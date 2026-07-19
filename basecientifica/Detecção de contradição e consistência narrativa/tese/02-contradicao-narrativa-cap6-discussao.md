@@ -1,0 +1,19 @@
+# 5 DISCUSSÃO
+
+Os achados delineados no arcabouço do capítulo de Desenvolvimento projetam reflexões substanciais acerca da viabilidade pragmática de sistemas inteligentes de autoria de textos ficcionais densos. O arranjo híbrido concebido resolve, teórica e formalmente, o paradoxo premente na literatura atual: o conflito entre o escopo temporal e a latência (conforme delineado no benchmark ConStory-Bench de Li et al., 2026).
+
+## 5.1 O Impacto da Modelagem Temporal Híbrida
+
+O avanço crucial desta pesquisa face aos paradigmas do passado (de Marneffe et al., 2008) repousa na percepção de que a detecção de contradições na ficção não representa um problema de semântica vetorial, mas sim um problema complexo de *rastreamento logístico*. A semelhança dos trabalhos de Zhu et al. (2023) sobre a capacidade da Inteligência Artificial seguir o rastro do "pensamento" dos personagens reafirma a eficácia da redução do texto puro em uma estrutura abstrata e previsível: o Grafo Temporal de Entidades.
+
+Ao operar em cima de vértices extraídos estruturados no grafo, o Auditor Global escapa inteiramente da "amnésia" que afeta os grandes modelos de linguagem ao operarem sem arquiteturas de RAG ou *Long Context Windows*. Não obstante, mesmo implementações de RAG sofrem problemas de alucinações contraditórias na recuperação, exaustivamente comprovados por Gokul, Tenneti e Nakkiran (2025). Na solução pautada em Grafos dirigida e restritiva impulsionada pelas metodologias TRACE (Duan et al., 2026) e SCORE (2025), o algoritmo de busca recupera *status lógicos booleanos*, não apenas fragmentos semânticos sujeitos à má interpretação da rede no espaço latente. A incompatibilidade detectada não é oriunda de sobreposição difusa, mas de uma violação matemática direta da rede (um objeto não pode conter duas localizações ativas simultaneamente em $T$).
+
+## 5.2 Avaliando os Benchmarks de Risco
+
+Embora teoricamente superior aos métodos estritamente gerativos unificados, a proposta necessita de escrutínio perante os testes práticos emergentes. O benchmark de falhas de roteiro *FlawedFictions* (Ahuja, Sclar & Tsvetkov, 2025) propõe enigmas extremamente nuançados, como as motivações intrínsecas e alianças secretas dos personagens. O grafo de entidades, se não enriquecido com um robusto modelo semântico multiagente como o framework LegalWiz (Mantravadi et al., 2025), falhará perante as contradições sutilmente subjetivas que lidam puramente com o domínio mental dos actantes (mentiras, segredos).
+
+Para endereçar esse gargalo discutível, o modelo híbrido deve, forçosamente, incorporar a flexibilidade das redes subjacentes exploradas por Brei et al. (2025) relativas a "Narradores Não Confiáveis". O grafo precisaria adotar a propriedade de "verdade percebida" versus "verdade absoluta" da narrativa. O ato de mentir de um personagem não constitui um erro do autor. Este ponto ressalta uma área de fragilidade sistêmica cuja remediação demandará algoritmos bayesianos atrelados ao grafo temporal para medir o grau de intenção literária antes de sinalizar a contradição no editor do autor de maneira definitiva. 
+
+## 5.3 O Papel Essencial do Processamento em Background
+
+O núcleo que responde à pergunta de pesquisa proposta repousa sobre a divisão computacional. Demonstra-se que o conceito de processamento imediato local leve (LiteReason, 2025) em conjunto com a auditoria em plano de fundo extirpa as sobrecargas de interface. Esta discussão ilumina o terreno fértil para empresas que desenvolvem processadores de texto avançados baseados na nuvem. A arquitetura viabiliza que a máquina da ponta (um notebook rudimentar) rode o detector NLI simples operando estritamente na DOM em tempo real e apenas despache metadados esporádicos para uma API robusta onde ocorre a extração no grafo, permitindo uma UX limpa, ágil, e ao mesmo tempo respaldada pelos mais avançados rastreamentos literários (NarrativeTrack, 2026).

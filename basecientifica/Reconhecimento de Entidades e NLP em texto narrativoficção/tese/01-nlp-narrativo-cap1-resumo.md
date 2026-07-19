@@ -1,0 +1,13 @@
+# RESUMO
+
+O Processamento de Linguagem Natural (PLN) aplicado ao domínio literário apresenta desafios singulares, especialmente devido à complexidade linguística, extensão dos textos e ocorrência frequente de aliases e correferências intrincadas que caracterizam a ficção. Este trabalho investiga em que medida sistemas de Reconhecimento de Entidades Nomeadas (NER) adaptados para textos ficcionais em língua portuguesa podem superar as limitações de ferramentas genéricas. O foco reside na identificação de personagens secundários, resolução de aliases e correferência em romances longos, visando estratégias arquiteturais que maximizem a precisão sem depender de APIs externas, garantindo a privacidade dos dados. A metodologia adota a *Design Science Research* aliada a uma revisão sistemática baseada no protocolo PRISMA. Como resultado, propõe-se um pipeline híbrido de dois estágios, combinando NER local, *Entity Linking* e resolução de correferência, otimizado para o domínio literário. A pesquisa fundamenta o desenvolvimento de um sistema web de organização de arquivos para escritores, demonstrando que arquiteturas locais específicas para literatura superam os modelos genéricos tradicionais, oferecendo melhorias no *recall* de personagens de cauda longa e mantendo a soberania dos dados.
+
+**Palavras-chave:** Processamento de Linguagem Natural, Reconhecimento de Entidades Nomeadas, Literatura, Correferência, Entity Linking.
+
+---
+
+# ABSTRACT
+
+Natural Language Processing (NLP) applied to the literary domain presents unique challenges, especially due to the linguistic complexity, text length, and frequent occurrence of aliases and intricate coreferences that characterize fiction. This work investigates the extent to which Named Entity Recognition (NER) systems adapted for fictional texts in Portuguese can overcome the limitations of generic tools. The focus lies on identifying secondary characters, alias resolution, and coreference in long novels, aiming for architectural strategies that maximize precision without relying on external APIs, ensuring data privacy. The methodology adopts Design Science Research combined with a systematic review based on the PRISMA protocol. As a result, a two-stage hybrid pipeline is proposed, combining local NER, Entity Linking, and coreference resolution, optimized for the literary domain. The research lays the foundation for developing a web-based file organization system for writers, demonstrating that local architectures specific to literature outperform traditional generic models, offering improvements in the recall of long-tail characters while maintaining data sovereignty.
+
+**Keywords:** Natural Language Processing, Named Entity Recognition, Literature, Coreference, Entity Linking.
