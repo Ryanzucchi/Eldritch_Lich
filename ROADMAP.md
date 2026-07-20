@@ -63,6 +63,7 @@
 - [ ] UC-025 a UC-059, UC-055 a UC-058 — entidades, relações, grafo e cronologia.
 - [ ] UC-046 a UC-054, UC-106 a UC-109, UC-143 a UC-149 — NLP, consistência e sugestões.
 - [ ] UC-158, UC-443 — respostas citadas e busca híbrida.
+- [x] UC-454, UC-455, UC-456, UC-457 — Grafo de Metas Narrativas (GMN), similaridade de metas (MMS) e Kanban de escrita.
 
 **Critério de saída:** IA opera localmente por padrão, expõe fonte/versão/confiança, não bloqueia autoria e tem avaliação em corpus narrativo em português.
 
@@ -279,19 +280,19 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-138** — Criar modelos de estrutura de pastas (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-011, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-139** — Definir metas de escrita (palavras/dia) (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
+- [x] **UC-139** — Definir metas de escrita (palavras/dia) (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-140** — Acompanhar sequência de dias escrevendo (streak) (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
+- [x] **UC-140** — Acompanhar sequência de dias escrevendo (streak) (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-141** — Modo foco / tela sem distrações (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-141** — Modo foco / tela sem distrações (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-142** — Atalhos de teclado personalizáveis (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-142** — Atalhos de teclado personalizáveis (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-152** — Marcar status do texto (rascunho, revisão, finalizado) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-152** — Marcar status do texto (rascunho, revisão, finalizado) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-154** — Favoritar pastas (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
@@ -708,6 +709,12 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-406** — Promover resultado do sandbox para o universo real (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
+- [x] **UC-454** — Criar e editar Grafo de Metas Narrativas (GMN) (Prioridade: Alta | Complexidade: Alta | Módulo: `gestao_projetos`)
+  - Depende de: UC-129
+  - Desbloqueia: UC-455, UC-456, UC-457
+- [x] **UC-455** — Detectar e propagar inconsistências no GMN (Prioridade: Alta | Complexidade: Média | Módulo: `gestao_projetos`)
+  - Depende de: UC-454, UC-129
+  - Desbloqueia: nenhum
 
 ## Fase 5 — Colaboração em Tempo Real, Chat e Comunicação de Equipe
 
@@ -1092,6 +1099,9 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-392** — Prever fluxo de caixa futuro (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
   - Depende de: UC-129, UC-381
   - Desbloqueia: nenhum
+- [x] **UC-457** — Quadro Kanban para Escrita Criativa (Prioridade: Alta | Complexidade: Média | Módulo: `gestao_projetos`)
+  - Depende de: UC-454, UC-129
+  - Desbloqueia: nenhum
 
 ## Fase 7 — Inteligência Artificial (IA), NLP e Assistência de Escrita
 
@@ -1244,6 +1254,9 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
   - Desbloqueia: nenhum
 - [ ] **UC-411** — Sugerir trilha sonora baseada no tom emocional da cena (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
+  - Desbloqueia: nenhum
+- [x] **UC-456** — Mapeamento Semântico Local de Progresso (MMS) (Prioridade: Média | Complexidade: Alta | Módulo: `gestao_projetos`)
+  - Depende de: UC-454, UC-129
   - Desbloqueia: nenhum
 
 ## Fase 8 — Integrações de Armazenamento, Exportações de Mídia e Otimizações Finais (RNFs)
