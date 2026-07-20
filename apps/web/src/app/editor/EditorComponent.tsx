@@ -1,0 +1,2121 @@
+'use client';
+
+import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import { db } from '../../db/schema';
+import { 
+  MetaNode, 
+  MetaEdge, 
+  WritingGoal, 
+  WritingLog, 
+  WritingStreak, 
+  Manuscript,
+  calculateStreak, 
+  calculateDailyQuota,
+  verifyZeroShotAction, 
+  cosineSimilarity, 
+  propagateStatus 
+} from '@eldritch/domain';
+import { computeE5Embedding, extractEntitiesWithNER, ProgressPayload } from '../../services/mms-ai';
+
+// Mock wiki entities dictionary
+const ENTITIES = [
+  { id: 'kael', name: 'Kael (Protagonista)', keywords: ['Kael'] },
+  { id: 'elara', name: 'Elara (Mentor)', keywords: ['Elara'] },
+  { id: 'castelo_sombrio', name: 'Castelo Sombrio', keywords: ['Castelo', 'Castelo Sombrio'] },
+  { id: 'floresta_sussurros', name: 'Floresta dos Sussurros', keywords: ['Floresta', 'Floresta dos Sussurros'] },
+  { id: 'medalhao_antigo', name: 'Medalhão Antigo', keywords: ['Medalhão', 'Medalhão Antigo'] },
+  { id: 'espada_eclipse', name: 'Espada do Eclipse', keywords: ['Espada', 'Espada do Eclipse'] }
+];
+
+interface MMSLog {
+  timestamp: string;
+  paragraphText: string;
+  goalTitle: string;
+  similarity: number;
+  evidenceScore: number;
+  entitiesMatched: string[];
+  graphEntitiesMatched: string[];
+  nerTokens: { entity: string; word: string }[];
+  llmVerification: { success: boolean; explanation: string };
+  status: 'SUCCESS' | 'PLANNING' | 'LOW_SIMILARITY';
+}
+
+interface KeyboardShortcut {
+  command: string;
+  keyCombo: string;
+  label: string;
+}
+
+const DEFAULT_SHORTCUTS: KeyboardShortcut[] = [
+  { command: 'toggle_focus', keyCombo: 'Ctrl+Shift+F', label: 'Alternar Modo Foco' },
+  { command: 'toggle_line_focus', keyCombo: 'Ctrl+Shift+L', label: 'Alternar Foco em Linha' },
+  { command: 'toggle_sidebar_left', keyCombo: 'Ctrl+Shift+B', label: 'Alternar Barra Esquerda' },
+  { command: 'toggle_sidebar_right', keyCombo: 'Ctrl+Shift+E', label: 'Alternar Barra Direita' }
+];
+
+const SCIENTIFIC_METHODS = [
+  {
+    id: 'guf',
+    label: 'GUF primeiro',
+    description: 'Prioriza metas e entidades do universo ficcional antes de qualquer sugestao generica.'
+  },
+  {
+    id: 'passive',
+    label: 'Sugestao passiva',
+    description: 'Mantem recomendacoes em painel lateral para preservar fluxo e autoria do escritor.'
+  },
+  {
+    id: 'evidence',
+    label: 'Evidencia hibrida',
+    description: 'Combina embeddings, entidades detectadas e verificacao zero-shot antes de concluir uma meta.'
+  }
+];
+
+const countWords = (text: string): number => {
+  return text.trim().split(/\s+/).filter(w => w.length > 0).length;
+};
+
+export default function EditorComponent() {
+  const [nodes, setNodes] = useState<MetaNode[]>([]);
+  const [edges, setEdges] = useState<MetaEdge[]>([]);
+  const [mmsLogs, setMmsLogs] = useState<MMSLog[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // IA Local State
+  const [isAILoaded, setIsAILoaded] = useState(false);
+  const [isAILoading, setIsAILoading] = useState(false);
+  const [aiLoadProgress, setAiLoadProgress] = useState(0);
+  const [aiLoadStatus, setAiLoadStatus] = useState('');
+
+  // Metas de Produtividade State
+  const [wordsToday, setWordsToday] = useState(0);
+  const [wordsSession, setWordsSession] = useState(0);
+  const [initialWordCount, setInitialWordCount] = useState<number | null>(null);
+  const [activeGoal, setActiveGoal] = useState<WritingGoal | null>(null);
+  const [streak, setStreak] = useState<WritingStreak>({
+    currentStreak: 0,
+    longestStreak: 0,
+    lastWrittenDate: '',
+    offDays: []
+  });
+  
+  // Manuscripts / Explorer State
+  const [manuscripts, setManuscripts] = useState<Manuscript[]>([]);
+  const [activeManuscript, setActiveManuscript] = useState<Manuscript | null>(null);
+  const [newChapterTitle, setNewChapterTitle] = useState('');
+  const [editingChapterId, setEditingChapterId] = useState<string | null>(null);
+  const [editingChapterTitle, setEditingChapterTitle] = useState('');
+
+  // Layout & Settings states
+  const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(true);
+  const [isFocusMode, setIsFocusMode] = useState(false);
+  const [isLineFocus, setIsLineFocus] = useState(false);
+  
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<'goals' | 'shortcuts'>('goals');
+  const [newGoalWords, setNewGoalWords] = useState(500);
+  const [newGoalType, setNewGoalType] = useState<'DIARIA' | 'PRAZO'>('DIARIA');
+  const [newGoalDeadline, setNewGoalDeadline] = useState('');
+  const [selectedOffDays, setSelectedOffDays] = useState<string[]>(['0', '6']);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [hasCelebratedToday, setHasCelebratedToday] = useState(false);
+
+  // Keyboard Shortcuts states
+  const [shortcuts, setShortcuts] = useState<KeyboardShortcut[]>(DEFAULT_SHORTCUTS);
+  const [capturingCommand, setCapturingCommand] = useState<string | null>(null);
+  const [shortcutConflict, setShortcutConflict] = useState<string | null>(null);
+
+  // Load from Dexie
+  const loadData = async () => {
+    const savedNodes = await db.metaNodes.toArray();
+    const savedEdges = await db.metaEdges.toArray();
+    setNodes(savedNodes);
+    setEdges(savedEdges);
+
+    // Load active goal
+    const savedGoals = await db.writingGoals.toArray();
+    if (savedGoals.length > 0) {
+      setActiveGoal(savedGoals[0]);
+      setNewGoalWords(savedGoals[0].targetWords);
+      setNewGoalType(savedGoals[0].type);
+      setNewGoalDeadline(savedGoals[0].deadline || '');
+    } else {
+      const defaultGoal: WritingGoal = {
+        id: 'main_goal',
+        type: 'DIARIA',
+        targetWords: 500,
+        documentIds: [],
+        createdAt: new Date().toISOString()
+      };
+      await db.writingGoals.put(defaultGoal);
+      setActiveGoal(defaultGoal);
+    }
+
+    // Load streak
+    const savedStreak = await db.writingStreak.get('main_streak');
+    if (savedStreak) {
+      setStreak(savedStreak);
+      setSelectedOffDays(savedStreak.offDays || []);
+    } else {
+      const defaultStreak: WritingStreak = {
+        currentStreak: 0,
+        longestStreak: 0,
+        lastWrittenDate: '',
+        offDays: ['0', '6']
+      };
+      await db.writingStreak.put({ ...defaultStreak, id: 'main_streak' as any });
+      setStreak(defaultStreak);
+    }
+
+    // Load today's log
+    const todayStr = new Date().toISOString().split('T')[0];
+    const todayLog = await db.writingLogs.get(todayStr);
+    if (todayLog) {
+      setWordsToday(todayLog.wordsWritten);
+    }
+
+    // Load custom shortcuts
+    const savedShortcuts = await db.keyboardShortcuts.toArray();
+    if (savedShortcuts.length > 0) {
+      const merged = DEFAULT_SHORTCUTS.map(def => {
+        const custom = savedShortcuts.find(s => s.command === def.command);
+        return custom ? { ...def, keyCombo: custom.keyCombo } : def;
+      });
+      setShortcuts(merged);
+    }
+
+    // Load manuscripts
+    await loadManuscripts();
+  };
+
+  const loadManuscripts = async () => {
+    const savedManuscripts = await db.manuscripts.toArray();
+    if (savedManuscripts.length > 0) {
+      setManuscripts(savedManuscripts);
+      // Select the first one by default if not set
+      if (!activeManuscript) {
+        setActiveManuscript(savedManuscripts[0]);
+      } else {
+        const updatedActive = savedManuscripts.find(m => m.id === activeManuscript.id);
+        if (updatedActive) setActiveManuscript(updatedActive);
+      }
+    } else {
+      // Create initial chapter
+      const defaultManuscript: Manuscript = {
+        id: 'chapter_1',
+        title: 'Capítulo 1 - A Travessia',
+        content: `
+          <p>Kael respirou fundo e deu os primeiros passos na Floresta dos Sussurros. As árvores retorcidas pareciam murmurar segredos ao vento frio da noite.</p>
+          <p>Ele caminhou por horas, guiado apenas pelo sussurro das folhas. Sob as raízes massivas de um salgueiro ancião, algo brilhava debilmente sob a terra úmida. Kael cavou freneticamente até que suas mãos tocaram a superfície gélida do Medalhão Antigo. Ele finalmente o segurou contra o peito, sentindo sua pulsação mística.</p>
+          <p>Ele pensou: "Vou levar o medalhão até a estalagem e amanhã pretendo encontrar a Espada do Eclipse."</p>
+        `,
+        status: 'RASCUNHO',
+        isLocked: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      await db.manuscripts.put(defaultManuscript);
+      setManuscripts([defaultManuscript]);
+      setActiveManuscript(defaultManuscript);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // Format key combo string helper
+  const formatShortcut = (e: React.KeyboardEvent | KeyboardEvent): string => {
+    const parts: string[] = [];
+    if (e.ctrlKey) parts.push('Ctrl');
+    if (e.altKey) parts.push('Alt');
+    if (e.shiftKey) parts.push('Shift');
+    if (e.metaKey) parts.push('Cmd');
+    
+    if (['Control', 'Alt', 'Shift', 'Meta'].includes(e.key)) {
+      return parts.join('+');
+    }
+    
+    let keyName = e.key;
+    if (keyName === ' ') keyName = 'Espaço';
+    else if (keyName.length === 1) keyName = keyName.toUpperCase();
+    
+    parts.push(keyName);
+    return parts.join('+');
+  };
+
+  // Execute shortcut actions
+  const triggerCommand = (command: string) => {
+    switch (command) {
+      case 'toggle_focus':
+        setIsFocusMode(prev => {
+          const next = !prev;
+          if (next) {
+            document.documentElement.requestFullscreen?.().catch(() => {});
+          } else {
+            if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+          }
+          return next;
+        });
+        break;
+      case 'toggle_line_focus':
+        setIsLineFocus(prev => !prev);
+        break;
+      case 'toggle_sidebar_left':
+        setIsLeftSidebarOpen(prev => !prev);
+        break;
+      case 'toggle_sidebar_right':
+        setIsRightSidebarOpen(prev => !prev);
+        break;
+    }
+  };
+
+  // Keyboard shortcut listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (capturingCommand) {
+        e.preventDefault();
+        const combo = formatShortcut(e);
+        if (['Ctrl', 'Alt', 'Shift', 'Cmd'].includes(combo)) return;
+        
+        const conflict = shortcuts.find(s => s.keyCombo === combo && s.command !== capturingCommand);
+        if (conflict) {
+          setShortcutConflict(`Conflito! Atalho já está associado a "${conflict.label}"`);
+          return;
+        }
+
+        setShortcutConflict(null);
+        handleSaveShortcut(capturingCommand, combo);
+        return;
+      }
+
+      if (e.key === 'Escape' && isFocusMode) {
+        e.preventDefault();
+        triggerCommand('toggle_focus');
+        return;
+      }
+
+      const pressedCombo = formatShortcut(e);
+      const matched = shortcuts.find(s => s.keyCombo === pressedCombo);
+      if (matched) {
+        e.preventDefault();
+        triggerCommand(matched.command);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [shortcuts, capturingCommand, isFocusMode, isLineFocus, isLeftSidebarOpen, isRightSidebarOpen]);
+
+  const handleSaveShortcut = async (command: string, keyCombo: string) => {
+    await db.keyboardShortcuts.put({ command, keyCombo });
+    setShortcuts(prev => prev.map(s => s.command === command ? { ...s, keyCombo } : s));
+    setCapturingCommand(null);
+  };
+
+  const handleRestoreDefaultShortcuts = async () => {
+    await db.keyboardShortcuts.clear();
+    setShortcuts(DEFAULT_SHORTCUTS);
+    setCapturingCommand(null);
+    setShortcutConflict(null);
+  };
+
+  // Initialize TipTap Editor
+  const editor = useEditor({
+    extensions: [StarterKit],
+    content: '',
+    onUpdate: ({ editor }) => {
+      if (!activeManuscript || activeManuscript.isLocked) return;
+
+      const currentText = editor.getText();
+      const currentWords = countWords(currentText);
+
+      if (initialWordCount === null) {
+        setInitialWordCount(currentWords);
+        return;
+      }
+
+      const diff = Math.max(0, currentWords - initialWordCount);
+      setWordsSession(diff);
+
+      // Autosave content to Dexie DB (instant < 5ms)
+      const html = editor.getHTML();
+      db.manuscripts.update(activeManuscript.id, {
+        content: html,
+        updatedAt: new Date().toISOString()
+      }).then(() => {
+        // Reload list locally without refetching all
+        setManuscripts(prev => prev.map(m => m.id === activeManuscript.id ? { ...m, content: html } : m));
+      });
+
+      // Update words written today
+      const todayStr = new Date().toISOString().split('T')[0];
+      db.writingLogs.get(todayStr).then(async (todayLog) => {
+        const baseWords = todayLog ? todayLog.wordsWritten : 0;
+        const newTodayWords = baseWords + diff;
+        setWordsToday(newTodayWords);
+
+        await db.writingLogs.put({
+          id: todayStr,
+          wordsWritten: newTodayWords,
+          date: new Date().toISOString()
+        });
+
+        const updatedStreak = calculateStreak(streak, todayStr, newTodayWords, 200);
+        await db.writingStreak.put({ ...updatedStreak, id: 'main_streak' as any });
+        setStreak(updatedStreak);
+
+        const targetGoal = activeGoal ? activeGoal.targetWords : 500;
+        if (newTodayWords >= targetGoal && !hasCelebratedToday) {
+          setShowCelebration(true);
+          setHasCelebratedToday(true);
+          setTimeout(() => setShowCelebration(false), 5000);
+        }
+      });
+
+      // MMS Pipeline trigger
+      if (!isAILoaded) return;
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        runMMSAnalysis(currentText);
+      }, 3000);
+    }
+  });
+
+  // Switch Active Manuscript and set editable state
+  useEffect(() => {
+    if (editor && activeManuscript) {
+      editor.setEditable(!activeManuscript.isLocked);
+      editor.commands.setContent(activeManuscript.content);
+      
+      // Reset counting base on switch
+      const initialWords = countWords(editor.getText());
+      setInitialWordCount(initialWords);
+      setWordsSession(0);
+    }
+  }, [activeManuscript?.id, editor]);
+
+  // Handle active status toggle
+  const handleUpdateStatus = async (status: 'RASCUNHO' | 'REVISAO' | 'FINALIZADO') => {
+    if (!activeManuscript) return;
+    const isLocked = status === 'FINALIZADO'; // auto lock on finalize as required
+
+    const updated = {
+      ...activeManuscript,
+      status,
+      isLocked,
+      updatedAt: new Date().toISOString()
+    };
+
+    await db.manuscripts.put(updated);
+    setActiveManuscript(updated);
+    setManuscripts(prev => prev.map(m => m.id === updated.id ? updated : m));
+    
+    if (editor) {
+      editor.setEditable(!isLocked);
+    }
+  };
+
+  // Toggle edit lock state
+  const handleToggleLock = async () => {
+    if (!activeManuscript) return;
+    const isLocked = !activeManuscript.isLocked;
+
+    const updated = {
+      ...activeManuscript,
+      isLocked,
+      updatedAt: new Date().toISOString()
+    };
+
+    await db.manuscripts.put(updated);
+    setActiveManuscript(updated);
+    setManuscripts(prev => prev.map(m => m.id === updated.id ? updated : m));
+    
+    if (editor) {
+      editor.setEditable(!isLocked);
+    }
+  };
+
+  // Add new chapter
+  const handleAddChapter = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newChapterTitle.trim()) return;
+
+    const newChapter: Manuscript = {
+      id: 'chapter_' + Date.now(),
+      title: newChapterTitle.trim(),
+      content: '<p>Comece a escrever...</p>',
+      status: 'RASCUNHO',
+      isLocked: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    await db.manuscripts.put(newChapter);
+    setNewChapterTitle('');
+    await loadManuscripts();
+    setActiveManuscript(newChapter);
+  };
+
+  // Delete chapter
+  const handleDeleteChapter = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (manuscripts.length <= 1) return; // keep at least 1
+    
+    if (confirm('Deseja excluir permanentemente este capítulo?')) {
+      await db.manuscripts.delete(id);
+      
+      // If we deleted the active one, select another
+      if (activeManuscript?.id === id) {
+        const remaining = manuscripts.filter(m => m.id !== id);
+        setActiveManuscript(remaining[0]);
+      }
+      
+      await loadManuscripts();
+    }
+  };
+
+  // Start renaming chapter
+  const startRenameChapter = (chapter: Manuscript, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingChapterId(chapter.id);
+    setEditingChapterTitle(chapter.title);
+  };
+
+  // Save renamed title
+  const handleSaveRename = async (id: string) => {
+    if (!editingChapterTitle.trim()) return;
+    await db.manuscripts.update(id, {
+      title: editingChapterTitle.trim(),
+      updatedAt: new Date().toISOString()
+    });
+    setEditingChapterId(null);
+    await loadManuscripts();
+  };
+
+  // Handle settings goals update
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const updatedGoal: WritingGoal = {
+      id: 'main_goal',
+      type: newGoalType,
+      targetWords: newGoalWords,
+      deadline: newGoalType === 'PRAZO' ? newGoalDeadline : undefined,
+      documentIds: [],
+      createdAt: new Date().toISOString()
+    };
+
+    await db.writingGoals.put(updatedGoal);
+    setActiveGoal(updatedGoal);
+
+    const updatedStreak = {
+      ...streak,
+      offDays: selectedOffDays
+    };
+    await db.writingStreak.put({ ...updatedStreak, id: 'main_streak' as any });
+    setStreak(updatedStreak);
+
+    setIsSettingsOpen(false);
+  };
+
+  const toggleOffDay = (day: string) => {
+    setSelectedOffDays(prev => 
+      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+    );
+  };
+
+  // Load local AI models
+  const handleLoadAI = async () => {
+    setIsAILoading(true);
+    setAiLoadStatus('Carregando modelos de IA...');
+    
+    const progressHandler = (payload: ProgressPayload) => {
+      if (payload.progress !== undefined) {
+        setAiLoadProgress(Math.round(payload.progress));
+        setAiLoadStatus(
+          payload.status === 'loading_embeddings'
+            ? `Baixando Embeddings (e5-small): ${Math.round(payload.progress)}%`
+            : `Baixando NER (bert-multilingual): ${Math.round(payload.progress)}%`
+        );
+      }
+    };
+
+    try {
+      await computeE5Embedding('teste', progressHandler);
+      await extractEntitiesWithNER('teste', progressHandler);
+      
+      setIsAILoaded(true);
+      setIsAILoading(false);
+      setAiLoadStatus('Modelos locais ativos.');
+      
+      if (editor) {
+        runMMSAnalysis(editor.getText());
+      }
+    } catch (err) {
+      console.error(err);
+      setAiLoadStatus('Erro ao carregar os modelos locais.');
+      setIsAILoading(false);
+    }
+  };
+
+  const handleImmediateCheck = () => {
+    if (!isAILoaded) {
+      handleLoadAI();
+      return;
+    }
+    if (editor) {
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      runMMSAnalysis(editor.getText());
+    }
+  };
+
+  // The MMS evaluation pipeline
+  const runMMSAnalysis = async (fullText: string) => {
+    if (!isAILoaded) return;
+    setIsProcessing(true);
+    
+    const paragraphs = fullText
+      .split('\n')
+      .map(p => p.trim())
+      .filter(p => p.length > 20);
+
+    const currentNodes = await db.metaNodes.toArray();
+    const currentEdges = await db.metaEdges.toArray();
+    const pendingNodes = currentNodes.filter(n => n.status === 'PENDENTE' || n.status === 'EM_ANDAMENTO');
+    
+    const newLogs: MMSLog[] = [];
+    let stateChanged = false;
+    let updatedNodes = [...currentNodes];
+    const goalEmbeddingCache = new Map<string, number[]>();
+
+    for (const paragraph of paragraphs) {
+      const matchedDictEntities = ENTITIES.filter(ent => 
+        ent.keywords.some(kw => new RegExp(`\\b${kw}\\b`, 'i').test(paragraph))
+      ).map(ent => ent.id);
+
+      const nerTokens = await extractEntitiesWithNER(paragraph);
+      const paraEmbedding = await computeE5Embedding(paragraph);
+
+      for (const node of pendingNodes) {
+        let goalEmbedding = goalEmbeddingCache.get(node.id);
+        if (!goalEmbedding) {
+          goalEmbedding = await computeE5Embedding(node.title + " " + node.description);
+          goalEmbeddingCache.set(node.id, goalEmbedding);
+        }
+        const similarity = cosineSimilarity(paraEmbedding, goalEmbedding);
+        const graphEntitiesMatched = node.relatedEntities.filter(entityId => matchedDictEntities.includes(entityId));
+        const graphContextBoost = graphEntitiesMatched.length > 0 ? 0.08 : 0;
+        const evidenceScore = Math.min(1, similarity + graphContextBoost);
+
+        if (evidenceScore >= node.similarityThreshold) {
+          const llmCheck = verifyZeroShotAction(paragraph, node.title);
+
+          if (llmCheck.success) {
+            newLogs.push({
+              timestamp: new Date().toLocaleTimeString(),
+              paragraphText: paragraph.substring(0, 80) + '...',
+              goalTitle: node.title,
+              similarity,
+              evidenceScore,
+              entitiesMatched: matchedDictEntities.map(id => ENTITIES.find(e => e.id === id)?.name || id),
+              graphEntitiesMatched: graphEntitiesMatched.map(id => ENTITIES.find(e => e.id === id)?.name || id),
+              nerTokens,
+              llmVerification: llmCheck,
+              status: 'SUCCESS'
+            });
+
+            updatedNodes = updatedNodes.map(n => 
+              n.id === node.id ? { ...n, status: 'CONCLUIDO', updatedAt: new Date().toISOString() } : n
+            );
+            stateChanged = true;
+          } else {
+            newLogs.push({
+              timestamp: new Date().toLocaleTimeString(),
+              paragraphText: paragraph.substring(0, 80) + '...',
+              goalTitle: node.title,
+              similarity,
+              evidenceScore,
+              entitiesMatched: matchedDictEntities.map(id => ENTITIES.find(e => e.id === id)?.name || id),
+              graphEntitiesMatched: graphEntitiesMatched.map(id => ENTITIES.find(e => e.id === id)?.name || id),
+              nerTokens,
+              llmVerification: llmCheck,
+              status: 'PLANNING'
+            });
+          }
+        } else if (similarity > 0.4) {
+          newLogs.push({
+            timestamp: new Date().toLocaleTimeString(),
+            paragraphText: paragraph.substring(0, 80) + '...',
+            goalTitle: node.title,
+            similarity,
+            evidenceScore,
+            entitiesMatched: matchedDictEntities.map(id => ENTITIES.find(e => e.id === id)?.name || id),
+            graphEntitiesMatched: graphEntitiesMatched.map(id => ENTITIES.find(e => e.id === id)?.name || id),
+            nerTokens,
+            llmVerification: { success: false, explanation: graphEntitiesMatched.length > 0 ? 'Contexto do grafo reconhecido, mas a acao narrativa ainda nao atingiu o limiar.' : 'Similaridade semantica abaixo do limiar.' },
+            status: 'LOW_SIMILARITY'
+          });
+        }
+      }
+    }
+
+    if (stateChanged) {
+      const { updatedNodes: finalNodes } = propagateStatus(updatedNodes, currentEdges);
+      await Promise.all(finalNodes.map(n => db.metaNodes.put(n)));
+      setNodes(finalNodes);
+    }
+
+    setMmsLogs(prev => [...newLogs, ...prev].slice(0, 20));
+    setIsProcessing(false);
+  };
+
+  // Compute stats for quota
+  const calculatedQuota = activeGoal?.type === 'PRAZO' && activeGoal.deadline
+    ? calculateDailyQuota(activeGoal.targetWords, wordsToday, activeGoal.deadline, new Date().toISOString().split('T')[0])
+    : activeGoal?.targetWords || 500;
+
+  const progressPercentage = Math.min(100, Math.round((wordsToday / calculatedQuota) * 100));
+  const streakColor = streak.currentStreak >= 30 ? '🔥 deep-red' : streak.currentStreak >= 7 ? '🔥 golden' : '🔥 normal';
+  const pendingGoals = nodes.filter(node => node.status === 'PENDENTE' || node.status === 'EM_ANDAMENTO');
+  const completedGoals = nodes.filter(node => node.status === 'CONCLUIDO');
+  const lastStrongEvidence = mmsLogs.find(log => log.status === 'SUCCESS' || log.status === 'PLANNING');
+  const priorityGoal = pendingGoals
+    .slice()
+    .sort((a, b) => {
+      const aDeps = edges.filter(edge => edge.toId === a.id).length;
+      const bDeps = edges.filter(edge => edge.toId === b.id).length;
+      return bDeps - aDeps || b.updatedAt.localeCompare(a.updatedAt);
+    })[0];
+  const graphCoverage = nodes.length > 0 ? Math.round((completedGoals.length / nodes.length) * 100) : 0;
+
+  return (
+    <div className={`layout-container ${isFocusMode ? 'focus-mode-active' : ''} ${isLineFocus ? 'line-focus-mode' : ''}`}>
+      {/* Celebration overlay */}
+      {showCelebration && (
+        <div className="celebration-overlay">
+          <div className="celebration-card glass">
+            <span className="celebration-emoji">🎉</span>
+            <h3>Meta Diária Alcançada!</h3>
+            <p>Você escreveu {wordsToday} palavras hoje. Continue com essa constância!</p>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Close Button for Focus Mode */}
+      {isFocusMode && (
+        <button onClick={() => triggerCommand('toggle_focus')} className="floating-btn-exit-focus glass">
+          Sair do Modo Foco (ESC)
+        </button>
+      )}
+
+      {/* Top Navbar */}
+      {!isFocusMode && (
+        <header className="navbar glass">
+          <h1 className="logo">Eldritch<span>Lich</span></h1>
+          <nav className="nav-links">
+            <Link href="/gmn" className="nav-item">Grafo de Metas</Link>
+            <Link href="/kanban" className="nav-item">Quadro Kanban</Link>
+            <Link href="/editor" className="nav-item active">Editor do Manuscrito</Link>
+          </nav>
+        </header>
+      )}
+
+      <div className="main-content">
+        {/* Left Panel - Active Goals & Writing Metrics */}
+        {!isFocusMode && isLeftSidebarOpen && (
+          <aside className="editor-side-panel left-panel glass">
+            {/* Streak & Configure Card */}
+            <div className="streak-stats-card glass">
+              <div className="streak-stats-header">
+                <span className={`streak-icon ${streakColor.split(' ')[1]}`}>🔥</span>
+                <div>
+                  <h3 className="streak-count">{streak.currentStreak} dias seguidos</h3>
+                  <p className="streak-record">Recorde: {streak.longestStreak} dias</p>
+                </div>
+              </div>
+              
+              <button onClick={() => setIsSettingsOpen(true)} className="btn-configure-goals">
+                Configurar Metas & Atalhos
+              </button>
+            </div>
+
+            {/* Document Tree / Explorer */}
+            <div className="manuscript-explorer-section">
+              <h3 className="explorer-title">Capítulos</h3>
+              
+              {/* Add Chapter Form */}
+              <form onSubmit={handleAddChapter} className="add-chapter-form">
+                <input 
+                  type="text" 
+                  placeholder="Novo Capítulo..." 
+                  value={newChapterTitle}
+                  onChange={(e) => setNewChapterTitle(e.target.value)}
+                  required
+                />
+                <button type="submit">+</button>
+              </form>
+
+              {/* Explorer List */}
+              <div className="manuscripts-list">
+                {manuscripts.map(chapter => (
+                  <div 
+                    key={chapter.id} 
+                    onClick={() => setActiveManuscript(chapter)}
+                    className={`chapter-list-item ${activeManuscript?.id === chapter.id ? 'active' : ''}`}
+                  >
+                    {editingChapterId === chapter.id ? (
+                      <input 
+                        type="text"
+                        value={editingChapterTitle}
+                        onChange={(e) => setEditingChapterTitle(e.target.value)}
+                        onBlur={() => handleSaveRename(chapter.id)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') handleSaveRename(chapter.id); }}
+                        onClick={(e) => e.stopPropagation()}
+                        autoFocus
+                        className="rename-input"
+                      />
+                    ) : (
+                      <div className="chapter-item-details">
+                        <span className="chapter-title-text">{chapter.title}</span>
+                        
+                        {/* Status tag badges */}
+                        <div className="chapter-badges">
+                          <span className={`status-badge-tag ${chapter.status.toLowerCase()}`}>
+                            {chapter.status === 'RASCUNHO' ? 'R' : chapter.status === 'REVISAO' ? 'Rev' : '✓'}
+                          </span>
+                          {chapter.isLocked && <span className="lock-badge-icon">🔒</span>}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="chapter-actions">
+                      <button 
+                        onClick={(e) => startRenameChapter(chapter, e)} 
+                        title="Renomear"
+                        className="action-btn"
+                      >
+                        ✎
+                      </button>
+                      <button 
+                        onClick={(e) => handleDeleteChapter(chapter.id, e)} 
+                        title="Excluir"
+                        disabled={manuscripts.length <= 1}
+                        className="action-btn delete"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <h2 className="panel-title" style={{ marginTop: '1.5rem' }}>Metas Ativas</h2>
+            <p className="panel-subtitle">O MMS analisa sua digitação para completar estas metas em tempo real.</p>
+
+            <div className="scientific-basis-card">
+              <div className="basis-card-header">
+                <span className="basis-kicker">Base cientifica aplicada</span>
+                <strong>{graphCoverage}% do grafo validado</strong>
+              </div>
+              <div className="basis-method-list">
+                {SCIENTIFIC_METHODS.map(method => (
+                  <div key={method.id} className="basis-method-row">
+                    <span>{method.label}</span>
+                    <p>{method.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {priorityGoal && (
+              <div className="next-step-card">
+                <span className="basis-kicker">Proximo melhor passo</span>
+                <strong>{priorityGoal.title}</strong>
+                <p>Escreva uma acao concreta envolvendo {priorityGoal.relatedEntities.length || 'as'} entidades ligadas a esta meta para aumentar a confianca do MMS.</p>
+              </div>
+            )}
+            
+            <div className="goals-vertical-list">
+              {nodes.map(node => (
+                <div key={node.id} className={`goal-item-card ${node.status.toLowerCase()} ${node.type.toLowerCase()}`}>
+                  <div className="goal-item-header">
+                    <span className="goal-item-status-icon">
+                      {node.status === 'CONCLUIDO' ? '✓' : node.status === 'INCONSISTENTE' ? '⚠' : '○'}
+                    </span>
+                    <span className="goal-item-type">{node.type}</span>
+                  </div>
+                  <h4 className="goal-item-title">{node.title}</h4>
+                  <p className="goal-item-desc">{node.description}</p>
+                  <div className="goal-item-meta">
+                    <span>Limiar: {node.similarityThreshold}</span>
+                    <span className={`status-badge ${node.status.toLowerCase()}`}>{node.status}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </aside>
+        )}
+
+        {/* Center Panel - Editor Canvas */}
+        <main className="editor-workspace">
+          {/* Locked Notification Banner */}
+          {activeManuscript?.isLocked && (
+            <div className="locked-banner glass">
+              <span>🔒 Este documento está finalizado e bloqueado para edições. Desbloqueie para editar.</span>
+              <button onClick={handleToggleLock} className="btn-banner-unlock">Desbloquear</button>
+            </div>
+          )}
+
+          {/* Document header controls */}
+          {!isFocusMode && activeManuscript && (
+            <div className="editor-document-header-controls glass">
+              <div className="document-info">
+                <h3>{activeManuscript.title}</h3>
+                <span className="last-saved">Salvo automaticamente</span>
+              </div>
+
+              <div className="document-actions-controls">
+                {/* Status Selector */}
+                <div className="status-selector-group">
+                  <label>Status:</label>
+                  <select 
+                    value={activeManuscript.status} 
+                    onChange={(e) => handleUpdateStatus(e.target.value as any)}
+                  >
+                    <option value="RASCUNHO">Rascunho</option>
+                    <option value="REVISAO">Em Revisão</option>
+                    <option value="FINALIZADO">Finalizado</option>
+                  </select>
+                </div>
+
+                {/* Edit Lock Button */}
+                <button 
+                  onClick={handleToggleLock}
+                  className={`btn-lock-toggle ${activeManuscript.isLocked ? 'locked' : ''}`}
+                >
+                  {activeManuscript.isLocked ? 'Desbloquear Capítulo' : 'Bloquear Capítulo'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!isFocusMode && !activeManuscript && (
+            <div className="editor-workspace-header">
+              <div>
+                <h2>Manuscrito Principal</h2>
+                <p className="subtitle">Selecione um capítulo no explorer lateral esquerdo para começar.</p>
+              </div>
+            </div>
+          )}
+
+          {/* TipTap editor canvas */}
+          <div className="tiptap-editor-container glass">
+            {editor && <EditorContent editor={editor} className="tiptap-editor-content" />}
+          </div>
+
+          {/* Floating Footer Progress Bar */}
+          <div className="editor-progress-footer glass">
+            <div className="progress-info">
+              <span className="progress-title">
+                {activeGoal?.type === 'PRAZO' ? 'Meta de Prazo' : 'Meta Diária'}: {wordsToday} / {calculatedQuota} palavras hoje
+              </span>
+              <span className="progress-percentage">{progressPercentage}%</span>
+            </div>
+            <div className="progress-track">
+              <div className={`progress-fill ${progressPercentage >= 100 ? 'completed' : ''}`} style={{ width: `${progressPercentage}%` }}></div>
+            </div>
+            <div className="session-stats">
+              <span>Sessão: {wordsSession} palavras</span>
+              <span>
+                Atalhos: Foco {shortcuts.find(s=>s.command==='toggle_focus')?.keyCombo} | Linha {shortcuts.find(s=>s.command==='toggle_line_focus')?.keyCombo}
+              </span>
+            </div>
+          </div>
+        </main>
+
+        {/* Right Panel - MMS Logs */}
+        {!isFocusMode && isRightSidebarOpen && (
+          <aside className="editor-side-panel mms-logs-panel glass">
+            <h2 className="panel-title">Evidencias MMS</h2>
+            <p className="panel-subtitle">Leitura passiva baseada em grafo, entidades e similaridade semantica. O texto continua sendo o centro da tela.</p>
+
+            <div className="evidence-summary-grid">
+              <div className="evidence-summary-item">
+                <span>Metas abertas</span>
+                <strong>{pendingGoals.length}</strong>
+              </div>
+              <div className="evidence-summary-item">
+                <span>Confianca recente</span>
+                <strong>{lastStrongEvidence ? `${Math.round(lastStrongEvidence.evidenceScore * 100)}%` : '--'}</strong>
+              </div>
+            </div>
+
+            {!isAILoaded && (
+              <button onClick={handleLoadAI} disabled={isAILoading} className="btn-ai-load">
+                {isAILoading ? aiLoadStatus : 'Ativar analise local'}
+              </button>
+            )}
+
+            {isAILoaded && (
+              <button onClick={handleImmediateCheck} disabled={isProcessing} className="btn-ai-load secondary">
+                {isProcessing ? 'Analisando...' : 'Reavaliar capitulo'}
+              </button>
+            )}
+
+            <div className="logs-container">
+              {!isAILoaded ? (
+                <p className="no-logs">Ative os modelos locais quando quiser validar metas. A analise fica lateral para nao interromper a escrita.</p>
+              ) : mmsLogs.length === 0 ? (
+                <p className="no-logs">Nenhuma atividade de digitação avaliada ainda. Escreva no editor para iniciar o monitor.</p>
+              ) : (
+                mmsLogs.map((log, idx) => (
+                  <div key={idx} className={`log-card ${log.status.toLowerCase()}`}>
+                    <div className="log-header">
+                      <span className="log-time">{log.timestamp}</span>
+                      <span className={`log-status-badge ${log.status.toLowerCase()}`}>
+                        {log.status === 'SUCCESS' ? 'Meta Atendida' : log.status === 'PLANNING' ? 'Planejamento' : 'Similaridade Baixa'}
+                      </span>
+                    </div>
+                    
+                    <div className="log-body">
+                      <p className="log-goal"><strong>Meta:</strong> {log.goalTitle}</p>
+                      <div className="evidence-bars">
+                        <div>
+                          <span>Semantica E5</span>
+                          <strong>{Math.round(log.similarity * 100)}%</strong>
+                        </div>
+                        <div>
+                          <span>Evidencia final</span>
+                          <strong>{Math.round(log.evidenceScore * 100)}%</strong>
+                        </div>
+                      </div>
+                      {log.graphEntitiesMatched.length > 0 ? (
+                        <p className="log-entities"><strong>Entidades do grafo:</strong> {log.graphEntitiesMatched.join(', ')}</p>
+                      ) : log.entitiesMatched.length > 0 && (
+                        <p className="log-entities"><strong>Entidades detectadas:</strong> {log.entitiesMatched.join(', ')}</p>
+                      )}
+                      {log.nerTokens.length > 0 && (
+                        <div className="log-ner-tokens">
+                          <strong>NER local:</strong>
+                          <div className="ner-tokens-list">
+                            {log.nerTokens.slice(0, 8).map((tok, tIdx) => (
+                              <span key={tIdx} className={`ner-token ${tok.entity.toLowerCase()}`}>
+                                {tok.word}: {tok.entity}
+                              </span>
+                            ))}
+                            {log.nerTokens.length > 8 && <span>...</span>}
+                          </div>
+                        </div>
+                      )}
+                      <div className="log-paragraph">
+                        <span className="label">Trecho:</span>
+                        <span className="text">"{log.paragraphText}"</span>
+                      </div>
+                      <p className="log-explanation"><strong>Decisao:</strong> {log.llmVerification.explanation}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </aside>
+        )}
+      </div>
+
+      {/* Settings Modal (Goals & Keyboard Shortcuts) */}
+      {isSettingsOpen && (
+        <div className="settings-modal-overlay">
+          <div className="settings-modal-content glass">
+            {/* Modal Tabs */}
+            <div className="settings-modal-tabs">
+              <button 
+                type="button"
+                className={`settings-tab-btn ${settingsTab === 'goals' ? 'active' : ''}`}
+                onClick={() => setSettingsTab('goals')}
+              >
+                Metas de Escrita
+              </button>
+              <button 
+                type="button"
+                className={`settings-tab-btn ${settingsTab === 'shortcuts' ? 'active' : ''}`}
+                onClick={() => setSettingsTab('shortcuts')}
+              >
+                Atalhos de Teclado
+              </button>
+            </div>
+
+            {settingsTab === 'goals' ? (
+              <form onSubmit={handleSaveSettings} className="settings-form">
+                <div className="form-group">
+                  <label>Tipo de Meta</label>
+                  <select value={newGoalType} onChange={(e) => setNewGoalType(e.target.value as any)}>
+                    <option value="DIARIA">Meta Diária Fixa</option>
+                    <option value="PRAZO">Meta com Prazo Final</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>{newGoalType === 'PRAZO' ? 'Total de Palavras Alvo' : 'Palavras por Dia Alvo'}</label>
+                  <input 
+                    type="number" 
+                    value={newGoalWords} 
+                    onChange={(e) => setNewGoalWords(Math.max(1, parseInt(e.target.value)))} 
+                    required 
+                  />
+                </div>
+
+                {newGoalType === 'PRAZO' && (
+                  <div className="form-group">
+                    <label>Data Limite</label>
+                    <input 
+                      type="date" 
+                      value={newGoalDeadline} 
+                      onChange={(e) => setNewGoalDeadline(e.target.value)} 
+                      required 
+                    />
+                  </div>
+                )}
+
+                <div className="form-group">
+                  <label>Dias de Folga (Protege a Sequência/Streak)</label>
+                  <div className="off-days-checkboxes">
+                    {['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'].map((dayName, idx) => (
+                      <label key={idx} className="off-day-label">
+                        <input 
+                          type="checkbox" 
+                          checked={selectedOffDays.includes(idx.toString())} 
+                          onChange={() => toggleOffDay(idx.toString())}
+                        />
+                        <span>{dayName}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="form-actions">
+                  <button type="button" onClick={() => setIsSettingsOpen(false)} className="btn-cancel">
+                    Cancelar
+                  </button>
+                  <button type="submit" className="btn-save">
+                    Salvar Configurações
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="shortcuts-settings-panel">
+                <p className="shortcuts-info">Clique no atalho para editar e pressione a nova combinação de teclas desejada.</p>
+                <div className="shortcuts-list">
+                  {shortcuts.map(sh => (
+                    <div key={sh.command} className="shortcut-setting-row">
+                      <span className="shortcut-label">{sh.label}</span>
+                      <button 
+                        onClick={() => {
+                          setCapturingCommand(sh.command);
+                          setShortcutConflict(null);
+                        }} 
+                        className={`btn-capture-shortcut ${capturingCommand === sh.command ? 'capturing' : ''}`}
+                      >
+                        {capturingCommand === sh.command ? 'Pressione teclas...' : sh.keyCombo}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {shortcutConflict && <div className="shortcut-error">{shortcutConflict}</div>}
+
+                <div className="form-actions">
+                  <button onClick={handleRestoreDefaultShortcuts} className="btn-cancel">
+                    Restaurar Padrões
+                  </button>
+                  <button onClick={() => setIsSettingsOpen(false)} className="btn-save">
+                    Fechar
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <style jsx global>{`
+        .editor-side-panel {
+          width: 300px;
+          border-right: 1px solid var(--border-light);
+          display: flex;
+          flex-direction: column;
+          padding: 1.2rem;
+          overflow-y: auto;
+          transition: all 0.2s;
+        }
+
+        .mms-logs-panel {
+          width: 320px;
+          border-right: none;
+          border-left: 1px solid var(--border-light);
+        }
+
+        .panel-title {
+          font-family: var(--font-display);
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: var(--text-primary);
+        }
+
+        .panel-subtitle {
+          font-size: 0.75rem;
+          color: var(--text-muted);
+          margin-top: 0.2rem;
+          margin-bottom: 1.2rem;
+          line-height: 1.4;
+        }
+
+        .evidence-summary-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0.6rem;
+          margin-bottom: 0.8rem;
+        }
+
+        .evidence-summary-item {
+          border: 1px solid var(--border-light);
+          background: rgba(255, 255, 255, 0.03);
+          border-radius: 8px;
+          padding: 0.65rem;
+        }
+
+        .evidence-summary-item span {
+          display: block;
+          color: var(--text-muted);
+          font-size: 0.66rem;
+          line-height: 1.2;
+        }
+
+        .evidence-summary-item strong {
+          display: block;
+          color: var(--text-primary);
+          font-size: 1.1rem;
+          margin-top: 0.25rem;
+        }
+
+        .btn-ai-load {
+          width: 100%;
+          border: 1px solid rgba(20, 184, 166, 0.32);
+          background: rgba(20, 184, 166, 0.12);
+          color: var(--text-primary);
+          border-radius: 8px;
+          padding: 0.7rem 0.85rem;
+          font-size: 0.78rem;
+          font-weight: 700;
+          cursor: pointer;
+          margin-bottom: 0.9rem;
+        }
+
+        .btn-ai-load.secondary {
+          background: rgba(37, 99, 235, 0.11);
+          border-color: rgba(37, 99, 235, 0.28);
+        }
+
+        .btn-ai-load:disabled {
+          opacity: 0.72;
+          cursor: progress;
+        }
+
+        .logs-container {
+          display: flex;
+          flex-direction: column;
+          gap: 0.8rem;
+        }
+
+        .no-logs {
+          color: var(--text-muted);
+          border: 1px dashed var(--border-light);
+          border-radius: 8px;
+          padding: 0.9rem;
+          font-size: 0.78rem;
+          line-height: 1.45;
+        }
+
+        .log-card {
+          border: 1px solid var(--border-light);
+          background: rgba(255, 255, 255, 0.03);
+          border-radius: 8px;
+          padding: 0.85rem;
+        }
+
+        .log-card.success {
+          border-color: rgba(16, 185, 129, 0.34);
+          background: rgba(16, 185, 129, 0.07);
+        }
+
+        .log-card.planning {
+          border-color: rgba(234, 179, 8, 0.28);
+          background: rgba(234, 179, 8, 0.06);
+        }
+
+        .log-header {
+          display: flex;
+          justify-content: space-between;
+          gap: 0.6rem;
+          align-items: center;
+          margin-bottom: 0.7rem;
+        }
+
+        .log-time {
+          color: var(--text-muted);
+          font-size: 0.68rem;
+        }
+
+        .log-status-badge {
+          border: 1px solid var(--border-light);
+          border-radius: 999px;
+          padding: 0.14rem 0.45rem;
+          font-size: 0.62rem;
+          font-weight: 700;
+          color: var(--text-secondary);
+        }
+
+        .log-status-badge.success {
+          border-color: rgba(16, 185, 129, 0.35);
+          color: var(--color-concluido);
+        }
+
+        .log-status-badge.planning {
+          border-color: rgba(234, 179, 8, 0.35);
+          color: var(--color-exposicao);
+        }
+
+        .log-body {
+          display: flex;
+          flex-direction: column;
+          gap: 0.55rem;
+          font-size: 0.74rem;
+          color: var(--text-secondary);
+          line-height: 1.4;
+        }
+
+        .log-goal {
+          color: var(--text-primary);
+        }
+
+        .evidence-bars {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0.5rem;
+        }
+
+        .evidence-bars div {
+          background: rgba(255, 255, 255, 0.04);
+          border-radius: 6px;
+          padding: 0.45rem;
+        }
+
+        .evidence-bars span {
+          display: block;
+          color: var(--text-muted);
+          font-size: 0.64rem;
+        }
+
+        .evidence-bars strong {
+          display: block;
+          color: var(--text-primary);
+          font-size: 0.9rem;
+          margin-top: 0.14rem;
+        }
+
+        .ner-tokens-list {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.3rem;
+          margin-top: 0.35rem;
+        }
+
+        .ner-token {
+          border: 1px solid var(--border-light);
+          border-radius: 999px;
+          color: var(--text-muted);
+          padding: 0.12rem 0.35rem;
+          font-size: 0.62rem;
+        }
+
+        .log-paragraph {
+          border-left: 2px solid rgba(20, 184, 166, 0.4);
+          padding-left: 0.55rem;
+        }
+
+        .log-paragraph .label {
+          display: block;
+          color: var(--text-muted);
+          font-size: 0.64rem;
+          margin-bottom: 0.15rem;
+        }
+
+        .log-paragraph .text {
+          color: var(--text-secondary);
+        }
+
+        /* Manuscript Explorer Section */
+        .manuscript-explorer-section {
+          display: flex;
+          flex-direction: column;
+          gap: 0.6rem;
+          border-bottom: 1px solid var(--border-light);
+          padding-bottom: 1.2rem;
+          margin-bottom: 1.2rem;
+        }
+
+        .explorer-title {
+          font-family: var(--font-display);
+          font-size: 0.95rem;
+          font-weight: 600;
+          color: var(--text-primary);
+        }
+
+        .add-chapter-form {
+          display: flex;
+          gap: 0.4rem;
+        }
+
+        .add-chapter-form input {
+          flex: 1;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid var(--border-light);
+          border-radius: 6px;
+          padding: 0.4rem 0.6rem;
+          color: var(--text-primary);
+          font-size: 0.75rem;
+          outline: none;
+        }
+
+        .add-chapter-form button {
+          background: linear-gradient(135deg, #14b8a6 0%, #2563eb 100%);
+          border: none;
+          color: white;
+          width: 28px;
+          height: 28px;
+          border-radius: 6px;
+          font-weight: bold;
+          cursor: pointer;
+        }
+
+        .manuscripts-list {
+          display: flex;
+          flex-direction: column;
+          gap: 0.4rem;
+          max-height: 180px;
+          overflow-y: auto;
+        }
+
+        .chapter-list-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid transparent;
+          border-radius: 6px;
+          padding: 0.5rem 0.7rem;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .chapter-list-item:hover {
+          background: rgba(255, 255, 255, 0.05);
+        }
+
+        .chapter-list-item.active {
+          background: rgba(20, 184, 166, 0.08);
+          border-color: rgba(20, 184, 166, 0.24);
+        }
+
+        .chapter-item-details {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          overflow: hidden;
+          flex: 1;
+        }
+
+        .chapter-title-text {
+          font-size: 0.8rem;
+          color: var(--text-secondary);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .chapter-list-item.active .chapter-title-text {
+          color: var(--text-primary);
+          font-weight: 600;
+        }
+
+        .rename-input {
+          background: rgba(255, 255, 255, 0.1);
+          border: 1px solid var(--color-andamento);
+          border-radius: 4px;
+          color: var(--text-primary);
+          font-size: 0.8rem;
+          padding: 0.2rem 0.4rem;
+          outline: none;
+          width: 150px;
+        }
+
+        .chapter-badges {
+          display: flex;
+          align-items: center;
+          gap: 0.3rem;
+        }
+
+        .status-badge-tag {
+          font-size: 0.55rem;
+          font-weight: bold;
+          padding: 0.1rem 0.3rem;
+          border-radius: 3px;
+          text-transform: uppercase;
+        }
+
+        .status-badge-tag.rascunho {
+          background: rgba(249, 115, 22, 0.15);
+          color: rgb(249, 115, 22);
+        }
+
+        .status-badge-tag.revisao {
+          background: rgba(59, 130, 246, 0.15);
+          color: rgb(59, 130, 246);
+        }
+
+        .status-badge-tag.finalizado {
+          background: rgba(16, 185, 129, 0.15);
+          color: rgb(16, 185, 129);
+        }
+
+        .lock-badge-icon {
+          font-size: 0.65rem;
+        }
+
+        .chapter-actions {
+          display: flex;
+          gap: 0.3rem;
+          opacity: 0;
+          transition: opacity 0.2s;
+        }
+
+        .chapter-list-item:hover .chapter-actions {
+          opacity: 1;
+        }
+
+        .action-btn {
+          background: transparent;
+          border: none;
+          color: var(--text-muted);
+          font-size: 0.75rem;
+          cursor: pointer;
+          padding: 0.1rem;
+        }
+
+        .action-btn:hover {
+          color: var(--text-primary);
+        }
+
+        .action-btn.delete:hover {
+          color: var(--color-inconsistente);
+        }
+
+        /* Document Header Controls */
+        .editor-document-header-controls {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0.8rem 1.2rem;
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid var(--border-light);
+          margin-bottom: 1.2rem;
+        }
+
+        .document-info h3 {
+          font-family: var(--font-display);
+          font-size: 0.95rem;
+          font-weight: 600;
+          color: var(--text-primary);
+        }
+
+        .last-saved {
+          font-size: 0.65rem;
+          color: var(--text-muted);
+        }
+
+        .document-actions-controls {
+          display: flex;
+          align-items: center;
+          gap: 1.2rem;
+        }
+
+        .status-selector-group {
+          display: flex;
+          align-items: center;
+          gap: 0.4rem;
+          font-size: 0.75rem;
+          color: var(--text-secondary);
+        }
+
+        .status-selector-group select {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid var(--border-light);
+          border-radius: 6px;
+          color: var(--text-primary);
+          padding: 0.3rem 0.5rem;
+          outline: none;
+          cursor: pointer;
+        }
+
+        .btn-lock-toggle {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid var(--border-light);
+          color: var(--text-secondary);
+          border-radius: 6px;
+          padding: 0.3rem 0.6rem;
+          font-size: 0.75rem;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-lock-toggle.locked {
+          border-color: rgba(16, 185, 129, 0.3);
+          color: var(--color-concluido);
+          background: rgba(16, 185, 129, 0.04);
+        }
+
+        .btn-lock-toggle:hover {
+          background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Locked Banner */
+        .locked-banner {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: rgba(220, 38, 38, 0.08);
+          border: 1px solid rgba(220, 38, 38, 0.3);
+          color: rgb(248, 113, 113);
+          padding: 0.6rem 1rem;
+          border-radius: 8px;
+          font-size: 0.8rem;
+          margin-bottom: 1.2rem;
+          animation: slideDown 0.3s;
+        }
+
+        @keyframes slideDown {
+          from { transform: translateY(-10px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+
+        .btn-banner-unlock {
+          background: rgb(220, 38, 38);
+          border: none;
+          color: white;
+          padding: 0.3rem 0.8rem;
+          border-radius: 4px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          cursor: pointer;
+        }
+
+        /* Streak stats styling */
+        .streak-stats-card {
+          padding: 1rem;
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid var(--border-light);
+          margin-bottom: 1.5rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.8rem;
+        }
+
+        .streak-stats-header {
+          display: flex;
+          align-items: center;
+          gap: 0.8rem;
+        }
+
+        .streak-icon {
+          font-size: 2.2rem;
+          filter: drop-shadow(0 2px 8px rgba(239, 68, 68, 0.4));
+          animation: flamePulse 1.2s infinite ease-in-out alternate;
+        }
+
+        .streak-icon.golden {
+          filter: drop-shadow(0 2px 10px rgba(245, 158, 11, 0.6));
+        }
+
+        .streak-icon.deep-red {
+          filter: drop-shadow(0 2px 12px rgba(220, 38, 38, 0.8));
+        }
+
+        @keyframes flamePulse {
+          0% { transform: scale(0.95) rotate(-3deg); }
+          100% { transform: scale(1.05) rotate(3deg); }
+        }
+
+        .streak-count {
+          font-family: var(--font-display);
+          font-size: 1.1rem;
+          font-weight: 700;
+          color: var(--text-primary);
+        }
+
+        .streak-record {
+          font-size: 0.75rem;
+          color: var(--text-muted);
+        }
+
+        .btn-configure-goals {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid var(--border-light);
+          color: var(--text-primary);
+          padding: 0.4rem;
+          border-radius: 6px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+          text-align: center;
+        }
+
+        .btn-configure-goals:hover {
+          background: rgba(255, 255, 255, 0.1);
+        }
+
+        .scientific-basis-card,
+        .next-step-card {
+          border: 1px solid rgba(20, 184, 166, 0.18);
+          background: rgba(10, 40, 38, 0.22);
+          border-radius: 8px;
+          padding: 0.85rem;
+          margin-bottom: 0.9rem;
+        }
+
+        .basis-card-header {
+          display: flex;
+          justify-content: space-between;
+          gap: 0.8rem;
+          align-items: center;
+          margin-bottom: 0.7rem;
+        }
+
+        .basis-card-header strong,
+        .next-step-card strong {
+          color: var(--text-primary);
+          font-size: 0.86rem;
+          line-height: 1.25;
+        }
+
+        .basis-kicker {
+          color: var(--color-andamento);
+          font-size: 0.66rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+        }
+
+        .basis-method-list {
+          display: flex;
+          flex-direction: column;
+          gap: 0.55rem;
+        }
+
+        .basis-method-row {
+          border-top: 1px solid rgba(255, 255, 255, 0.06);
+          padding-top: 0.55rem;
+        }
+
+        .basis-method-row span {
+          color: var(--text-primary);
+          font-size: 0.76rem;
+          font-weight: 700;
+        }
+
+        .basis-method-row p,
+        .next-step-card p {
+          color: var(--text-muted);
+          font-size: 0.72rem;
+          line-height: 1.45;
+          margin-top: 0.2rem;
+        }
+
+        .next-step-card {
+          border-color: rgba(234, 179, 8, 0.24);
+          background: rgba(72, 54, 10, 0.2);
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+        }
+
+        /* Footer Progress bar styling */
+        .editor-progress-footer {
+          margin-top: 1.5rem;
+          padding: 1rem;
+          border-radius: 8px;
+          background: rgba(18, 22, 27, 0.78);
+          border: 1px solid var(--border-light);
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .progress-info {
+          display: flex;
+          justify-content: space-between;
+          font-size: 0.8rem;
+          font-weight: 600;
+        }
+
+        .progress-title {
+          color: var(--text-secondary);
+        }
+
+        .progress-percentage {
+          color: var(--color-andamento);
+        }
+
+        .progress-track {
+          background: rgba(255, 255, 255, 0.08);
+          height: 8px;
+          border-radius: 4px;
+          overflow: hidden;
+        }
+
+        .progress-fill {
+          height: 100%;
+          background: linear-gradient(90deg, var(--color-andamento) 0%, #3b82f6 100%);
+          border-radius: 4px;
+          transition: width 0.3s ease;
+        }
+
+        .progress-fill.completed {
+          background: linear-gradient(90deg, var(--color-concluido) 0%, #059669 100%);
+        }
+
+        .session-stats {
+          display: flex;
+          justify-content: space-between;
+          font-size: 0.7rem;
+          color: var(--text-muted);
+          margin-top: 0.2rem;
+        }
+
+        /* Celebration popup styling */
+        .celebration-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.6);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          animation: fadeIn 0.3s;
+        }
+
+        .celebration-card {
+          padding: 2.5rem;
+          border-radius: 16px;
+          border: 1px solid rgba(16, 185, 129, 0.4);
+          background: rgba(10, 20, 15, 0.95);
+          text-align: center;
+          max-width: 400px;
+          animation: popUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          box-shadow: 0 10px 30px rgba(16, 185, 129, 0.25);
+        }
+
+        .celebration-emoji {
+          font-size: 3.5rem;
+          display: inline-block;
+          animation: wobble 1s infinite alternate;
+        }
+
+        @keyframes wobble {
+          0% { transform: rotate(-8deg); }
+          100% { transform: rotate(8deg); }
+        }
+
+        .celebration-card h3 {
+          font-family: var(--font-display);
+          font-size: 1.5rem;
+          color: var(--color-concluido);
+          margin-top: 1rem;
+        }
+
+        .celebration-card p {
+          font-size: 0.9rem;
+          color: var(--text-secondary);
+          margin-top: 0.5rem;
+        }
+
+        /* Settings modal styling */
+        .settings-modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.7);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1100;
+        }
+
+        .settings-modal-content {
+          width: 460px;
+          background: rgba(15, 15, 23, 0.95);
+          border: 1px solid var(--border-light);
+          border-radius: 12px;
+          padding: 2rem;
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        .settings-modal-tabs {
+          display: flex;
+          border-bottom: 1px solid var(--border-light);
+          margin-bottom: 1.5rem;
+          gap: 1rem;
+        }
+
+        .settings-tab-btn {
+          background: transparent;
+          border: none;
+          color: var(--text-muted);
+          font-family: var(--font-display);
+          font-size: 0.9rem;
+          font-weight: 600;
+          padding-bottom: 0.6rem;
+          cursor: pointer;
+          border-bottom: 2px solid transparent;
+          transition: all 0.2s;
+        }
+
+        .settings-tab-btn.active {
+          color: var(--color-andamento);
+          border-bottom-color: var(--color-andamento);
+        }
+
+        .settings-form {
+          display: flex;
+          flex-direction: column;
+          gap: 1.2rem;
+        }
+
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.4rem;
+        }
+
+        .form-group label {
+          font-size: 0.8rem;
+          font-weight: 600;
+          color: var(--text-secondary);
+        }
+
+        .form-group select, .form-group input[type="number"], .form-group input[type="date"] {
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid var(--border-light);
+          border-radius: 6px;
+          padding: 0.6rem;
+          color: var(--text-primary);
+          outline: none;
+        }
+
+        .off-days-checkboxes {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 0.6rem;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid var(--border-light);
+          padding: 0.8rem;
+          border-radius: 6px;
+        }
+
+        .off-day-label {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 0.75rem;
+          cursor: pointer;
+        }
+
+        .off-day-label input {
+          cursor: pointer;
+        }
+
+        .form-actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 1rem;
+          margin-top: 0.5rem;
+        }
+
+        .btn-cancel {
+          background: transparent;
+          border: 1px solid var(--border-light);
+          color: var(--text-secondary);
+          padding: 0.6rem 1.2rem;
+          border-radius: 6px;
+          cursor: pointer;
+        }
+
+        .btn-save {
+          background: linear-gradient(135deg, #14b8a6 0%, #2563eb 100%);
+          border: none;
+          color: white;
+          padding: 0.6rem 1.2rem;
+          border-radius: 6px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+
+        /* Shortcuts Panel CSS */
+        .shortcuts-settings-panel {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .shortcuts-info {
+          font-size: 0.75rem;
+          color: var(--text-muted);
+        }
+
+        .shortcuts-list {
+          display: flex;
+          flex-direction: column;
+          gap: 0.8rem;
+          margin: 0.5rem 0;
+        }
+
+        .shortcut-setting-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid var(--border-light);
+          padding: 0.6rem 1rem;
+          border-radius: 8px;
+        }
+
+        .shortcut-label {
+          font-size: 0.8rem;
+          color: var(--text-secondary);
+          font-weight: 500;
+        }
+
+        .btn-capture-shortcut {
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid var(--border-light);
+          color: var(--color-andamento);
+          padding: 0.4rem 0.8rem;
+          border-radius: 6px;
+          font-family: monospace;
+          font-size: 0.8rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-capture-shortcut.capturing {
+          background: rgba(20, 184, 166, 0.1);
+          border-color: var(--color-andamento);
+          color: var(--color-andamento);
+          animation: capturingPulse 1s infinite alternate;
+        }
+
+        @keyframes capturingPulse {
+          from { opacity: 0.7; }
+          to { opacity: 1; }
+        }
+
+        .shortcut-error {
+          font-size: 0.75rem;
+          color: var(--color-inconsistente);
+          margin-top: 0.2rem;
+        }
+
+        /* Focus mode and line focus CSS overrides */
+        .focus-mode-active .navbar, 
+        .focus-mode-active .editor-side-panel {
+          display: none !important;
+        }
+
+        .focus-mode-active .editor-workspace {
+          max-width: 800px;
+          margin: 0 auto;
+          padding: 3rem 1.5rem;
+          height: 100vh;
+          overflow: hidden;
+          background: #07070a;
+        }
+
+        .focus-mode-active .tiptap-editor-container {
+          background: transparent;
+          border: none;
+          padding: 0;
+        }
+
+        .focus-mode-active .editor-progress-footer {
+          margin-top: 2rem;
+          background: rgba(255, 255, 255, 0.02);
+          border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .floating-btn-exit-focus {
+          position: fixed;
+          top: 1.5rem;
+          right: 2rem;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid var(--border-light);
+          color: var(--text-muted);
+          padding: 0.5rem 1rem;
+          border-radius: 8px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          cursor: pointer;
+          z-index: 100;
+          transition: all 0.2s;
+        }
+
+        .floating-btn-exit-focus:hover {
+          background: rgba(255, 255, 255, 0.1);
+          color: var(--text-primary);
+        }
+
+        /* Line focus mode implementation */
+        .line-focus-mode .tiptap-editor-content p {
+          opacity: 0.18;
+          transition: opacity 0.25s ease-in-out;
+        }
+
+        .line-focus-mode .tiptap-editor-content p:focus-within {
+          opacity: 1;
+        }
+
+        @keyframes popUp {
+          0% { transform: scale(0.8); opacity: 0; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `}</style>
+    </div>
+  );
+}
