@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { readProjects, writeProjects, verifyToken } from '../../../services/auth-backend';
+import { 
+  readProjects, 
+  writeProjects, 
+  verifyToken, 
+  readCollaborators, 
+  readUsers 
+} from '../../../services/auth-backend';
 import { Project } from '@eldritch/domain';
 
-// Fetch user's projects
+// Fetch user's projects (owned and shared collaborations)
 export async function GET(req: NextRequest) {
   try {
     const token = cookies().get('token')?.value;
@@ -17,10 +23,49 @@ export async function GET(req: NextRequest) {
     }
 
     const projects = readProjects();
+    const collaborators = readCollaborators();
+
+    // 1. Projects owned by the user
     const userProjects = projects.filter(p => p.ownerId === payload.id);
 
+    // 2. Shared projects where the user accepted the collaboration invite
+    const acceptedShares = collaborators.filter(c => 
+      c.userEmail.toLowerCase() === payload.email.toLowerCase() && 
+      c.status === 'ACEITO'
+    );
+    const sharedProjectIds = acceptedShares.map(c => c.projectId);
+    const sharedProjects = projects.filter(p => sharedProjectIds.includes(p.id));
+
+    // Merge owned and shared projects
+    const allProjects = [...userProjects, ...sharedProjects];
+
+    // 3. Pending invitations that haven't expired (+7 days check)
+    const now = Date.now();
+    const pendingShares = collaborators.filter(c => 
+      c.userEmail.toLowerCase() === payload.email.toLowerCase() && 
+      c.status === 'PENDENTE' &&
+      new Date(c.expiresAt).getTime() > now
+    );
+
+    const users = readUsers();
+    const pendingInvites = pendingShares.map(share => {
+      const proj = projects.find(p => p.id === share.projectId);
+      const owner = users.find(u => u.id === proj?.ownerId);
+      return {
+        inviteId: share.id,
+        projectId: share.projectId,
+        projectName: proj ? proj.name : 'Projeto Desconhecido',
+        projectGenre: proj ? proj.genre : 'Desconhecido',
+        permission: share.permission,
+        invitedBy: owner ? owner.name : 'Dono do Projeto',
+        invitedAt: share.invitedAt,
+        expiresAt: share.expiresAt
+      };
+    });
+
     return NextResponse.json({
-      projects: userProjects
+      projects: allProjects,
+      pendingInvites
     });
   } catch (err) {
     console.error('Fetch projects error:', err);

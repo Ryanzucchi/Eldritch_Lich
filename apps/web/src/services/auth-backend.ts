@@ -1,12 +1,13 @@
 import { scryptSync, randomBytes, createHmac } from 'crypto';
 import fs from 'fs';
 import path from 'path';
-import { User, ResetToken, Project, Manuscript } from '@eldritch/domain';
+import { User, ResetToken, Project, Manuscript, ProjectCollaborator } from '@eldritch/domain';
 
 const USERS_FILE_PATH = path.join(process.cwd(), 'src/db/users.json');
 const RESET_TOKENS_FILE_PATH = path.join(process.cwd(), 'src/db/reset_tokens.json');
 const PROJECTS_FILE_PATH = path.join(process.cwd(), 'src/db/projects.json');
 const MANUSCRIPTS_FILE_PATH = path.join(process.cwd(), 'src/db/manuscripts.json');
+const COLLABORATORS_FILE_PATH = path.join(process.cwd(), 'src/db/collaborators.json');
 const JWT_SECRET = process.env.JWT_SECRET || 'eldritch-super-secret-key-12345';
 
 // Ensure the db folder exists
@@ -103,6 +104,28 @@ export function readManuscripts(): Manuscript[] {
 export function writeManuscripts(manuscripts: Manuscript[]) {
   ensureDbDir();
   fs.writeFileSync(MANUSCRIPTS_FILE_PATH, JSON.stringify(manuscripts, null, 2));
+}
+
+// Read project collaborators from local JSON file
+export function readCollaborators(): ProjectCollaborator[] {
+  ensureDbDir();
+  if (!fs.existsSync(COLLABORATORS_FILE_PATH)) {
+    fs.writeFileSync(COLLABORATORS_FILE_PATH, JSON.stringify([]));
+    return [];
+  }
+  try {
+    const data = fs.readFileSync(COLLABORATORS_FILE_PATH, 'utf8');
+    return JSON.parse(data);
+  } catch (err) {
+    console.error('Error reading collaborators file:', err);
+    return [];
+  }
+}
+
+// Write project collaborators to local JSON file
+export function writeCollaborators(collaborators: ProjectCollaborator[]) {
+  ensureDbDir();
+  fs.writeFileSync(COLLABORATORS_FILE_PATH, JSON.stringify(collaborators, null, 2));
 }
 
 // Hash password using Node scrypt

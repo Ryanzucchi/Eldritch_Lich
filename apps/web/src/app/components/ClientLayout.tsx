@@ -15,7 +15,9 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
     selectProject, 
     createProject, 
     logout,
-    hideSidebar
+    hideSidebar,
+    refreshSession,
+    pendingInvites
   } = useApp();
 
   const [showDropdown, setShowDropdown] = useState(false);
@@ -25,6 +27,119 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
   const [projectVisibility, setProjectVisibility] = useState<'PRIVADO' | 'COMPARTILHADO'>('PRIVADO');
   const [modalError, setModalError] = useState<string | null>(null);
   const [modalLoading, setModalLoading] = useState(false);
+
+  // Collaboration States
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [collaborators, setCollaborators] = useState<any[]>([]);
+  const [shareEmail, setShareEmail] = useState('');
+  const [sharePermission, setSharePermission] = useState('LEITOR');
+  const [shareError, setShareError] = useState<string | null>(null);
+  const [shareSuccess, setShareSuccess] = useState<string | null>(null);
+  const [shareLoading, setShareLoading] = useState(false);
+
+  const handleOpenShareModal = async () => {
+    if (!activeProject) return;
+    setShowShareModal(true);
+    setShareError(null);
+    setShareSuccess(null);
+    loadCollaborators();
+  };
+
+  const loadCollaborators = async () => {
+    if (!activeProject) return;
+    try {
+      const res = await fetch(`/api/projects/share?projectId=${activeProject.id}`);
+      const data = await res.json();
+      if (res.ok && data.collaborators) {
+        setCollaborators(data.collaborators);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar colaboradores:', err);
+    }
+  };
+
+  const handleAddCollaborator = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeProject || !shareEmail) return;
+    setShareError(null);
+    setShareSuccess(null);
+    setShareLoading(true);
+
+    try {
+      const res = await fetch('/api/projects/share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId: activeProject.id,
+          email: shareEmail,
+          permission: sharePermission
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+
+      setShareSuccess('Convite enviado com sucesso!');
+      setShareEmail('');
+      setSharePermission('LEITOR');
+      loadCollaborators();
+    } catch (err: any) {
+      setShareError(err.message || 'Erro ao enviar convite.');
+    } finally {
+      setShareLoading(false);
+    }
+  };
+
+  const handleRemoveCollaborator = async (collaboratorId: string) => {
+    if (!confirm('Deseja realmente remover este colaborador do projeto?')) return;
+    try {
+      const res = await fetch('/api/projects/share/remove', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ collaboratorId })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+
+      loadCollaborators();
+    } catch (err: any) {
+      alert(err.message || 'Erro ao remover colaborador.');
+    }
+  };
+
+  const handleAcceptInvite = async (inviteId: string) => {
+    try {
+      const res = await fetch('/api/projects/share/accept', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inviteId })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      
+      await refreshSession();
+      alert('Convite aceito com sucesso! O projeto agora está na sua lista.');
+      window.location.reload();
+    } catch (err: any) {
+      alert(err.message || 'Erro ao aceitar convite.');
+    }
+  };
+
+  const handleRejectInvite = async (inviteId: string) => {
+    try {
+      const res = await fetch('/api/projects/share/reject', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inviteId })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      
+      await refreshSession();
+      alert('Convite recusado.');
+    } catch (err: any) {
+      alert(err.message || 'Erro ao recusar convite.');
+    }
+  };
 
   // If we are on the auth pages, do not render the dashboard wrapper
   const isAuthPage = pathname.startsWith('/auth');
@@ -179,6 +294,55 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
+        {/* Share Project Trigger (Only for Owner) */}
+        {user && activeProject && activeProject.ownerId === user.id && (
+          <button 
+            type="button" 
+            className="btn-share-project-sidebar glass"
+            onClick={handleOpenShareModal}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+              <polyline points="16 6 12 2 8 6"></polyline>
+              <line x1="12" y1="2" x2="12" y2="15"></line>
+            </svg>
+            Compartilhar Manuscrito
+          </button>
+        )}
+
+        {/* Pending Invites Section */}
+        {pendingInvites && pendingInvites.length > 0 && (
+          <div className="pending-invites-section">
+            <div className="section-title">Convites de Equipe ({pendingInvites.length})</div>
+            <div className="invites-list">
+              {pendingInvites.map(invite => (
+                <div key={invite.inviteId} className="invite-item glass">
+                  <div className="invite-details">
+                    <span className="invite-project">{invite.projectName}</span>
+                    <span className="invite-meta">De: {invite.invitedBy} • {invite.permission.toLowerCase()}</span>
+                  </div>
+                  <div className="invite-actions">
+                    <button 
+                      onClick={() => handleAcceptInvite(invite.inviteId)} 
+                      className="btn-invite-accept" 
+                      title="Aceitar Convite"
+                    >
+                      ✓
+                    </button>
+                    <button 
+                      onClick={() => handleRejectInvite(invite.inviteId)} 
+                      className="btn-invite-reject" 
+                      title="Recusar Convite"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Navigation links */}
         <nav className="sidebar-nav">
           <Link href="/editor" className={`nav-link-item ${pathname === '/editor' ? 'active' : ''}`}>
@@ -330,6 +494,126 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Share Project Modal */}
+      {showShareModal && activeProject && (
+        <div className="modal-overlay animate-fade-in">
+          <div className="modal-card glass share-modal">
+            <div className="modal-header">
+              <h3>Compartilhar Projeto: {activeProject.name}</h3>
+              <button 
+                type="button" 
+                className="close-modal" 
+                onClick={() => { setShowShareModal(false); setShareError(null); setShareSuccess(null); }}
+              >&times;</button>
+            </div>
+            
+            <div className="share-modal-body">
+              {/* Form to add collaborator */}
+              <form onSubmit={handleAddCollaborator} className="share-add-form">
+                <div className="form-group">
+                  <label htmlFor="share-email">E-mail do Colaborador</label>
+                  <div className="share-input-row">
+                    <input
+                      id="share-email"
+                      type="email"
+                      value={shareEmail}
+                      onChange={(e) => setShareEmail(e.target.value)}
+                      placeholder="colaborador@email.com"
+                      required
+                    />
+                    <select
+                      value={sharePermission}
+                      onChange={(e) => setSharePermission(e.target.value)}
+                      className="share-select-permission"
+                    >
+                      <option value="LEITOR">Leitor</option>
+                      <option value="EDITOR">Editor</option>
+                      <option value="ADMINISTRADOR">Administrador</option>
+                    </select>
+                    <button 
+                      type="submit" 
+                      className="btn-share-invite" 
+                      disabled={shareLoading}
+                    >
+                      {shareLoading ? 'Enviando...' : 'Convidar'}
+                    </button>
+                  </div>
+                </div>
+              </form>
+
+              {shareError && <div className="alert alert-error animate-fade-in">{shareError}</div>}
+              {shareSuccess && <div className="alert alert-success animate-fade-in">{shareSuccess}</div>}
+
+              {/* Collaborators List */}
+              <div className="collaborators-list-section">
+                <h4>Colaboradores do Projeto</h4>
+                <div className="collaborators-table-wrapper">
+                  {collaborators.length === 0 ? (
+                    <p className="empty-collaborators">Este projeto ainda não foi compartilhado com ninguém.</p>
+                  ) : (
+                    <table className="collaborators-table">
+                      <thead>
+                        <tr>
+                          <th>E-mail</th>
+                          <th>Permissão</th>
+                          <th>Status</th>
+                          <th>Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {collaborators.map(c => {
+                          const now = Date.now();
+                          const isExpired = c.status === 'PENDENTE' && new Date(c.expiresAt).getTime() < now;
+                          
+                          return (
+                            <tr key={c.id}>
+                              <td>{c.userEmail}</td>
+                              <td>
+                                <span className={`badge-permission ${c.permission}`}>
+                                  {c.permission.toLowerCase()}
+                                </span>
+                              </td>
+                              <td>
+                                {isExpired ? (
+                                  <span className="status-badge expired">Expirado</span>
+                                ) : (
+                                  <span className={`status-badge ${c.status.toLowerCase()}`}>
+                                    {c.status.toLowerCase()}
+                                  </span>
+                                )}
+                              </td>
+                              <td>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveCollaborator(c.id)}
+                                  className="btn-remove-collab"
+                                  title="Remover colaborador"
+                                >
+                                  Remover
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="modal-actions">
+              <button 
+                type="button" 
+                className="btn-modal-close" 
+                onClick={() => { setShowShareModal(false); setShareError(null); setShareSuccess(null); }}
+              >
+                Fechar
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -824,6 +1108,313 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
           background: rgba(239, 68, 68, 0.1);
           border: 1px solid rgba(239, 68, 68, 0.2);
           color: #f87171;
+        }
+
+        .alert-success {
+          padding: 0.8rem 1rem;
+          border-radius: 10px;
+          font-size: 0.875rem;
+          background: rgba(16, 185, 129, 0.1);
+          border: 1px solid rgba(16, 185, 129, 0.2);
+          color: #34d399;
+          margin-bottom: 1rem;
+        }
+
+        .btn-share-project-sidebar {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          padding: 0.75rem;
+          margin: 0.5rem 0 1rem 0;
+          background: rgba(20, 184, 166, 0.08);
+          border: 1px solid rgba(20, 184, 166, 0.2);
+          border-radius: 8px;
+          color: #2dd4bf;
+          font-weight: 600;
+          font-size: 0.85rem;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-share-project-sidebar:hover {
+          background: rgba(20, 184, 166, 0.15);
+          border-color: rgba(20, 184, 166, 0.4);
+          color: #2dd4bf;
+          transform: translateY(-1px);
+        }
+
+        .pending-invites-section {
+          padding: 0 0.5rem;
+          margin-bottom: 1rem;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+          padding-bottom: 1rem;
+        }
+
+        .pending-invites-section .section-title {
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: #9ca3af;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+          margin-bottom: 0.5rem;
+        }
+
+        .invites-list {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .invite-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0.6rem 0.8rem;
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .invite-details {
+          display: flex;
+          flex-direction: column;
+          gap: 0.15rem;
+        }
+
+        .invite-project {
+          font-weight: 600;
+          font-size: 0.85rem;
+          color: #f3f4f6;
+        }
+
+        .invite-meta {
+          font-size: 0.7rem;
+          color: #9ca3af;
+        }
+
+        .invite-actions {
+          display: flex;
+          gap: 0.25rem;
+        }
+
+        .btn-invite-accept, .btn-invite-reject {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          border: none;
+          font-weight: bold;
+          font-size: 0.85rem;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-invite-accept {
+          background: rgba(16, 185, 129, 0.15);
+          color: #34d399;
+          border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-invite-accept:hover {
+          background: #10b981;
+          color: #ffffff;
+        }
+
+        .btn-invite-reject {
+          background: rgba(239, 68, 68, 0.15);
+          color: #f87171;
+          border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-invite-reject:hover {
+          background: #ef4444;
+          color: #ffffff;
+        }
+
+        .share-modal {
+          max-width: 550px !important;
+        }
+
+        .share-modal-body {
+          display: flex;
+          flex-direction: column;
+          gap: 1.25rem;
+        }
+
+        .share-add-form {
+          margin-bottom: 0.5rem;
+        }
+
+        .share-input-row {
+          display: flex;
+          gap: 0.5rem;
+          margin-top: 0.5rem;
+        }
+
+        .share-input-row input {
+          flex: 1;
+        }
+
+        .share-select-permission {
+          padding: 0.75rem;
+          background: rgba(0, 0, 0, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 8px;
+          color: #f3f4f6;
+          font-weight: 500;
+          outline: none;
+        }
+
+        .btn-share-invite {
+          padding: 0.75rem 1.25rem;
+          background: #14b8a6;
+          color: #050608;
+          border: none;
+          border-radius: 8px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-share-invite:hover {
+          background: #0d9488;
+          transform: translateY(-1px);
+        }
+
+        .collaborators-list-section {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .collaborators-list-section h4 {
+          font-size: 0.95rem;
+          font-weight: 600;
+          color: #f3f4f6;
+          margin: 0;
+        }
+
+        .collaborators-table-wrapper {
+          background: rgba(0, 0, 0, 0.15);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          border-radius: 8px;
+          overflow: hidden;
+        }
+
+        .empty-collaborators {
+          padding: 1.5rem;
+          text-align: center;
+          color: #9ca3af;
+          font-size: 0.85rem;
+          margin: 0;
+        }
+
+        .collaborators-table {
+          width: 100%;
+          border-collapse: collapse;
+          text-align: left;
+          font-size: 0.85rem;
+        }
+
+        .collaborators-table th, .collaborators-table td {
+          padding: 0.75rem 1rem;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .collaborators-table th {
+          background: rgba(255, 255, 255, 0.02);
+          color: #9ca3af;
+          font-weight: 600;
+        }
+
+        .collaborators-table tr:last-child td {
+          border-bottom: none;
+        }
+
+        .badge-permission {
+          display: inline-block;
+          padding: 0.15rem 0.5rem;
+          border-radius: 4px;
+          font-size: 0.7rem;
+          font-weight: 600;
+          text-transform: uppercase;
+        }
+
+        .badge-permission.LEITOR {
+          background: rgba(59, 130, 246, 0.1);
+          color: #60a5fa;
+          border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .badge-permission.EDITOR {
+          background: rgba(16, 185, 129, 0.1);
+          color: #34d399;
+          border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .badge-permission.ADMINISTRADOR {
+          background: rgba(245, 158, 11, 0.1);
+          color: #fbbf24;
+          border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .status-badge {
+          display: inline-block;
+          padding: 0.15rem 0.5rem;
+          border-radius: 4px;
+          font-size: 0.7rem;
+          font-weight: 600;
+          text-transform: capitalize;
+        }
+
+        .status-badge.pendente {
+          background: rgba(245, 158, 11, 0.1);
+          color: #fbbf24;
+        }
+
+        .status-badge.aceito {
+          background: rgba(16, 185, 129, 0.1);
+          color: #34d399;
+        }
+
+        .status-badge.expired {
+          background: rgba(239, 68, 68, 0.1);
+          color: #f87171;
+        }
+
+        .btn-remove-collab {
+          background: none;
+          border: none;
+          color: #f87171;
+          font-size: 0.8rem;
+          font-weight: 600;
+          cursor: pointer;
+          padding: 0;
+          transition: color 0.2s;
+        }
+
+        .btn-remove-collab:hover {
+          color: #ef4444;
+          text-decoration: underline;
+        }
+
+        .btn-modal-close {
+          padding: 0.75rem 1.2rem;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 8px;
+          color: #e5e7eb;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-modal-close:hover {
+          background: rgba(255, 255, 255, 0.08);
         }
       `}</style>
     </div>

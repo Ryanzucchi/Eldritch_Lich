@@ -7,3 +7,13 @@ export interface Project {
     createdAt: string;
     updatedAt: string;
 }
+export interface ProjectCollaborator {
+    id: string;
+    projectId: string;
+    userEmail: string;
+    permission: 'LEITOR' | 'EDITOR' | 'ADMINISTRADOR';
+    status: 'PENDENTE' | 'ACEITO';
+    invitedAt: string;
+    acceptedAt?: string;
+    expiresAt: string;
+}

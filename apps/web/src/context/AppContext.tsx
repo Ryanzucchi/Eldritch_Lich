@@ -30,6 +30,7 @@ interface AppContextType {
   refreshSession: () => Promise<void>;
   hideSidebar: boolean;
   setHideSidebar: (hide: boolean) => void;
+  pendingInvites: any[];
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -43,6 +44,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [loadingSession, setLoadingSession] = useState(true);
   const [hideSidebar, setHideSidebar] = useState(false);
+  const [pendingInvites, setPendingInvites] = useState<any[]>([]);
 
   // AI states
   const [isAILoaded, setIsAILoaded] = useState(false);
@@ -84,10 +86,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
             setActiveProject(current);
           }
         }
+        if (projData.pendingInvites) {
+          setPendingInvites(projData.pendingInvites);
+        } else {
+          setPendingInvites([]);
+        }
       } else {
         setUser(null);
         setProjects([]);
         setActiveProject(null);
+        setPendingInvites([]);
       }
     } catch (err) {
       console.error('Falha ao inicializar a sessão do AppContext:', err);
@@ -191,7 +199,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         logout,
         refreshSession,
         hideSidebar,
-        setHideSidebar
+        setHideSidebar,
+        pendingInvites
       }}
     >
       {children}

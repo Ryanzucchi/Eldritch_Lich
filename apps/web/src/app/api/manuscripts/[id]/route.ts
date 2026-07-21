@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { readManuscripts, writeManuscripts, verifyToken } from '../../../../services/auth-backend';
+import { 
+  readManuscripts, 
+  writeManuscripts, 
+  verifyToken,
+  readProjects,
+  readCollaborators
+} from '../../../../services/auth-backend';
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -20,12 +26,38 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     }
 
     const manuscripts = readManuscripts();
-    const updated = manuscripts.filter(m => m.id !== id);
+    const manuscript = manuscripts.find(m => m.id === id);
 
-    if (manuscripts.length === updated.length) {
+    if (!manuscript) {
       return NextResponse.json({ message: 'Manuscrito não encontrado.' }, { status: 404 });
     }
 
+    // Verify user access to the associated project
+    const projects = readProjects();
+    const project = projects.find(p => p.id === manuscript.projectId);
+
+    if (!project) {
+      return NextResponse.json({ message: 'Projeto não encontrado.' }, { status: 404 });
+    }
+
+    const collaborators = readCollaborators();
+    const isOwner = project.ownerId === payload.id;
+    const collaborator = collaborators.find(c => 
+      c.projectId === manuscript.projectId && 
+      c.userEmail.toLowerCase() === payload.email.toLowerCase() && 
+      c.status === 'ACEITO'
+    );
+
+    if (!isOwner && !collaborator) {
+      return NextResponse.json({ message: 'Acesso negado a este projeto.' }, { status: 403 });
+    }
+
+    // LEITOR (Read-only) cannot delete manuscripts
+    if (collaborator && collaborator.permission === 'LEITOR') {
+      return NextResponse.json({ message: 'Permissão insuficiente. Você tem apenas acesso de leitura neste projeto.' }, { status: 403 });
+    }
+
+    const updated = manuscripts.filter(m => m.id !== id);
     writeManuscripts(updated);
 
     return NextResponse.json({

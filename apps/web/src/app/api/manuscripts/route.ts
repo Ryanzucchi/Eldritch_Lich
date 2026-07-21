@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { readManuscripts, writeManuscripts, verifyToken, sanitizeInput } from '../../../services/auth-backend';
+import { 
+  readManuscripts, 
+  writeManuscripts, 
+  verifyToken, 
+  sanitizeInput, 
+  readProjects, 
+  readCollaborators 
+} from '../../../services/auth-backend';
 import { Manuscript } from '@eldritch/domain';
 
 // Fetch manuscripts for a project
@@ -21,6 +28,26 @@ export async function GET(req: NextRequest) {
 
     if (!projectId) {
       return NextResponse.json({ message: 'O ID do projeto é obrigatório.' }, { status: 400 });
+    }
+
+    const projects = readProjects();
+    const project = projects.find(p => p.id === projectId);
+
+    if (!project) {
+      return NextResponse.json({ message: 'Projeto não encontrado.' }, { status: 404 });
+    }
+
+    // Verify if the user is the owner or an active collaborator
+    const collaborators = readCollaborators();
+    const isOwner = project.ownerId === payload.id;
+    const isCollaborator = collaborators.some(c => 
+      c.projectId === projectId && 
+      c.userEmail.toLowerCase() === payload.email.toLowerCase() && 
+      c.status === 'ACEITO'
+    );
+
+    if (!isOwner && !isCollaborator) {
+      return NextResponse.json({ message: 'Acesso negado a este projeto.' }, { status: 403 });
     }
 
     const manuscripts = readManuscripts();
@@ -58,6 +85,31 @@ export async function POST(req: NextRequest) {
         { message: 'Dados inválidos do manuscrito.' },
         { status: 400 }
       );
+    }
+
+    // Verify project access and collaborator permission
+    const projects = readProjects();
+    const project = projects.find(p => p.id === manuscript.projectId);
+
+    if (!project) {
+      return NextResponse.json({ message: 'Projeto não encontrado.' }, { status: 404 });
+    }
+
+    const collaborators = readCollaborators();
+    const isOwner = project.ownerId === payload.id;
+    const collaborator = collaborators.find(c => 
+      c.projectId === manuscript.projectId && 
+      c.userEmail.toLowerCase() === payload.email.toLowerCase() && 
+      c.status === 'ACEITO'
+    );
+
+    if (!isOwner && !collaborator) {
+      return NextResponse.json({ message: 'Acesso negado a este projeto.' }, { status: 403 });
+    }
+
+    // LEITOR (Read-only) cannot modify manuscripts
+    if (collaborator && collaborator.permission === 'LEITOR') {
+      return NextResponse.json({ message: 'Permissão insuficiente. Você tem apenas acesso de leitura neste projeto.' }, { status: 403 });
     }
 
     // Sanitization of title and content to prevent XSS

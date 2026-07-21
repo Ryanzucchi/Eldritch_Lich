@@ -2,6 +2,28 @@
 
 Este registro lista em ordem cronológica todas as atualizações de desenvolvimento integradas a esta base de conhecimento.
 
+## [2026-07-21] (Colaboração e Segurança) - Compartilhamento de Projetos e Isolamento Multi-Tenant (UC-081, UC-418, UC-421, UC-083)
+
+### Compartilhamento e Controle de Acesso de Projetos
+*   **Convite e Permissões (UC-081):** Desenvolvido o motor de compartilhamento de projetos no monorepo. O proprietário do projeto pode abrir o modal de Gerenciamento de Colaboradores, inserir o e-mail de um colaborador cadastrado e atribuir uma permissão de acesso inicial: `LEITOR`, `EDITOR` ou `ADMINISTRADOR`.
+*   **Expiração de Convite (RNF):** Definida a validade temporal de 7 dias para convites pendentes. Convites expirados são automaticamente invalidados e limpos pela API.
+*   **Aceite/Recusa de Convites:** Os colaboradores recebem convites em tempo real no dashboard (painel de "Convites de Equipe") e podem aceitar ou recusar com botões rápidos. Ao aceitar, o projeto é integrado à Sidebar do usuário instantaneamente.
+*   **Isolamento Multi-Tenant Robusto (UC-418):** Atualizadas as APIs de manuscritos (`/api/manuscripts` e `/api/manuscripts/[id]`) para impedir que qualquer usuário sem permissão acesse ou exclua dados de projetos alheios.
+*   **Validação de Nível de Escrita:** Colaboradores atribuídos com nível de permissão `LEITOR` (read-only) são bloqueados no backend de criar, editar ou excluir manuscritos (retornando HTTP 403 Forbidden).
+
+### Código Adicionado/Modificado
+*   [types.ts](file:///home/zucchi/Projetos/Eldritch_Lich/packages/domain/src/project/types.ts) (Inclusão da interface ProjectCollaborator)
+*   [auth-backend.ts](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/services/auth-backend.ts) (Persistência local de colaboradores no banco simulado JSON)
+*   [route.ts](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/api/projects/route.ts) (Listagem de projetos compartilhados aceitos e injeção de convites pendentes)
+*   [route.ts](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/api/projects/share/route.ts) (Criação de convites de projeto e listagem de colaboradores ativos)
+*   [route.ts](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/api/projects/share/accept/route.ts) (Endpoint de aceite de convite de projeto)
+*   [route.ts](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/api/projects/share/reject/route.ts) (Endpoint de recusa de convite)
+*   [route.ts](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/api/projects/share/remove/route.ts) (Endpoint de remoção de colaborador pelo proprietário)
+*   [route.ts](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/api/manuscripts/route.ts) (Controle de privilégios de colaborador)
+*   [route.ts](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/api/manuscripts/[id]/route.ts) (Controle de deleção para read-only)
+*   [ClientLayout.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/components/ClientLayout.tsx) (Modal de gerenciamento de colaboradores, card de aceitar/rejeitar convites na Sidebar e estilos CSS)
+*   [AppContext.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/context/AppContext.tsx) (Propagação global de convites pendentes)
+
 ## [2026-07-21] (Refatoração Visual) - Design System do Dashboard, Sidebar Unificada, AppContext e Melhoria de Fluxo (UX/UI)
 
 ### Melhorias de UI/UX e Arquitetura Visual
