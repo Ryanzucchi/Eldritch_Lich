@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Navbar from '../components/Navbar';
 import { db } from '../../db/schema';
 import { MetaNode, MetaEdge, MetaStatus, propagateStatus } from '@eldritch/domain';
 
@@ -111,11 +110,7 @@ export default function KanbanPage() {
   };
 
   return (
-    <div className="layout-container">
-      {/* Top Navbar */}
-      <Navbar />
-
-      <main className="kanban-area">
+    <main className="kanban-area animate-fade-in">
         <div className="kanban-header">
           <h2>Quadro Kanban de Escrita</h2>
           <p className="subtitle">Mova os cartões para atualizar o status do outline e do manuscrito. Teclas ← e → movem cartões selecionados.</p>
@@ -229,7 +224,6 @@ export default function KanbanPage() {
             );
           })}
         </div>
-      </main>
 
       {/* Confirmation Modal for Manual completion */}
       {showConfirmModal && (
@@ -281,63 +275,9 @@ export default function KanbanPage() {
       )}
 
       <style jsx global>{`
-        .navbar {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0.8rem 2rem;
-          height: 60px;
-          z-index: 10;
-        }
-
-        .logo {
-          font-family: var(--font-display);
-          font-size: 1.5rem;
-          font-weight: 700;
-          letter-spacing: 0;
-        }
-
-        .logo span {
-          color: var(--color-andamento);
-        }
-
-        .nav-links {
-          display: flex;
-          gap: 1.5rem;
-        }
-
-        .user-menu {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-        }
-
-        .user-name {
-          font-size: 0.85rem;
-          color: var(--text-secondary);
-          font-weight: 500;
-        }
-
-        .btn-logout {
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid var(--border-light);
-          padding: 0.35rem 0.75rem;
-          border-radius: 6px;
-          font-size: 0.8rem;
-          font-weight: 600;
-          color: var(--text-primary);
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .btn-logout:hover {
-          background: rgba(239, 68, 68, 0.15);
-          border-color: rgba(239, 68, 68, 0.35);
-          color: #f87171;
-        }
-
         .kanban-area {
-          flex: 1;
+          height: 100vh;
+          width: 100%;
           padding: 2rem;
           overflow-y: auto;
           background: radial-gradient(circle at 50% 50%, rgba(15, 15, 23, 0.3) 0%, rgba(7, 7, 10, 0.95) 100%);
@@ -646,6 +586,6 @@ export default function KanbanPage() {
           color: var(--text-primary);
         }
       `}</style>
-    </div>
+    </main>
   );
 }

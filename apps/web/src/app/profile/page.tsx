@@ -3,12 +3,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useApp } from '../../context/AppContext';
 
 type ProfileTab = 'general' | 'security';
 
 export default function ProfilePage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { refreshSession } = useApp();
 
   const [activeTab, setActiveTab] = useState<ProfileTab>('general');
   const [loading, setLoading] = useState(false);
@@ -118,6 +120,7 @@ export default function ProfilePage() {
       if (data.user) {
         setSessionUser({ name: data.user.name, email: data.user.email });
       }
+      refreshSession();
       router.refresh();
     } catch (err: any) {
       setError(err.message || 'Erro de conexão.');
@@ -168,21 +171,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="layout-container animate-fade-in">
-      {/* Top Navbar */}
-      <header className="navbar glass">
-        <h1 className="logo">Eldritch<span>Lich</span></h1>
-        <nav className="nav-links">
-          <Link href="/gmn" className="nav-item">Grafo de Metas</Link>
-          <Link href="/kanban" className="nav-item">Quadro Kanban</Link>
-        </nav>
-        <div className="user-menu">
-          {sessionUser && <span className="user-name">Olá, {sessionUser.name}</span>}
-          <button onClick={handleLogout} className="btn-logout">Sair</button>
-        </div>
-      </header>
-
-      <main className="profile-area">
+    <main className="profile-area animate-fade-in">
         <div className="profile-card glass">
           <div className="profile-header-section">
             <div className="avatar-container">
@@ -345,92 +334,11 @@ export default function ProfilePage() {
             </form>
           )}
         </div>
-      </main>
 
       <style jsx global>{`
-        .layout-container {
-          display: flex;
-          flex-direction: column;
-          height: 100vh;
-        }
-
-        .navbar {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0.8rem 2rem;
-          height: 60px;
-          z-index: 10;
-        }
-
-        .logo {
-          font-family: var(--font-display);
-          font-size: 1.5rem;
-          font-weight: 700;
-          letter-spacing: 0;
-        }
-
-        .logo span {
-          color: var(--color-andamento);
-        }
-
-        .nav-links {
-          display: flex;
-          gap: 1.5rem;
-        }
-
-        .user-menu {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-        }
-
-        .user-name {
-          font-size: 0.85rem;
-          color: var(--text-secondary);
-          font-weight: 500;
-        }
-
-        .btn-logout {
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid var(--border-light);
-          padding: 0.35rem 0.75rem;
-          border-radius: 6px;
-          font-size: 0.8rem;
-          font-weight: 600;
-          color: var(--text-primary);
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .btn-logout:hover {
-          background: rgba(239, 68, 68, 0.15);
-          border-color: rgba(239, 68, 68, 0.35);
-          color: #f87171;
-        }
-
-        .nav-item {
-          font-weight: 500;
-          font-size: 0.95rem;
-          padding: 0.4rem 0.8rem;
-          border-radius: 8px;
-          transition: all 0.2s;
-          color: var(--text-secondary);
-        }
-
-        .nav-item:hover {
-          color: var(--text-primary);
-          background: rgba(255, 255, 255, 0.03);
-        }
-
-        .nav-item.active {
-          color: var(--color-andamento);
-          background: rgba(20, 184, 166, 0.08);
-          font-weight: 600;
-        }
-
         .profile-area {
-          flex: 1;
+          height: 100vh;
+          width: 100%;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -655,6 +563,6 @@ export default function ProfilePage() {
           border-color: var(--text-secondary);
         }
       `}</style>
-    </div>
+    </main>
   );
 }

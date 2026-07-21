@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import Navbar from '../components/Navbar';
+import { useApp } from '../../context/AppContext';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { db } from '../../db/schema';
@@ -88,11 +88,15 @@ export default function EditorComponent() {
   const lastSnapshotTimeRef = useRef<number>(Date.now());
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // IA Local State
-  const [isAILoaded, setIsAILoaded] = useState(false);
-  const [isAILoading, setIsAILoading] = useState(false);
-  const [aiLoadProgress, setAiLoadProgress] = useState(0);
-  const [aiLoadStatus, setAiLoadStatus] = useState('');
+  // IA Local State (Carregado globalmente no AppContext)
+  const { 
+    isAILoaded, 
+    isAILoading, 
+    aiLoadProgress, 
+    aiLoadStatus, 
+    loadAI: handleLoadAI,
+    setHideSidebar
+  } = useApp();
 
   // Metas de Produtividade State
   const [wordsToday, setWordsToday] = useState(0);
@@ -595,6 +599,17 @@ export default function EditorComponent() {
     }
   }, [activeManuscript?.id, editor]);
 
+  useEffect(() => {
+    if (isAILoaded && editor) {
+      runMMSAnalysis(editor.getText());
+    }
+  }, [isAILoaded, editor]);
+
+  useEffect(() => {
+    setHideSidebar(isFocusMode);
+    return () => setHideSidebar(false);
+  }, [isFocusMode, setHideSidebar]);
+
   // Handle active status toggle
   const handleUpdateStatus = async (status: 'RASCUNHO' | 'REVISAO' | 'FINALIZADO') => {
     if (!activeManuscript) return;
@@ -725,39 +740,7 @@ export default function EditorComponent() {
     );
   };
 
-  // Load local AI models
-  const handleLoadAI = async () => {
-    setIsAILoading(true);
-    setAiLoadStatus('Carregando modelos de IA...');
-    
-    const progressHandler = (payload: ProgressPayload) => {
-      if (payload.progress !== undefined) {
-        setAiLoadProgress(Math.round(payload.progress));
-        setAiLoadStatus(
-          payload.status === 'loading_embeddings'
-            ? `Baixando Embeddings (e5-small): ${Math.round(payload.progress)}%`
-            : `Baixando NER (bert-multilingual): ${Math.round(payload.progress)}%`
-        );
-      }
-    };
-
-    try {
-      await computeE5Embedding('teste', progressHandler);
-      await extractEntitiesWithNER('teste', progressHandler);
-      
-      setIsAILoaded(true);
-      setIsAILoading(false);
-      setAiLoadStatus('Modelos locais ativos.');
-      
-      if (editor) {
-        runMMSAnalysis(editor.getText());
-      }
-    } catch (err) {
-      console.error(err);
-      setAiLoadStatus('Erro ao carregar os modelos locais.');
-      setIsAILoading(false);
-    }
-  };
+  // Load local AI models - Handled globally in AppContext
 
   const handleImmediateCheck = () => {
     if (!isAILoaded) {
@@ -890,7 +873,7 @@ export default function EditorComponent() {
   const graphCoverage = nodes.length > 0 ? Math.round((completedGoals.length / nodes.length) * 100) : 0;
 
   return (
-    <div className={`layout-container ${isFocusMode ? 'focus-mode-active' : ''} ${isLineFocus ? 'line-focus-mode' : ''}`}>
+    <div className={`main-content animate-fade-in ${isFocusMode ? 'focus-mode-active' : ''} ${isLineFocus ? 'line-focus-mode' : ''}`}>
       {/* Celebration overlay */}
       {showCelebration && (
         <div className="celebration-overlay">
@@ -917,10 +900,7 @@ export default function EditorComponent() {
         </button>
       )}
 
-      {/* Top Navbar */}
-      {!isFocusMode && <Navbar />}
-
-      <div className="main-content">
+      {/* Top Navbar Removida por conta do DashboardLayout */}
         {/* Left Panel - Active Goals & Writing Metrics */}
         {!isFocusMode && isLeftSidebarOpen && (
           <aside className="editor-side-panel left-panel glass">
@@ -1295,8 +1275,6 @@ export default function EditorComponent() {
             )}
           </aside>
         )}
-      </div>
-
       {/* Version Preview Modal */}
       {showVersionPreview && selectedVersion && (
         <div className="version-modal-overlay animate-fade-in">

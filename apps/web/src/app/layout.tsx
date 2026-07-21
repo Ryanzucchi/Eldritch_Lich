@@ -1,5 +1,7 @@
 import './globals.css';
 import React from 'react';
+import { AppProvider } from '../context/AppContext';
+import { ClientLayout } from './components/ClientLayout';
 
 export const metadata = {
   title: 'Eldritch Lich - Planejador de Metas Narrativas',
@@ -14,8 +16,11 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body>
-        {children}
+        <AppProvider>
+          <ClientLayout>{children}</ClientLayout>
+        </AppProvider>
       </body>
     </html>
   );
 }
+

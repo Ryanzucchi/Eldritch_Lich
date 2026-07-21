@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import Navbar from '../components/Navbar';
 import { db, deleteNodeTransaction } from '../../db/schema';
 import { MetaNode, MetaEdge, MetaType, MetaStatus, hasNoCycle, propagateStatus } from '@eldritch/domain';
 
@@ -294,13 +293,9 @@ export default function GMNPage() {
   };
 
   return (
-    <div className="layout-container">
-      {/* Top Navbar */}
-      <Navbar />
-
-      <div className="main-content">
-        {/* Left Sidebar */}
-        <aside className="sidebar glass">
+    <div className="main-content animate-fade-in">
+      {/* Left Sidebar */}
+      <aside className="sidebar glass">
           <div className="sidebar-section">
             <h2 className="section-title">Criar Nova Meta</h2>
             <div className="graph-intelligence-card">
@@ -505,93 +500,12 @@ export default function GMNPage() {
             })}
           </svg>
         </main>
-      </div>
 
       <style jsx global>{`
-        .layout-container {
-          display: flex;
-          flex-direction: column;
-          height: 100vh;
-        }
-
-        .navbar {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0.8rem 2rem;
-          height: 60px;
-          z-index: 10;
-        }
-
-        .logo {
-          font-family: var(--font-display);
-          font-size: 1.5rem;
-          font-weight: 700;
-          letter-spacing: 0;
-        }
-
-        .logo span {
-          color: var(--color-andamento);
-        }
-
-        .nav-links {
-          display: flex;
-          gap: 1.5rem;
-        }
-
-        .user-menu {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-        }
-
-        .user-name {
-          font-size: 0.85rem;
-          color: var(--text-secondary);
-          font-weight: 500;
-        }
-
-        .btn-logout {
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid var(--border-light);
-          padding: 0.35rem 0.75rem;
-          border-radius: 6px;
-          font-size: 0.8rem;
-          font-weight: 600;
-          color: var(--text-primary);
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .btn-logout:hover {
-          background: rgba(239, 68, 68, 0.15);
-          border-color: rgba(239, 68, 68, 0.35);
-          color: #f87171;
-        }
-
-        .nav-item {
-          font-weight: 500;
-          font-size: 0.95rem;
-          padding: 0.4rem 0.8rem;
-          border-radius: 6px;
-          transition: all 0.2s;
-          color: var(--text-secondary);
-        }
-
-        .nav-item:hover, .nav-item.active {
-          color: var(--text-primary);
-          background: rgba(255, 255, 255, 0.05);
-        }
-
-        .nav-item.active {
-          border-bottom: 2px solid var(--color-andamento);
-          border-radius: 6px 6px 0 0;
-        }
-
         .main-content {
           display: flex;
-          flex: 1;
-          height: calc(100vh - 60px);
+          width: 100%;
+          height: 100vh;
           overflow: hidden;
         }
 

@@ -14,23 +14,25 @@ graph TD
     WebApp --> MMSService[services/mms-ai.ts]
     WebApp --> AuthService[services/auth-backend.ts]
     WebApp --> Middleware[middleware.ts]
-    WebApp --> GlobalNavbar[app/components/Navbar.tsx]
+    WebApp --> DashboardLayout[app/components/ClientLayout.tsx]
+    WebApp --> AppContext[context/AppContext.tsx]
     
     %% Relações Funcionais
     WebApp -->|Importa tipos e lógica| Domain
     MMSService -->|Usa pipelines locais| TransformersJS[@huggingface/transformers]
     AuthService -->|Persistência Criptografada| UsersJSON[src/db/users.json & reset_tokens.json & projects.json]
     Middleware -->|Verifica Cookie JWT| AuthService
-    GlobalNavbar -->|Alterna context e gerencia projetos| AuthService
+    DashboardLayout -->|Consome dados| AppContext
+    AppContext -->|Gerencia projetos e sessão| AuthService
     DexieSchema -->|Isolamento por projeto| DexieDB[IndexedDB Client]
     DexieSchema -->|Transações GMN| DexieDB
     
     %% Telas do Editor
     AuthPage[app/auth/page.tsx] -->|Loga / Cadastra / Recupera| WebApp
-    ProfilePage[app/profile/page.tsx] -->|Edita Perfil / WebP canvas| WebApp
-    GMNEditor[app/gmn/page.tsx] -->|Navbar integrada| GlobalNavbar
+    ProfilePage[app/profile/page.tsx] -->|Layout unificado| DashboardLayout
+    GMNEditor[app/gmn/page.tsx] -->|Layout unificado| DashboardLayout
     GMNEditor -->|Lê/Grava Grafo| DexieSchema
-    KanbanBoard[app/kanban/page.tsx] -->|Navbar integrada| GlobalNavbar
+    KanbanBoard[app/kanban/page.tsx] -->|Layout unificado| DashboardLayout
     KanbanBoard -->|Lê/Grava Metas| DexieSchema
     ManuscriptEditor[app/editor/page.tsx] -->|Analisa digitação| MMSService
     ManuscriptEditor -->|Atualiza status| DexieSchema
