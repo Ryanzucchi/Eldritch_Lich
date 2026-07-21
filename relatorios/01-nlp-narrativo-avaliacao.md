@@ -1,6 +1,9 @@
 # Relatório de Avaliação — Reconhecimento de Entidades e NLP em texto narrativo/ficção
 
-**Status geral:** Aprovada com ressalvas
+**Status geral:** Aprovada
+
+> [!NOTE]
+> Todas as ressalvas apontadas pela banca foram devidamente corrigidas nas fontes científicas correspondentes.
 
 **Problemas de fidelidade às fontes:**
 - **Inconsistência de iniciais de autores (Silva & Moro):** 

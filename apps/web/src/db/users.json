@@ -1,0 +1,11 @@
+[
+  {
+    "id": "3e4b62e3-88d5-4898-ac5b-b5d27d0f5d40",
+    "name": "ryan",
+    "email": "zucchiryan07@gmail.com",
+    "passwordHash": "7e4670edc9c648b217b9bca90bb4ca3d:0f921f53844f72323bf3eefec0ec8306fe1168c4c681e56b377f0f9392d27ff5d4b96b48e244a4b7a1723a5f1d40fef9cb513ecd51d1b2a123815150b09f4d37",
+    "emailVerified": false,
+    "createdAt": "2026-07-21T16:58:38.521Z",
+    "updatedAt": "2026-07-21T16:58:38.521Z"
+  }
+]

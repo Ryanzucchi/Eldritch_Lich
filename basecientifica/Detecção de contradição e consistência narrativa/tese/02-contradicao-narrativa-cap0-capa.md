@@ -3,7 +3,7 @@
 
 <br><br><br><br><br><br>
 
-### NOME DO(A) AUTOR(A)
+### Breno de Oliveira Alencar
 
 <br><br><br><br><br><br>
 
@@ -12,12 +12,12 @@
 
 <br><br><br><br><br><br>
 
-### LOCAL
-### ANO
+### Recife – PE
+### 2026
 
 <div style="page-break-after: always;"></div>
 
-# NOME DO(A) AUTOR(A)
+# Breno de Oliveira Alencar
 
 <br><br><br><br><br><br>
 
@@ -30,9 +30,9 @@ Tese de Doutorado apresentada ao Programa de Pós-Graduação em Ciência da Com
 
 <br>
 
-**Orientador(a):** Prof. Dr. Orientador
+**Orientador(a):** Prof. Dr. Ricardo Augusto de Sousa
 
 <br><br><br><br><br><br>
 
-### LOCAL
-### ANO
+### Recife – PE
+### 2026

@@ -1,8 +1,8 @@
-# 3 REFERENCIAL TEÓRICO E REVISÃO SISTEMÁTICA DE LITERATURA
+# 2 REFERENCIAL TEÓRICO E REVISÃO SISTEMÁTICA DE LITERATURA
 
-## 3.1 Fundamentos Conceituais da Sumarização Automática
+## 2.1 Fundamentos Conceituais da Sumarização Automática
 
-### 3.1.1 Definição e Histórico
+### 2.1.1 Definição e Histórico
 
 A sumarização automática de texto constitui uma das tarefas mais fundamentais do Processamento de Linguagem Natural (PLN), definida como o processo de redução computacional de um ou mais documentos textuais, preservando as informações mais relevantes segundo um determinado critério de relevância. Conforme expõem os autores do levantamento sistemático sobre sumarização de documentos longos (2022), a área evoluiu significativamente desde as primeiras abordagens baseadas em frequência de termos nos anos 1950, passando pelos modelos estatísticos da virada do século XXI, até as arquiteturas neurais profundas contemporâneas baseadas em Transformers.
 
@@ -12,7 +12,7 @@ A distinção clássica na área opõe dois paradigmas fundamentais:
 
 **Sumarização abstrativa:** Gera novo texto condensado, potencialmente com formulações não presentes no original. Modelos sequência-a-sequência (seq2seq) com mecanismos de atenção, como o trabalho pioneiro de Query Focused Abstractive Summarization (2018), estabeleceram as bases para essa abordagem ao adaptarem redes codificadoras-decodificadoras com atenção orientada por consultas para a geração de respostas abstrativas. A chegada dos Transformers e, posteriormente, dos LLMs, transformou radicalmente o campo, viabilizando resumos de qualidade próxima à humana.
 
-### 3.1.2 O Desafio de Documentos Longos
+### 2.1.2 O Desafio de Documentos Longos
 
 A sumarização de documentos de grande extensão — como romances literários, que frequentemente ultrapassam 100.000 palavras — impõe desafios técnicos específicos que não são adequadamente abordados pelos modelos treinados em corpora de artigos noticiosos ou acadêmicos. O levantamento empírico sobre sumarização de documentos longos (2022) identifica três categorias principais de desafios:
 
@@ -22,15 +22,15 @@ A sumarização de documentos de grande extensão — como romances literários,
 
 O framework BooookScore, proposto por Chang et al. (2023), aborda justamente o problema de avaliação de qualidade de resumos em escala de livro inteiro, demonstrando que os LLMs contemporâneos cometem um número significativo de inconsistências factuais ao resumir romances inteiros, mesmo os mais avançados.
 
-### 3.1.3 Sumarização Orientada a Consultas (Query-Focused Summarization)
+### 2.1.3 Sumarização Orientada a Consultas (Query-Focused Summarization)
 
 A sumarização focada em consultas (QFS) representa uma extensão relevante da sumarização genérica, na qual um sistema gera um resumo especificamente orientado para responder a uma pergunta ou necessidade informacional do usuário. O trabalho de Tackling Query-Focused Summarization as a Knowledge-Intensive Task (2021) estabeleceu uma conexão conceitual importante entre QFS e sistemas de recuperação de informação baseados em conhecimento externo, demonstrando que a integração de bases de conhecimento estruturadas melhora significativamente a fidelidade e relevância dos resumos gerados.
 
 No contexto de sistemas de apoio à escrita criativa, a QFS adquire uma dimensão especial: o autor pode necessitar de resumos que respondam a perguntas específicas sobre seu próprio universo ficcional ("quais eventos levaram à morte do personagem X?" ou "como evoluiu a relação entre A e B ao longo dos capítulos?"), exigindo uma arquitetura que combine recuperação semântica e geração orientada.
 
-## 3.2 Estado da Arte: Modelos e Abordagens
+## 2.2 Estado da Arte: Modelos e Abordagens
 
-### 3.2.1 Sumarização Hierárquica
+### 2.2.1 Sumarização Hierárquica
 
 A estratégia hierárquica tornou-se a abordagem dominante para sumarização de textos muito longos. Em sua forma mais básica, o texto é fragmentado em seções (parágrafos ou capítulos), cada seção é resumida individualmente e os resumos intermediários são então combinados em um resumo final de nível superior.
 
@@ -38,11 +38,11 @@ O framework DTCRS (Dynamic Tree Construction for Recursive Summarization), propo
 
 Complementarmente, o framework CAHM (Context-Aware Hierarchical Merging), desenvolvido em 2025, aborda o problema da fusão de resumos intermediários com uma estratégia de mesclagem ciente de contexto. O modelo ajusta dinamicamente os pesos de relevância de nós de capítulos vizinhos, levando em conta as dependências semânticas entre seções ao unificar os resumos parciais, o que evita a perda de fatos cruciais que ocorre quando as seções são tratadas independentemente.
 
-### 3.2.2 Sumarização Multiagente
+### 2.2.2 Sumarização Multiagente
 
 O framework NexusSum (2024) introduziu uma abordagem inovadora baseada em múltiplos agentes para sumarização hierárquica: agentes especializados de nível inferior processam seções individuais do texto, enquanto um agente coordenador de nível superior consolida os resumos parciais em um sumário executivo unificado. Essa arquitetura multiagente permite paralelização do processamento, o que é crítico para documentos de grande extensão, e facilita a especialização de diferentes agentes para diferentes tipos de conteúdo (diálogos, descrições de cenário, narração de eventos).
 
-### 3.2.3 Sumarização de Narrativas e Roteiros
+### 2.2.3 Sumarização de Narrativas e Roteiros
 
 Além da sumarização de documentos gerais, pesquisas específicas têm abordado o processamento de narrativas ficcionais estruturadas. O dataset BookSum (Kryściński et al., 2021) representa um marco nessa direção, fornecendo resumos estruturados de livros clássicos em três níveis de granularidade (parágrafo, capítulo e livro completo), o que permite o treinamento de modelos de sumarização hierárquica especificamente calibrados para prosa ficcional.
 
@@ -50,13 +50,13 @@ O framework S²tory (2026) aborda o desafio da sumarização de roteiros cinemat
 
 O dataset SUMMSCREEN (Chen et al., 2021) contribuiu com um corpus de sumarização de roteiros de séries televisivas, incluindo episódios de múltiplos gêneros acompanhados de recaps escritos por fãs, abordando especificamente o desafio da retenção de informações de diálogos complexos na geração de resumos.
 
-### 3.2.4 Sumarização em Língua Portuguesa
+### 2.2.4 Sumarização em Língua Portuguesa
 
 A investigação de sistemas de sumarização especificamente para a língua portuguesa apresenta um estado de arte consideravelmente menos desenvolvido em comparação ao inglês. O dataset PublicHearingBR (2024) representa uma iniciativa relevante nessa direção, introduzindo o primeiro corpus de transcrições em português brasileiro voltado especificamente para avaliar modelos na tarefa de sumarizar documentos muito longos.
 
 O trabalho de exploração de sumarização guiada por plano narrativo para textos ficcionais com modelos de linguagem menores (Small Language Models), publicado em 2025, investiga especificamente o uso de planejamento de enredo (story plan) para guiar SLMs na geração de resumos de narrativas ficcionais, com relevância direta para processamento de textos em português sem dependência de modelos proprietários de grande escala.
 
-### 3.2.5 RAG e Sumarização Baseada em Conhecimento
+### 2.2.5 RAG e Sumarização Baseada em Conhecimento
 
 O framework OntoRAG (2025) conecta a sumarização automática com a recuperação aumentada por geração (RAG), propondo um sistema que extrai uma ontologia a partir de documentos não estruturados e a utiliza para melhorar a precisão em tarefas de question-answering e sumarização sobre a base de conhecimento. Essa abordagem é particularmente relevante para universos ficcionais, nos quais as relações entre entidades (personagens, locais, eventos) formam uma ontologia implícita que precisa ser descoberta e utilizada para orientar a sumarização.
 
@@ -64,7 +64,7 @@ O trabalho Beyond Relevant Documents (2024) estende essa perspectiva ao propor u
 
 O framework ASLD (Automatic Summarization of Long Documents), publicado em 2024, descreve três algoritmos inovadores que processam romances com mais de 70.000 palavras fragmentando e combinando seções sem estourar as janelas de contexto de LLMs menores, com foco na garantia de eficiência de custo computacional.
 
-## 3.3 Tabela Comparativa dos Trabalhos Revisados
+## 2.3 Tabela Comparativa dos Trabalhos Revisados
 
 A tabela a seguir apresenta uma análise comparativa dos 20 trabalhos incluídos na revisão sistemática, organizados por autor/projeto, ano de publicação, método principal, dataset utilizado, principais resultados reportados e limitações identificadas.
 
@@ -91,7 +91,7 @@ A tabela a seguir apresenta uma análise comparativa dos 20 trabalhos incluídos
 | 19 | Survey Geral | 2021 | Revisão sistemática histórica | Histórico da área | Panorama completo extrativo/abstrativo | Anterior aos LLMs modernos; desatualizado |
 | 20 | NexusSum | 2024 | Multiagente hierárquico | Grandes coleções textuais | Paralelização; coordenação eficiente | Overhead de coordenação entre agentes |
 
-## 3.4 Análise Crítica e Lacunas Identificadas
+## 2.4 Análise Crítica e Lacunas Identificadas
 
 A análise comparativa dos trabalhos revisados permite identificar as seguintes lacunas críticas na literatura atual:
 
@@ -101,11 +101,11 @@ A análise comparativa dos trabalhos revisados permite identificar as seguintes 
 
 **Lacuna 3 – Integração de sumarização com grafos de estados de entidades:** Nenhum dos sistemas revisados integra explicitamente a sumarização hierárquica com um grafo dinâmico de estados de entidades (personagens, locais, objetos) que permita rastrear a evolução dos fatos ao longo da narrativa. Essa integração seria fundamental para detectar inconsistências nos resumos gerados.
 
-**Lacuna 4 – Granularidade multi-nível orientada ao autor:** Os sistemas existentes operam com granularidades fixas (parágrafo, capítulo, livro). Autores de escrita criativa frequentemente necessitam de resumos em granularidades variáveis e personalizadas (cena, subcapítulo, arco narrativo), o que não é suportado pelos sistemas atuais.
+**Lacuna 4 – Granularidade multi-nível orientada ao autor:** Os sistemas existentes operam com granularidades fixas (parágrafo, capítulo, livro). Autores de escrita criativa frequentemente necessitam de resumos em granularidades variáveis e personalizadas (cena, subcapítulo, arco narrativo), o que não é suportado pelos sistemas atual.
 
 **Lacuna 5 – Operação offline e privacidade:** Os sistemas de maior desempenho (BooookScore, ASLD, BeyondRD) dependem de LLMs proprietários (GPT-4, Claude) via APIs, o que inviabiliza seu uso em contextos de escrita criativa onde a privacidade do manuscrito inédito é essencial.
 
-## 3.5 Taxonomia dos Métodos de Sumarização para Narrativas Longas
+## 2.5 Taxonomia dos Métodos de Sumarização para Narrativas Longas
 
 Com base na análise da literatura, propõe-se a seguinte taxonomia dos métodos de sumarização aplicáveis a narrativas ficcionais longas:
 

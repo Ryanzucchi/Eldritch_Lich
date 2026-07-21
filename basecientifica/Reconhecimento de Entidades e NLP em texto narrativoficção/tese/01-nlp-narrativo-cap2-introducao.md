@@ -36,4 +36,4 @@ O foco primário reside na extração e unificação de personagens, locais e or
 
 ## 1.6 Estrutura do Documento
 
-A tese está organizada em sete capítulos. O Capítulo 2 (este) apresenta a introdução e o problema. O Capítulo 3 delineia o referencial teórico e a revisão sistemática da literatura. O Capítulo 4 detalha a metodologia da pesquisa. O Capítulo 5 apresenta a proposta técnica e o desenvolvimento do pipeline. O Capítulo 6 engloba a discussão dos resultados e o Capítulo 7 traz as conclusões e os trabalhos futuros.
+A tese está organizada em sete capítulos. O Capítulo 1 (este) apresenta a introdução e o problema. O Capítulo 2 delineia o referencial teórico e a revisão sistemática da literatura. O Capítulo 3 detalha a metodologia da pesquisa. O Capítulo 4 apresenta a proposta técnica e o desenvolvimento do pipeline. O Capítulo 5 engloba a discussão dos resultados e o Capítulo 6 traz as conclusões e os trabalhos futuros, seguido pelas Referências Bibliográficas no Capítulo 7.

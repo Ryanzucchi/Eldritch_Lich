@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Navbar from '../components/Navbar';
 import { db, deleteNodeTransaction } from '../../db/schema';
 import { MetaNode, MetaEdge, MetaType, MetaStatus, hasNoCycle, propagateStatus } from '@eldritch/domain';
 
@@ -295,13 +296,7 @@ export default function GMNPage() {
   return (
     <div className="layout-container">
       {/* Top Navbar */}
-      <header className="navbar glass">
-        <h1 className="logo">Eldritch<span>Lich</span></h1>
-        <nav className="nav-links">
-          <Link href="/gmn" className="nav-item active">Grafo de Metas</Link>
-          <Link href="/kanban" className="nav-item">Quadro Kanban</Link>
-        </nav>
-      </header>
+      <Navbar />
 
       <div className="main-content">
         {/* Left Sidebar */}
@@ -542,6 +537,36 @@ export default function GMNPage() {
         .nav-links {
           display: flex;
           gap: 1.5rem;
+        }
+
+        .user-menu {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .user-name {
+          font-size: 0.85rem;
+          color: var(--text-secondary);
+          font-weight: 500;
+        }
+
+        .btn-logout {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid var(--border-light);
+          padding: 0.35rem 0.75rem;
+          border-radius: 6px;
+          font-size: 0.8rem;
+          font-weight: 600;
+          color: var(--text-primary);
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .btn-logout:hover {
+          background: rgba(239, 68, 68, 0.15);
+          border-color: rgba(239, 68, 68, 0.35);
+          color: #f87171;
         }
 
         .nav-item {

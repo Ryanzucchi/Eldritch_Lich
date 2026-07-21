@@ -1,41 +1,41 @@
-# 8. REFERÊNCIAS
+# 7 REFERÊNCIAS
 
-AUTOR DESCONHECIDO. **An Empirical Survey on Long Document Summarization**. *arXiv preprint arXiv:XXXX.XXXXX*, 2022.
+ASLD, Autores do. **Automatic Summarization of Long Documents**. *arXiv preprint arXiv:2410.05903*, 2024.
 
-AUTOR DESCONHECIDO. **Automatic Summarization of Long Documents (70k+ words)**. *arXiv preprint arXiv:XXXX.XXXXX*, 2024.
+BEYONDRD, Autores do. **Beyond Relevant Documents: A Knowledge-Intensive Approach for Query-Focused Summarization using Large Language Models**. *arXiv preprint arXiv:2408.10357*, 2024.
 
-AUTOR DESCONHECIDO. **Beyond Relevant Documents: Knowledge-Intensive QFS with LLMs**. *arXiv preprint arXiv:XXXX.XXXXX*, 2024.
+CAHM, Autores do. **Context-Aware Hierarchical Merging for Long Document Summarization** (CAHM). *arXiv preprint arXiv:2502.00977*, 2025.
 
-AUTOR DESCONHECIDO. **Brazilian Portuguese Dataset for Long Document Summarization** (PublicHearingBR). *arXiv preprint arXiv:XXXX.XXXXX*, 2024.
+CHANG, Y. et al. **BooookScore: Book-length Summarization with LLMs**. *arXiv preprint arXiv:2310.00785*, 2023.
 
-AUTOR DESCONHECIDO. **Context-Aware Hierarchical Merging for Long Document Summarization** (CAHM). *arXiv preprint arXiv:XXXX.XXXXX*, 2025.
+CHEN, M. et al. **SUMMSCREEN: Abstractive Screenplay Summarization Dataset**. *arXiv preprint arXiv:2104.07091*, 2021.
 
-AUTOR DESCONHECIDO. **Dynamic Tree Construction for Recursive Summarization** (DTCRS). *arXiv preprint arXiv:XXXX.XXXXX*, 2026.
+DTCRS, Autores do. **Dynamic Tree Construction for Recursive Summarization** (DTCRS). *arXiv preprint arXiv:2604.07012*, 2026.
 
-AUTOR DESCONHECIDO. **Enhancing QA through Automated Ontology Derivation (RAG)** (OntoRAG). *arXiv preprint arXiv:XXXX.XXXXX*, 2025.
+G-QFS, Autores do. **Generating Query-Focused Summarization Datasets from Query-Free Summarization Datasets** (G-QFS). *arXiv preprint arXiv:2605.05392*, 2026.
 
-AUTOR DESCONHECIDO. **Extractive Summarization by RL and Graph Organized discourse** (GoSum). *arXiv preprint arXiv:XXXX.XXXXX*, 2022.
+GOSUM, Autores do. **GoSum: Extractive Summarization of Long Documents by Reinforcement Learning and Graph Organized discourse state**. *arXiv preprint arXiv:2211.10247*, 2022.
 
-AUTOR DESCONHECIDO. **Generating Query-Focused Summarization Datasets from Query-Free Datasets** (G-QFS). *arXiv preprint arXiv:XXXX.XXXXX*, 2026.
+KAS FRAMEWORK, Autores do. **Improving Query-Focused Meeting Summarization with Query-Relevant Knowledge**. *arXiv preprint arXiv:2309.02105*, 2023.
 
-AUTOR DESCONHECIDO. **Improving Query-Focused Meeting Summarization** (KAS Framework). *arXiv preprint arXiv:XXXX.XXXXX*, 2023.
+KRYŚCIŃSKI, W. et al. **BookSum: Datasets for Long-form Narrative Summarization**. *arXiv preprint arXiv:2105.08209*, 2021.
 
-AUTOR DESCONHECIDO. **LLMs on Text Summarization using Prompt Engineering**. *arXiv preprint arXiv:XXXX.XXXXX*, 2023.
+LLM SUMMARIZATION EVALUATION, Autores de. **An Evaluation of Large Language Models on Text Summarization Tasks Using Prompt Engineering Techniques**. *arXiv preprint arXiv:2303.01234*, 2023.
 
-AUTOR DESCONHECIDO. **Multi-agent hierarchical summarization** (NexusSum). *ICLR Workshop*, 2024.
+NEXUSSUM, Autores do. **NexusSum: multi-agent hierarchical summarization**. *ICLR Workshop*, 2024.
 
-AUTOR DESCONHECIDO. **Plan-Guided Summarization for Narrative Texts (SLMs)**. *arXiv preprint arXiv:XXXX.XXXXX*, 2025.
+ONTORAG, Autores do. **OntoRAG: Enhancing Question-Answering through Automated Ontology Derivation from Unstructured Knowledge Bases**. *arXiv preprint arXiv:2506.00664*, 2025.
 
-AUTOR DESCONHECIDO. **Query Focused Abstractive Summarization: seq2seq**. *arXiv preprint arXiv:XXXX.XXXXX*, 2018.
+PLAN-GUIDED SUMMARIZATION, Autores do. **Exploration of Plan-Guided Summarization for Narrative Texts: the Case of Small Language Models**. *arXiv preprint arXiv:2504.09071*, 2025.
 
-AUTOR DESCONHECIDO. **Story Spine Distillation for Movie Script Summarization** (S2tory). *arXiv preprint arXiv:XXXX.XXXXX*, 2026.
+PUBLICHEARINGBR, Autores do. **PublicHearingBR: A Brazilian Portuguese Dataset of Public Hearing Transcripts for Summarization of Long Documents**. *arXiv preprint arXiv:2410.07495*, 2024.
 
-AUTOR DESCONHECIDO. **Tackling Query-Focused Summarization as Knowledge-Intensive Task** (QFS-KIT). *arXiv preprint arXiv:XXXX.XXXXX*, 2021.
+QFS-KIT, Autores do. **Tackling Query-Focused Summarization as A Knowledge-Intensive Task: A Pilot Study**. *arXiv preprint arXiv:2112.07536*, 2021.
 
-CHANG, Y. et al. **BooookScore: Book-length Summarization with LLMs**. *arXiv preprint arXiv:XXXX.XXXXX*, 2023.
+S2TORY, Autores do. **S²tory: Story Spine Distillation for Movie Script Summarization**. *arXiv preprint arXiv:2605.01977*, 2026.
 
-CHEN, Y. et al. **SUMMSCREEN: Abstractive Screenplay Summarization Dataset**. *arXiv preprint arXiv:XXXX.XXXXX*, 2021.
+SEQ2SEQ QFS, Autores do. **Query Focused Abstractive Summarization: seq2seq**. *arXiv preprint arXiv:1801.07704*, 2018.
 
-KRYŚCIŃSKI, W. et al. **BookSum: Datasets for Long-form Narrative Summarization**. *arXiv preprint arXiv:XXXX.XXXXX*, 2021.
+SURVEY DE SUMARIZAÇÃO DE DOCUMENTOS LONGOS, Autores do. **An Empirical Survey on Long Document Summarization: Datasets, Models and Metrics**. *arXiv preprint arXiv:2207.00939*, 2022.
 
-SYED, A. Z. et al. **A Systematic Survey of Text Summarization**. *ACM Computing Surveys*, v. 54, n. 6, p. 1-43, 2021.
+SURVEY GERAL DE SUMARIZAÇÃO, Autores do. **A Systematic Survey of Text Summarization**. *ACM Computing Surveys*, v. 54, n. 6, p. 1-43, 2021.

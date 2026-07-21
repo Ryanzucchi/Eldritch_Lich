@@ -22,3 +22,5 @@ __exportStar(require("./mms/classifier.js"), exports);
 __exportStar(require("./metrics/types.js"), exports);
 __exportStar(require("./metrics/streak-calculator.js"), exports);
 __exportStar(require("./editor/types.js"), exports);
+__exportStar(require("./auth/types.js"), exports);
+__exportStar(require("./project/types.js"), exports);

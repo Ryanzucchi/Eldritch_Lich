@@ -9,9 +9,13 @@ export class EldritchDatabase extends Dexie {
   writingStreak!: Table<WritingStreak, string>;
   keyboardShortcuts!: Table<{ command: string; keyCombo: string }, string>;
   manuscripts!: Table<Manuscript, string>;
+  manuscriptVersions!: Table<{ id: string; manuscriptId: string; versionNumber: number; title: string; content: string; createdAt: string }, string>;
+  pendingSaves!: Table<{ id: string; manuscriptId: string; content: string; timestamp: number }, string>;
 
   constructor() {
-    super('EldritchDatabase');
+    const isBrowser = typeof window !== 'undefined';
+    const activeProjectId = isBrowser ? localStorage.getItem('activeProjectId') || 'default' : 'default';
+    super(`EldritchDatabase_${activeProjectId}`);
     this.version(1).stores({
       metaNodes: 'id, type, status, title',
       metaEdges: 'id, fromId, toId'
@@ -39,6 +43,17 @@ export class EldritchDatabase extends Dexie {
       writingStreak: 'id',
       keyboardShortcuts: 'command',
       manuscripts: 'id, status, title'
+    });
+    this.version(5).stores({
+      metaNodes: 'id, type, status, title',
+      metaEdges: 'id, fromId, toId',
+      writingGoals: 'id, type, targetWords, deadline',
+      writingLogs: 'id, date',
+      writingStreak: 'id',
+      keyboardShortcuts: 'command',
+      manuscripts: 'id, status, title',
+      manuscriptVersions: 'id, manuscriptId, versionNumber, createdAt',
+      pendingSaves: 'id, manuscriptId, timestamp'
     });
   }
 }

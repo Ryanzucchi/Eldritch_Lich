@@ -1,6 +1,6 @@
-# 2. INTRODUÇÃO
+# 1 INTRODUÇÃO
 
-## 2.1 O Problema da Sumarização de Textos Ficcionais Longos em Português
+## 1.1 O Problema da Sumarização de Textos Ficcionais Longos em Português
 
 A expansão exponencial de conteúdos textuais gerados digitalmente fomentou um avanço significativo nas tecnologias de Processamento de Linguagem Natural (PLN), com destaque para a Sumarização Automática de Textos. A sumarização automática visa destilar as informações essenciais de um documento, produzindo uma versão condensada que preserve o significado original (SYED et al., 2021). Enquanto o estado da arte tem demonstrado eficácia notável em documentos curtos, como artigos de notícias ou resenhas de produtos, a sumarização de documentos longos — em particular textos narrativos ficcionais de longa extensão, como romances — permanece um dos desafios mais proeminentes e em aberto na inteligência artificial contemporânea (SURVEY DE SUMARIZAÇÃO, 2022).
 
@@ -12,7 +12,7 @@ Ademais, a literatura científica demonstra uma escassez crítica de recursos e 
 
 Portanto, o problema que motiva esta tese é a inadequação das atuais arquiteturas de sumarização hierárquica na preservação da fidelidade dos elementos narrativos de longa extensão e no mapeamento de dependências globais sem a explosão do custo computacional, especialmente quando aplicadas ao contexto literário na língua portuguesa. Tal deficiência afeta diretamente o desenvolvimento de sistemas de suporte à criatividade, organização bibliográfica e gerenciamento de projetos literários, onde usuários demandam extração precisa de sinopses e interações focadas em partes específicas do texto ficcional.
 
-## 2.2 Objetivos e Hipóteses
+## 1.2 Objetivos e Hipóteses
 
 **Objetivo Geral:**
 Investigar, propor e validar uma arquitetura de sumarização hierárquica recursiva, denominada *Hierarchical Narrative Summarizer para português* (HNS-PT), capaz de processar romances de longa extensão em língua portuguesa para gerar resumos consistentes em múltiplos níveis de granularidade, assegurando a fidelidade aos fatos ficcionais e otimizando o custo computacional para permitir seu emprego em sistemas ativos.
@@ -29,24 +29,24 @@ Investigar, propor e validar uma arquitetura de sumarização hierárquica recur
 * **Hipótese 2 (H2):** A estruturação guiada por planos (*plan-guided*) em níveis granulares menores (parágrafos e cenas) eleva a consistência narrativa das sinopses agregadas (nível do capítulo e obra), sem causar um aumento superlinear na latência e no custo de inferência, viabilizando o uso em aplicações em tempo real.
 * **Hipótese 3 (H3):** A adequação de métricas baseadas em grafos e alinhamento de *role-playing* para o português do Brasil resulta em avaliações de resumos de obras de ficção com maior correlação humana do que métricas lexicais (ROUGE), provendo uma taxonomia de avaliação superior.
 
-## 2.3 Pergunta de Pesquisa
+## 1.3 Pergunta de Pesquisa
 
 Em consonância com as hipóteses formuladas e a contextualização do problema, a presente pesquisa orienta-se pela seguinte questão central:
 
 *Como estratégias hierárquicas de sumarização recursiva podem ser adaptadas para processar romances de longa extensão em língua portuguesa, gerando sinopses coerentes em múltiplos níveis de granularidade (parágrafo, capítulo e obra completa) sem perda de fidelidade factual aos fatos do universo ficcional, e com custo computacional compatível com sistemas de uso ativo?*
 
-## 2.4 Delimitação e Justificativa
+## 1.4 Delimitação e Justificativa
 
 A sumarização de documentos longos é um espectro vasto. O escopo desta tese restringe-se primariamente a textos narrativos ficcionais (romances literários e assemelhados). Não são abordados no núcleo avaliativo os textos jurídicos, médicos ou científicos extensos, visto que as dinâmicas discursivas e a organização informacional diferem radicalmente das narrativas (SURVEY DE SUMARIZAÇÃO, 2022). Optou-se pela língua portuguesa, mais especificamente sua variante brasileira, de modo a suprir uma lacuna flagrante na democratização do uso de Inteligência Artificial Generativa para o campo das Letras e da Indústria Criativa lusófona.
 
 A pesquisa justifica-se não apenas pelo desafio acadêmico intrínseco de dominar dependências de longo alcance em PLNs, mas também por sua expressiva contribuição prática. A arquitetura formulada estabelece os alicerces sistêmicos para uma aplicação web de apoio a escritores e editores (sistema de organização de histórias e *brainstorm*). Nesses sistemas, a geração automatizada, precisa e confiável de loglines (sumários de uma frase), sinopses de capítulos e visualizações estruturais atua como um acelerador cognitivo inestimável na produção intelectual (S2TORY, 2026).
 
-## 2.5 Estrutura da Tese
+## 1.5 Estrutura da Tese
 
-O presente documento encontra-se estruturado em oito capítulos, organizados para prover uma progressão lógica e científica do tema.
-O **Capítulo 1** introduz o problema e os contornos da tese.
-O **Capítulo 3** oferece o Referencial Teórico, englobando os fundamentos de sumarização extrativa e abstrativa, o panorama evolutivo de arquiteturas seq2seq e Transformers, além de uma revisão exaustiva e tabelada de vinte trabalhos que representam o estado da arte (incluindo QFS, sumarização em múltiplos agentes, datasets de narrativas), apontando as lacunas remanescentes.
-O **Capítulo 4** expõe a Metodologia, alicerçada na *Design Science Research* e detalhando os protocolos de pesquisa e instrumentação de avaliação (ROUGE, BooookScore, testes factuais).
-O **Capítulo 5** pormenoriza o Desenvolvimento, apresentando a arquitetura HNS-PT, a integração do grafo de estados, as dinâmicas de múltiplos níveis e a discussão de *trade-offs* entre qualidade, fidelidade e custo computacional.
-O **Capítulo 6** reserva-se à Discussão, analisando os resultados experimentais através da lente das hipóteses levantadas e seu impacto no contexto da aplicação web visada.
-O **Capítulo 7** conclui o trabalho, reiterando as principais contribuições científicas, as limitações encontradas e demarcando rotas futuras de investigação. O Capítulo 8 reúne o referencial bibliográfico norteador desta pesquisa.
+O presente documento encontra-se estruturado em sete capítulos textuais, organizados para prover uma progressão lógica e científica do tema.
+O **Capítulo 1 (este)** apresenta a introdução e o problema.
+O **Capítulo 2** oferece o Referencial Teórico, englobando os fundamentos de sumarização extrativa e abstrativa, o panorama evolutivo de arquiteturas seq2seq e Transformers, além de uma revisão exaustiva e tabelada de vinte trabalhos que representam o estado da arte (incluindo QFS, sumarização em múltiplos agentes, datasets de narrativas), apontando as lacunas remanescentes.
+O **Capítulo 3** expõe a Metodologia, alicerçada na *Design Science Research* e detalhando os protocolos de pesquisa e instrumentação de avaliação (ROUGE, BooookScore, testes factuais).
+O **Capítulo 4** pormenoriza o Desenvolvimento, apresentando a arquitetura HNS-PT, a integração do grafo de estados, as dinâmicas de múltiplos níveis e a discussão de *trade-offs* entre qualidade, fidelidade e custo computacional.
+O **Capítulo 5** reserva-se à Discussão, analisando os resultados experimentais através da lente das hipóteses levantadas e seu impacto no contexto da aplicação web visada.
+O **Capítulo 6** conclui o trabalho, reiterando as principais contribuições científicas, as limitações encontradas e demarcando rotas futuras de investigação, seguido pelas Referências Bibliográficas reunidas no Capítulo 7.

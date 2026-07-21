@@ -1,4 +1,4 @@
-# CAPÍTULO 6 - DISCUSSÃO
+# 5 DISCUSSÃO
 
 A pesquisa realizada demonstra a viabilidade, tanto teórica quanto tecnológica, da aplicação de Grafos de Conhecimento Temporais (TKGs) no desenvolvimento de universos ficcionais complexos. Ao contrastar o arcabouço conceitual do modelo proposto (FUKG) com a literatura fundamental, torna-se nítido que o estado da arte transcendeu o mero armazenamento semântico passivo (representado por esforços válidos, mas estáticos, como o WLKG e o URW-KG). A introdução de perspectivas temporais permite que o raciocínio acompanhe a entropia natural das obras literárias.
 

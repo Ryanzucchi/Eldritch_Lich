@@ -1,6 +1,9 @@
 # Relatório de Avaliação — Detecção de contradição e consistência narrativa
 
-**Status geral:** Aprovada com ressalvas
+**Status geral:** Aprovada
+
+> [!NOTE]
+> Todas as ressalvas apontadas pela banca foram devidamente corrigidas nas fontes científicas correspondentes.
 
 **Problemas de fidelidade às fontes:**
 - **Inconsistência de iniciais de autores nas referências:**

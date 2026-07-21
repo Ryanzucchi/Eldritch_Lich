@@ -8,26 +8,32 @@ graph TD
     Domain[packages/domain] --> CoreGMN[gmn/types.ts & cycle-detector.ts & propagator.ts]
     Domain --> CoreMMS[mms/similarity.ts & classifier.ts]
     Domain --> CoreMetrics[metrics/types.ts & streak-calculator.ts]
+    Domain --> CoreAuth[auth/types.ts & project/types.ts]
     
     WebApp[apps/web] --> DexieSchema[db/schema.ts]
     WebApp --> MMSService[services/mms-ai.ts]
+    WebApp --> AuthService[services/auth-backend.ts]
+    WebApp --> Middleware[middleware.ts]
+    WebApp --> GlobalNavbar[app/components/Navbar.tsx]
     
     %% Relações Funcionais
     WebApp -->|Importa tipos e lógica| Domain
     MMSService -->|Usa pipelines locais| TransformersJS[@huggingface/transformers]
-    DexieSchema -->|Transações GMN| DexieDB[IndexedDB Client]
-    DexieSchema -->|Tabelas de Produtividade| DexieDB
-    DexieSchema -->|Mapeamento de Atalhos| DexieDB
-    DexieSchema -->|Tabela de Manuscritos| DexieDB
+    AuthService -->|Persistência Criptografada| UsersJSON[src/db/users.json & reset_tokens.json & projects.json]
+    Middleware -->|Verifica Cookie JWT| AuthService
+    GlobalNavbar -->|Alterna context e gerencia projetos| AuthService
+    DexieSchema -->|Isolamento por projeto| DexieDB[IndexedDB Client]
+    DexieSchema -->|Transações GMN| DexieDB
     
     %% Telas do Editor
-    GMNEditor[app/gmn/page.tsx] -->|Lê/Grava Grafo| DexieSchema
-    KanbanBoard[app/kanban/page.tsx] -->|Lê/Grava Metas| DexieSchema
+    AuthPage[app/auth/page.tsx] -->|Loga / Cadastra / Recupera| WebApp
+    ProfilePage[app/profile/page.tsx] -->|Edita Perfil / WebP canvas| WebApp
+    GMNEditor[app/gmn/page.tsx] -->|Navbar integrada| GlobalNavbar
+    GMNEditor -->|Lê/Grava Grafo| DexieSchema
+    KanbanBoard[app/kanban/page.tsx] -->|Navbar integrada| GlobalNavbar
+    KanbanBoard -->|Lê/Grava Metas| DexieSchema
     ManuscriptEditor[app/editor/page.tsx] -->|Analisa digitação| MMSService
     ManuscriptEditor -->|Atualiza status| DexieSchema
-    ManuscriptEditor -->|Atualiza progresso e streaks| DexieSchema
-    ManuscriptEditor -->|Lê/Grava Atalhos Customizados| DexieSchema
-    ManuscriptEditor -->|Gerencia Capítulos e Bloqueio| DexieSchema
 ```
 
 ## Resumo das Dependências Físicas

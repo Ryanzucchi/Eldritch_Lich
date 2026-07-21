@@ -25,9 +25,9 @@
 
 ## Fase 1 — Núcleo seguro e multi-tenant
 
-- [ ] UC-129, UC-130, UC-131 — identidade, sessão e perfil.
-- [ ] UC-117, UC-118 — criação e seleção de projetos.
-- [ ] UC-418, UC-420, UC-421, UC-422 — RLS/autorização por recurso, validação, sessão e rate limit.
+- [ ] UC-129 (implementado), UC-130 (implementado), UC-131 (implementado) — identidade, sessão e perfil.
+- [ ] UC-117 (implementado), UC-118 (implementado) — criação e seleção de projetos.
+- [ ] UC-418 (implementado), UC-420 (implementado), UC-421 (implementado), UC-422 (implementado) — RLS/autorização por recurso, validação, sessão e rate limit.
 - [ ] UC-415, UC-416, UC-417, UC-423, UC-434 — TLS, segredos, backup/restauração e observabilidade.
 
 **Critério de saída:** testes negativos impedem acesso entre tenants/projetos; sessão expirada ou sem permissão é recusada; backup é restaurado em ambiente isolado.
@@ -88,16 +88,16 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-081** — Compartilhar projetos (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: UC-132, UC-133, UC-134, UC-136, UC-195 e mais 10 UCs
-- [ ] **UC-117** — Criar múltiplos projetos (Prioridade: Média | Complexidade: Média | Módulo: `workspace_projetos`)
+- [x] **UC-117** — Criar múltiplos projetos (Prioridade: Média | Complexidade: Média | Módulo: `workspace_projetos`)
   - Depende de: UC-129
   - Desbloqueia: UC-118, UC-119
-- [ ] **UC-129** — Cadastrar e autenticar usuários (Prioridade: Média | Complexidade: Média | Módulo: `autenticacao_perfil`)
+- [x] **UC-129** — Cadastrar e autenticar usuários (Prioridade: Média | Complexidade: Média | Módulo: `autenticacao_perfil`)
   - Depende de: nenhum
   - Desbloqueia: UC-001, UC-002, UC-003, UC-004, UC-005 e mais 414 UCs
-- [ ] **UC-130** — Recuperar senha (Prioridade: Média | Complexidade: Média | Módulo: `autenticacao_perfil`)
-  - Depende de: nenhum
+- [x] **UC-130** — Recuperar senha (Prioridade: Média | Complexidade: Média | Módulo: `autenticacao_perfil`)
+  - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-131** — Editar perfil do usuário (Prioridade: Média | Complexidade: Média | Módulo: `autenticacao_perfil`)
+- [x] **UC-131** — Editar perfil do usuário (Prioridade: Média | Complexidade: Média | Módulo: `autenticacao_perfil`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-414** — Salvar automaticamente sem perda de progresso em caso de queda de conexão (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
@@ -112,19 +112,19 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-417** — Realizar backup periódico automático dos dados (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-418** — Garantir isolamento de dados entre usuários/projetos (multi-tenancy seguro) (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-418** — Garantir isolamento de dados entre usuários/projetos (multi-tenancy seguro) (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-419** — Estar disponível pelo menos 99,5% do tempo (uptime) (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-420** — Validar e sanitizar todas as entradas para evitar injeção de código (SQL Injection, XSS) (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-420** — Validar e sanitizar todas as entradas para evitar injeção de código (SQL Injection, XSS) (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-421** — Autenticar todas as requisições sensíveis via token seguro (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-421** — Autenticar todas as requisições sensíveis via token seguro (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-422** — Limitar tentativas de login para evitar ataques de força bruta (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-422** — Limitar tentativas de login para evitar ataques de força bruta (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-423** — Permitir recuperação de dados em caso de falha catastrófica (disaster recovery) (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
@@ -1273,7 +1273,7 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-089** — Gerar PDF ilustrado do universo (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-118** — Alternar entre projetos (Prioridade: Média | Complexidade: Média | Módulo: `workspace_projetos`)
+- [x] **UC-118** — Alternar entre projetos (Prioridade: Média | Complexidade: Média | Módulo: `workspace_projetos`)
   - Depende de: UC-117, UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-119** — Duplicar projeto (Prioridade: Média | Complexidade: Média | Módulo: `workspace_projetos`)

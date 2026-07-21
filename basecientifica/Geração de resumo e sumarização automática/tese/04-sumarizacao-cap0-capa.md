@@ -4,7 +4,7 @@
 
 <br><br><br><br><br>
 
-**NOME DO AUTOR**
+**Thiago Henrique Rodrigues**
 
 <br><br><br><br><br>
 
@@ -15,9 +15,9 @@
 
 Tese apresentada ao Programa de Pós-Graduação em Ciência da Computação, como requisito parcial para obtenção do título de Doutor em Ciência da Computação, área de concentração: Inteligência Artificial e Processamento de Linguagem Natural.
 
-Orientador(a): Prof. Dr. Nome do Orientador
+Orientador(a): Prof. Dra. Clarice Moreira Mendes
 
 <br><br><br><br><br><br><br><br>
 
-**CIDADE**
-**ANO**
+**Campinas – SP**
+**2026**

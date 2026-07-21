@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Navbar from '../components/Navbar';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { db } from '../../db/schema';
@@ -84,6 +85,8 @@ export default function EditorComponent() {
   const [mmsLogs, setMmsLogs] = useState<MMSLog[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSnapshotTimeRef = useRef<number>(Date.now());
+  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // IA Local State
   const [isAILoaded, setIsAILoaded] = useState(false);
@@ -125,10 +128,182 @@ export default function EditorComponent() {
   const [showCelebration, setShowCelebration] = useState(false);
   const [hasCelebratedToday, setHasCelebratedToday] = useState(false);
 
+  // Autosave, Sync and Versioning states
+  const [rightTab, setRightTab] = useState<'mms' | 'versions'>('mms');
+  const [syncStatus, setSyncStatus] = useState<'syncing' | 'synced' | 'local'>('synced');
+  const [versions, setVersions] = useState<{ id: string; manuscriptId: string; versionNumber: number; title: string; content: string; createdAt: string }[]>([]);
+  const [selectedVersion, setSelectedVersion] = useState<{ id: string; manuscriptId: string; versionNumber: number; title: string; content: string; createdAt: string } | null>(null);
+  const [showVersionPreview, setShowVersionPreview] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
+
   // Keyboard Shortcuts states
   const [shortcuts, setShortcuts] = useState<KeyboardShortcut[]>(DEFAULT_SHORTCUTS);
   const [capturingCommand, setCapturingCommand] = useState<string | null>(null);
   const [shortcutConflict, setShortcutConflict] = useState<string | null>(null);
+
+  const loadVersions = async (manuscriptId: string) => {
+    if (!manuscriptId) return;
+    const list = await db.manuscriptVersions
+      .filter(v => v.manuscriptId === manuscriptId)
+      .toArray();
+    list.sort((a, b) => b.versionNumber - a.versionNumber);
+    setVersions(list);
+  };
+
+  const createVersionSnapshot = async (manuscript: Manuscript, currentContent: string) => {
+    const list = await db.manuscriptVersions
+      .filter(v => v.manuscriptId === manuscript.id)
+      .toArray();
+    const nextVerNumber = list.length > 0 ? Math.max(...list.map(v => v.versionNumber)) + 1 : 1;
+
+    const newVersion = {
+      id: crypto.randomUUID(),
+      manuscriptId: manuscript.id,
+      versionNumber: nextVerNumber,
+      title: manuscript.title,
+      content: currentContent,
+      createdAt: new Date().toISOString()
+    };
+
+    await db.manuscriptVersions.put(newVersion);
+    await loadVersions(manuscript.id);
+  };
+
+  const handleRestoreVersion = async (version: typeof versions[0]) => {
+    if (!activeManuscript) return;
+
+    const currentHtml = editor?.getHTML() || '';
+    await createVersionSnapshot(activeManuscript, currentHtml);
+
+    const updated = {
+      ...activeManuscript,
+      content: version.content,
+      updatedAt: new Date().toISOString()
+    };
+
+    await db.manuscripts.put(updated);
+    setActiveManuscript(updated);
+    editor?.commands.setContent(version.content);
+    
+    setSuccess('Versão anterior restaurada. Um ponto de restauração do estado atual foi criado.');
+    setShowVersionPreview(false);
+    setSelectedVersion(null);
+
+    syncToServer(updated);
+
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  const handleSelectChapter = async (chapter: Manuscript) => {
+    if (activeManuscript) {
+      const currentHtml = editor?.getHTML() || '';
+      await createVersionSnapshot(activeManuscript, currentHtml);
+    }
+    setActiveManuscript(chapter);
+  };
+
+  const syncToServer = async (manuscript: Manuscript) => {
+    const isBrowser = typeof window !== 'undefined';
+    const activeProjectId = isBrowser ? localStorage.getItem('activeProjectId') || 'default' : 'default';
+
+    const payload = {
+      manuscript: {
+        id: manuscript.id,
+        title: manuscript.title,
+        content: manuscript.content,
+        status: manuscript.status,
+        isLocked: manuscript.isLocked,
+        projectId: activeProjectId,
+        createdAt: manuscript.createdAt
+      }
+    };
+
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      await db.pendingSaves.put({
+        id: crypto.randomUUID(),
+        manuscriptId: manuscript.id,
+        content: manuscript.content,
+        timestamp: Date.now()
+      });
+      setSyncStatus('local');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/manuscripts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        throw new Error('Sync failed');
+      }
+
+      setSyncStatus('synced');
+    } catch (err) {
+      console.warn('Sync failed, buffering local save:', err);
+      await db.pendingSaves.put({
+        id: crypto.randomUUID(),
+        manuscriptId: manuscript.id,
+        content: manuscript.content,
+        timestamp: Date.now()
+      });
+      setSyncStatus('local');
+    }
+  };
+
+  useEffect(() => {
+    const handleOnline = async () => {
+      const pending = await db.pendingSaves.toArray();
+      if (pending.length === 0) {
+        setSyncStatus('synced');
+        return;
+      }
+
+      setSyncStatus('syncing');
+      pending.sort((a, b) => a.timestamp - b.timestamp);
+
+      const activeProjectId = typeof window !== 'undefined' ? localStorage.getItem('activeProjectId') || 'default' : 'default';
+
+      try {
+        for (const item of pending) {
+          const manuscript = await db.manuscripts.get(item.manuscriptId);
+          if (!manuscript) continue;
+
+          const res = await fetch('/api/manuscripts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              manuscript: {
+                ...manuscript,
+                content: item.content,
+                projectId: activeProjectId
+              }
+            })
+          });
+
+          if (res.ok) {
+            await db.pendingSaves.delete(item.id);
+          }
+        }
+        setSyncStatus('synced');
+      } catch (err) {
+        console.error('Failed to clear pending saves queue:', err);
+        setSyncStatus('local');
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', handleOnline);
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('online', handleOnline);
+      }
+    };
+  }, []);
 
   // Load from Dexie
   const loadData = async () => {
@@ -353,6 +528,24 @@ export default function EditorComponent() {
         setManuscripts(prev => prev.map(m => m.id === activeManuscript.id ? { ...m, content: html } : m));
       });
 
+      // Debounced Sync to Server (2000ms)
+      setSyncStatus('syncing');
+      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+      syncTimeoutRef.current = setTimeout(() => {
+        const updatedDoc = {
+          ...activeManuscript,
+          content: html
+        };
+        syncToServer(updatedDoc);
+      }, 2000);
+
+      // Snapshot every 10 minutes of active typing
+      const nowSnapshot = Date.now();
+      if (nowSnapshot - lastSnapshotTimeRef.current > 10 * 60 * 1000) {
+        lastSnapshotTimeRef.current = nowSnapshot;
+        createVersionSnapshot(activeManuscript, html);
+      }
+
       // Update words written today
       const todayStr = new Date().toISOString().split('T')[0];
       db.writingLogs.get(todayStr).then(async (todayLog) => {
@@ -397,6 +590,8 @@ export default function EditorComponent() {
       const initialWords = countWords(editor.getText());
       setInitialWordCount(initialWords);
       setWordsSession(0);
+
+      loadVersions(activeManuscript.id);
     }
   }, [activeManuscript?.id, editor]);
 
@@ -707,6 +902,14 @@ export default function EditorComponent() {
         </div>
       )}
 
+      {/* Success toast notification */}
+      {success && (
+        <div className="success-toast glass animate-fade-in">
+          <span className="toast-icon">✓</span>
+          <span>{success}</span>
+        </div>
+      )}
+
       {/* Floating Close Button for Focus Mode */}
       {isFocusMode && (
         <button onClick={() => triggerCommand('toggle_focus')} className="floating-btn-exit-focus glass">
@@ -715,16 +918,7 @@ export default function EditorComponent() {
       )}
 
       {/* Top Navbar */}
-      {!isFocusMode && (
-        <header className="navbar glass">
-          <h1 className="logo">Eldritch<span>Lich</span></h1>
-          <nav className="nav-links">
-            <Link href="/gmn" className="nav-item">Grafo de Metas</Link>
-            <Link href="/kanban" className="nav-item">Quadro Kanban</Link>
-            <Link href="/editor" className="nav-item active">Editor do Manuscrito</Link>
-          </nav>
-        </header>
-      )}
+      {!isFocusMode && <Navbar />}
 
       <div className="main-content">
         {/* Left Panel - Active Goals & Writing Metrics */}
@@ -766,7 +960,7 @@ export default function EditorComponent() {
                 {manuscripts.map(chapter => (
                   <div 
                     key={chapter.id} 
-                    onClick={() => setActiveManuscript(chapter)}
+                    onClick={() => handleSelectChapter(chapter)}
                     className={`chapter-list-item ${activeManuscript?.id === chapter.id ? 'active' : ''}`}
                   >
                     {editingChapterId === chapter.id ? (
@@ -933,6 +1127,12 @@ export default function EditorComponent() {
             </div>
             <div className="session-stats">
               <span>Sessão: {wordsSession} palavras</span>
+              <span className="sync-status-badge">
+                <span className={`status-dot ${syncStatus}`}></span>
+                {syncStatus === 'syncing' ? 'Sincronizando...' : 
+                 syncStatus === 'synced' ? 'Sincronizado com a nuvem' : 
+                 'Salvo localmente (offline)'}
+              </span>
               <span>
                 Atalhos: Foco {shortcuts.find(s=>s.command==='toggle_focus')?.keyCombo} | Linha {shortcuts.find(s=>s.command==='toggle_line_focus')?.keyCombo}
               </span>
@@ -940,93 +1140,198 @@ export default function EditorComponent() {
           </div>
         </main>
 
-        {/* Right Panel - MMS Logs */}
+        {/* Right Panel - MMS Logs & Version History */}
         {!isFocusMode && isRightSidebarOpen && (
           <aside className="editor-side-panel mms-logs-panel glass">
-            <h2 className="panel-title">Evidencias MMS</h2>
-            <p className="panel-subtitle">Leitura passiva baseada em grafo, entidades e similaridade semantica. O texto continua sendo o centro da tela.</p>
-
-            <div className="evidence-summary-grid">
-              <div className="evidence-summary-item">
-                <span>Metas abertas</span>
-                <strong>{pendingGoals.length}</strong>
-              </div>
-              <div className="evidence-summary-item">
-                <span>Confianca recente</span>
-                <strong>{lastStrongEvidence ? `${Math.round(lastStrongEvidence.evidenceScore * 100)}%` : '--'}</strong>
-              </div>
+            <div className="panel-tabs">
+              <button 
+                type="button" 
+                className={`panel-tab-btn ${rightTab === 'mms' ? 'active' : ''}`}
+                onClick={() => setRightTab('mms')}
+              >
+                Evidências MMS
+              </button>
+              <button 
+                type="button" 
+                className={`panel-tab-btn ${rightTab === 'versions' ? 'active' : ''}`}
+                onClick={() => setRightTab('versions')}
+              >
+                Histórico de Versões
+              </button>
             </div>
 
-            {!isAILoaded && (
-              <button onClick={handleLoadAI} disabled={isAILoading} className="btn-ai-load">
-                {isAILoading ? aiLoadStatus : 'Ativar analise local'}
-              </button>
-            )}
+            {rightTab === 'mms' ? (
+              <>
+                <p className="panel-subtitle">Leitura passiva baseada em grafo, entidades e similaridade semantica. O texto continua sendo o centro da tela.</p>
 
-            {isAILoaded && (
-              <button onClick={handleImmediateCheck} disabled={isProcessing} className="btn-ai-load secondary">
-                {isProcessing ? 'Analisando...' : 'Reavaliar capitulo'}
-              </button>
-            )}
-
-            <div className="logs-container">
-              {!isAILoaded ? (
-                <p className="no-logs">Ative os modelos locais quando quiser validar metas. A analise fica lateral para nao interromper a escrita.</p>
-              ) : mmsLogs.length === 0 ? (
-                <p className="no-logs">Nenhuma atividade de digitação avaliada ainda. Escreva no editor para iniciar o monitor.</p>
-              ) : (
-                mmsLogs.map((log, idx) => (
-                  <div key={idx} className={`log-card ${log.status.toLowerCase()}`}>
-                    <div className="log-header">
-                      <span className="log-time">{log.timestamp}</span>
-                      <span className={`log-status-badge ${log.status.toLowerCase()}`}>
-                        {log.status === 'SUCCESS' ? 'Meta Atendida' : log.status === 'PLANNING' ? 'Planejamento' : 'Similaridade Baixa'}
-                      </span>
-                    </div>
-                    
-                    <div className="log-body">
-                      <p className="log-goal"><strong>Meta:</strong> {log.goalTitle}</p>
-                      <div className="evidence-bars">
-                        <div>
-                          <span>Semantica E5</span>
-                          <strong>{Math.round(log.similarity * 100)}%</strong>
-                        </div>
-                        <div>
-                          <span>Evidencia final</span>
-                          <strong>{Math.round(log.evidenceScore * 100)}%</strong>
-                        </div>
-                      </div>
-                      {log.graphEntitiesMatched.length > 0 ? (
-                        <p className="log-entities"><strong>Entidades do grafo:</strong> {log.graphEntitiesMatched.join(', ')}</p>
-                      ) : log.entitiesMatched.length > 0 && (
-                        <p className="log-entities"><strong>Entidades detectadas:</strong> {log.entitiesMatched.join(', ')}</p>
-                      )}
-                      {log.nerTokens.length > 0 && (
-                        <div className="log-ner-tokens">
-                          <strong>NER local:</strong>
-                          <div className="ner-tokens-list">
-                            {log.nerTokens.slice(0, 8).map((tok, tIdx) => (
-                              <span key={tIdx} className={`ner-token ${tok.entity.toLowerCase()}`}>
-                                {tok.word}: {tok.entity}
-                              </span>
-                            ))}
-                            {log.nerTokens.length > 8 && <span>...</span>}
-                          </div>
-                        </div>
-                      )}
-                      <div className="log-paragraph">
-                        <span className="label">Trecho:</span>
-                        <span className="text">"{log.paragraphText}"</span>
-                      </div>
-                      <p className="log-explanation"><strong>Decisao:</strong> {log.llmVerification.explanation}</p>
-                    </div>
+                <div className="evidence-summary-grid">
+                  <div className="evidence-summary-item">
+                    <span>Metas abertas</span>
+                    <strong>{pendingGoals.length}</strong>
                   </div>
-                ))
-              )}
-            </div>
+                  <div className="evidence-summary-item">
+                    <span>Confianca recente</span>
+                    <strong>{lastStrongEvidence ? `${Math.round(lastStrongEvidence.evidenceScore * 100)}%` : '--'}</strong>
+                  </div>
+                </div>
+
+                {!isAILoaded && (
+                  <button onClick={handleLoadAI} disabled={isAILoading} className="btn-ai-load">
+                    {isAILoading ? aiLoadStatus : 'Ativar analise local'}
+                  </button>
+                )}
+
+                {isAILoaded && (
+                  <button onClick={handleImmediateCheck} disabled={isProcessing} className="btn-ai-load secondary">
+                    {isProcessing ? 'Analisando...' : 'Reavaliar capitulo'}
+                  </button>
+                )}
+
+                <div className="logs-container">
+                  {!isAILoaded ? (
+                    <p className="no-logs">Ative os modelos locais quando quiser validar metas. A analise fica lateral para nao interromper a escrita.</p>
+                  ) : mmsLogs.length === 0 ? (
+                    <p className="no-logs">Nenhuma atividade de digitação avaliada ainda. Escreva no editor para iniciar o monitor.</p>
+                  ) : (
+                    mmsLogs.map((log, idx) => (
+                      <div key={idx} className={`log-card ${log.status.toLowerCase()}`}>
+                        <div className="log-header">
+                          <span className="log-time">{log.timestamp}</span>
+                          <span className={`log-status-badge ${log.status.toLowerCase()}`}>
+                            {log.status === 'SUCCESS' ? 'Meta Atendida' : log.status === 'PLANNING' ? 'Planejamento' : 'Similaridade Baixa'}
+                          </span>
+                        </div>
+                        
+                        <div className="log-body">
+                          <p className="log-goal"><strong>Meta:</strong> {log.goalTitle}</p>
+                          <div className="evidence-bars">
+                            <div>
+                              <span>Semantica E5</span>
+                              <strong>{Math.round(log.similarity * 100)}%</strong>
+                            </div>
+                            <div>
+                              <span>Evidencia final</span>
+                              <strong>{Math.round(log.evidenceScore * 100)}%</strong>
+                            </div>
+                          </div>
+                          {log.graphEntitiesMatched.length > 0 ? (
+                            <p className="log-entities"><strong>Entidades do grafo:</strong> {log.graphEntitiesMatched.join(', ')}</p>
+                          ) : log.entitiesMatched.length > 0 && (
+                            <p className="log-entities"><strong>Entidades detectadas:</strong> {log.entitiesMatched.join(', ')}</p>
+                          )}
+                          {log.nerTokens.length > 0 && (
+                            <div className="log-ner-tokens">
+                              <strong>NER local:</strong>
+                              <div className="ner-tokens-list">
+                                {log.nerTokens.slice(0, 8).map((tok, tIdx) => (
+                                  <span key={tIdx} className={`ner-token ${tok.entity.toLowerCase()}`}>
+                                    {tok.word}: {tok.entity}
+                                  </span>
+                                ))}
+                                {log.nerTokens.length > 8 && <span>...</span>}
+                              </div>
+                            </div>
+                          )}
+                          <div className="log-paragraph">
+                            <span className="label">Trecho:</span>
+                            <span className="text">"{log.paragraphText}"</span>
+                          </div>
+                          <p className="log-explanation"><strong>Decisao:</strong> {log.llmVerification.explanation}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="panel-subtitle">Pontos de restauração salvos localmente. A restauração criará automaticamente um backup do estado atual.</p>
+                
+                <button 
+                  type="button" 
+                  className="btn-create-snapshot"
+                  onClick={() => {
+                    if (activeManuscript) {
+                      createVersionSnapshot(activeManuscript, editor?.getHTML() || '');
+                    }
+                  }}
+                  disabled={!activeManuscript}
+                >
+                  + Criar Ponto de Restauração
+                </button>
+
+                <div className="versions-container">
+                  {versions.length === 0 ? (
+                    <p className="no-logs">Nenhum ponto de restauração registrado para este capítulo. Digite por 10 minutos ou clique no botão acima para registrar.</p>
+                  ) : (
+                    versions.map((ver) => {
+                      // Strip html tag excerpt
+                      const rawText = ver.content.replace(/<[^>]*>/g, '');
+                      const excerpt = rawText.length > 80 ? rawText.substring(0, 80) + '...' : rawText || '(Capítulo Vazio)';
+
+                      return (
+                        <div key={ver.id} className="version-card glass">
+                          <div className="version-card-header">
+                            <span className="version-number">Versão #{ver.versionNumber}</span>
+                            <span className="version-time">{new Date(ver.createdAt).toLocaleTimeString()} - {new Date(ver.createdAt).toLocaleDateString()}</span>
+                          </div>
+                          <p className="version-excerpt">"{excerpt}"</p>
+                          <button 
+                            type="button" 
+                            className="btn-view-version"
+                            onClick={() => {
+                              setSelectedVersion(ver);
+                              setShowVersionPreview(true);
+                            }}
+                          >
+                            Visualizar & Restaurar
+                          </button>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </>
+            )}
           </aside>
         )}
       </div>
+
+      {/* Version Preview Modal */}
+      {showVersionPreview && selectedVersion && (
+        <div className="version-modal-overlay animate-fade-in">
+          <div className="version-modal-card glass">
+            <div className="version-modal-header">
+              <h3>Visualizar Versão #{selectedVersion.versionNumber}</h3>
+              <span className="version-modal-time">Salvo em {new Date(selectedVersion.createdAt).toLocaleString()}</span>
+            </div>
+            
+            <div className="version-modal-body">
+              <div className="version-content-preview" dangerouslySetInnerHTML={{ __html: selectedVersion.content || '<p>(Sem conteúdo)</p>' }} />
+            </div>
+
+            <div className="version-modal-actions">
+              <button 
+                type="button" 
+                className="btn-modal-restore"
+                onClick={() => handleRestoreVersion(selectedVersion)}
+              >
+                Restaurar Esta Versão
+              </button>
+              <button 
+                type="button" 
+                className="btn-modal-close"
+                onClick={() => {
+                  setShowVersionPreview(false);
+                  setSelectedVersion(null);
+                }}
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Settings Modal (Goals & Keyboard Shortcuts) */}
       {isSettingsOpen && (
@@ -2114,6 +2419,284 @@ export default function EditorComponent() {
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
+        }
+
+        /* Panel tabs in right sidebar */
+        .panel-tabs {
+          display: flex;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          margin-bottom: 1rem;
+          gap: 1rem;
+        }
+
+        .panel-tab-btn {
+          flex: 1;
+          padding: 0.5rem;
+          background: none;
+          border: none;
+          color: var(--text-secondary);
+          font-weight: 600;
+          font-size: 0.85rem;
+          cursor: pointer;
+          border-bottom: 2px solid transparent;
+          transition: all 0.2s;
+        }
+
+        .panel-tab-btn:hover {
+          color: var(--text-primary);
+        }
+
+        .panel-tab-btn.active {
+          color: var(--color-andamento);
+          border-bottom-color: var(--color-andamento);
+        }
+
+        /* Success Toast */
+        .success-toast {
+          position: fixed;
+          bottom: 80px;
+          right: 20px;
+          padding: 0.75rem 1.25rem;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          z-index: 1000;
+          border: 1px solid rgba(16, 185, 129, 0.3);
+          background: rgba(16, 185, 129, 0.12) !important;
+          color: #34d399;
+          font-size: 0.875rem;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .toast-icon {
+          font-weight: bold;
+          font-size: 1rem;
+          margin-right: 0.25rem;
+        }
+
+        /* Sync status badge in stats footer */
+        .sync-status-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          font-size: 0.775rem;
+          color: var(--text-secondary);
+          background: rgba(255, 255, 255, 0.02);
+          padding: 0.2rem 0.5rem;
+          border-radius: 4px;
+          border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .status-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          display: inline-block;
+        }
+
+        .status-dot.synced {
+          background-color: #10b981;
+          box-shadow: 0 0 8px #10b981;
+        }
+
+        .status-dot.syncing {
+          background-color: #3b82f6;
+          box-shadow: 0 0 8px #3b82f6;
+          animation: pulse 1s infinite alternate;
+        }
+
+        .status-dot.local {
+          background-color: #f59e0b;
+          box-shadow: 0 0 8px #f59e0b;
+        }
+
+        /* Snapshot and Versions styles */
+        .btn-create-snapshot {
+          width: 100%;
+          padding: 0.6rem;
+          background: rgba(20, 184, 166, 0.06);
+          border: 1px dashed var(--border-active);
+          border-radius: 8px;
+          color: var(--color-andamento);
+          font-weight: 600;
+          font-size: 0.825rem;
+          cursor: pointer;
+          margin-bottom: 1rem;
+          transition: all 0.2s;
+        }
+
+        .btn-create-snapshot:hover:not(:disabled) {
+          background: rgba(20, 184, 166, 0.12);
+          color: var(--text-primary);
+        }
+
+        .versions-container {
+          display: flex;
+          flex-direction: column;
+          gap: 0.8rem;
+          max-height: 480px;
+          overflow-y: auto;
+          padding-right: 0.2rem;
+        }
+
+        .version-card {
+          padding: 0.8rem;
+          border-radius: 10px;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid var(--border-light);
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          transition: all 0.2s;
+        }
+
+        .version-card:hover {
+          border-color: rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.04);
+        }
+
+        .version-card-header {
+          display: flex;
+          justify-content: space-between;
+          font-size: 0.725rem;
+        }
+
+        .version-number {
+          font-weight: 700;
+          color: var(--color-andamento);
+        }
+
+        .version-time {
+          color: var(--text-muted);
+        }
+
+        .version-excerpt {
+          font-size: 0.775rem;
+          color: var(--text-secondary);
+          line-height: 1.4;
+          font-style: italic;
+        }
+
+        .btn-view-version {
+          padding: 0.4rem;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid var(--border-light);
+          border-radius: 6px;
+          color: var(--text-primary);
+          font-size: 0.75rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-view-version:hover {
+          background: rgba(20, 184, 166, 0.08);
+          border-color: var(--border-active);
+          color: var(--color-andamento);
+        }
+
+        /* Version Preview Modal */
+        .version-modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.75);
+          backdrop-filter: blur(8px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1100;
+        }
+
+        .version-modal-card {
+          width: 100%;
+          max-width: 680px;
+          height: 80vh;
+          border-radius: 20px;
+          padding: 2rem;
+          display: flex;
+          flex-direction: column;
+          gap: 1.2rem;
+        }
+
+        .version-modal-header {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+          border-bottom: 1px solid var(--border-light);
+          padding-bottom: 0.8rem;
+        }
+
+        .version-modal-header h3 {
+          font-family: var(--font-display);
+          font-size: 1.4rem;
+          font-weight: 700;
+          color: var(--text-primary);
+        }
+
+        .version-modal-time {
+          font-size: 0.8rem;
+          color: var(--text-muted);
+        }
+
+        .version-modal-body {
+          flex: 1;
+          overflow-y: auto;
+          background: rgba(0, 0, 0, 0.25);
+          border: 1px solid var(--border-light);
+          border-radius: 10px;
+          padding: 1.2rem;
+        }
+
+        .version-content-preview {
+          font-size: 0.95rem;
+          line-height: 1.6;
+          color: var(--text-secondary);
+        }
+
+        .version-content-preview p {
+          margin-bottom: 1rem;
+        }
+
+        .version-modal-actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 1rem;
+          border-top: 1px solid var(--border-light);
+          padding-top: 1rem;
+        }
+
+        .btn-modal-restore {
+          padding: 0.65rem 1.25rem;
+          background: linear-gradient(135deg, var(--color-andamento) 0%, #0d9488 100%);
+          border: none;
+          border-radius: 8px;
+          color: #ffffff;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+          box-shadow: 0 4px 12px rgba(20, 184, 166, 0.25);
+        }
+
+        .btn-modal-restore:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 6px 16px rgba(20, 184, 166, 0.35);
+        }
+
+        .btn-modal-close {
+          padding: 0.65rem 1.25rem;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid var(--border-light);
+          border-radius: 8px;
+          color: var(--text-secondary);
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-modal-close:hover {
+          color: var(--text-primary);
+          background: rgba(255, 255, 255, 0.08);
         }
       `}</style>
     </div>

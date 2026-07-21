@@ -4,6 +4,7 @@ export interface Manuscript {
   content: string;
   status: 'RASCUNHO' | 'REVISAO' | 'FINALIZADO';
   isLocked: boolean;
+  projectId?: string;
   createdAt: string;
   updatedAt: string;
 }

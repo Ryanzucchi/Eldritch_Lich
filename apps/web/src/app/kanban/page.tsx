@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Navbar from '../components/Navbar';
 import { db } from '../../db/schema';
 import { MetaNode, MetaEdge, MetaStatus, propagateStatus } from '@eldritch/domain';
 
@@ -112,13 +113,7 @@ export default function KanbanPage() {
   return (
     <div className="layout-container">
       {/* Top Navbar */}
-      <header className="navbar glass">
-        <h1 className="logo">Eldritch<span>Lich</span></h1>
-        <nav className="nav-links">
-          <Link href="/gmn" className="nav-item">Grafo de Metas</Link>
-          <Link href="/kanban" className="nav-item active">Quadro Kanban</Link>
-        </nav>
-      </header>
+      <Navbar />
 
       <main className="kanban-area">
         <div className="kanban-header">
@@ -286,6 +281,61 @@ export default function KanbanPage() {
       )}
 
       <style jsx global>{`
+        .navbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0.8rem 2rem;
+          height: 60px;
+          z-index: 10;
+        }
+
+        .logo {
+          font-family: var(--font-display);
+          font-size: 1.5rem;
+          font-weight: 700;
+          letter-spacing: 0;
+        }
+
+        .logo span {
+          color: var(--color-andamento);
+        }
+
+        .nav-links {
+          display: flex;
+          gap: 1.5rem;
+        }
+
+        .user-menu {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .user-name {
+          font-size: 0.85rem;
+          color: var(--text-secondary);
+          font-weight: 500;
+        }
+
+        .btn-logout {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid var(--border-light);
+          padding: 0.35rem 0.75rem;
+          border-radius: 6px;
+          font-size: 0.8rem;
+          font-weight: 600;
+          color: var(--text-primary);
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .btn-logout:hover {
+          background: rgba(239, 68, 68, 0.15);
+          border-color: rgba(239, 68, 68, 0.35);
+          color: #f87171;
+        }
+
         .kanban-area {
           flex: 1;
           padding: 2rem;
