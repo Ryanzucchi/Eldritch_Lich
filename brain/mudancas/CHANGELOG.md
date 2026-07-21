@@ -2,6 +2,28 @@
 
 Este registro lista em ordem cronológica todas as atualizações de desenvolvimento integradas a esta base de conhecimento.
 
+## [2026-07-21] (Escrita e Organização) - Sistema de Pastas Hierárquicas, Drag-and-Drop e Lixeira com Purga de 30 Dias (UC-010, UC-011, UC-012, UC-157)
+
+### Organização de Arquivos e Pastas
+*   **Pastas e Subpastas Hierárquicas (UC-010, UC-011):** Implementada a modelagem e interface para criação de pastas e subpastas ilimitadas. O explorador de capítulos foi refatorado para renderizar uma estrutura em árvore recursiva.
+*   **Drag-and-Drop Nativo (UC-012):** Integrado suporte a arrastar-e-soltar baseado na API HTML5. Os usuários podem mover manuscritos para dentro de pastas ou reorganizar subpastas arrastando os componentes. 
+*   **Expansão Inteligente no Drag:** Se o usuário passar o cursor com um item arrastado por mais de 1,5 segundos sobre uma pasta fechada, ela se expande automaticamente para revelar seu conteúdo.
+*   **Prevenção de Loops Hierárquicos:** Implementada validação a nível de cliente e servidor (API) que detecta e impede movimentações circulares inválidas (como tentar mover uma pasta para dentro de si mesma ou de suas filhas).
+
+### Lixeira Lógica e Purga Temporal (UC-157)
+*   **Exclusão Lógica:** O fluxo de deleção de capítulos agora move os manuscritos para um estado de Lixeira lógica (`inTrash: true` e `deletedAt`).
+*   **Gerenciamento da Lixeira:** Adicionado painel retrátil de Lixeira na Sidebar do editor. Os usuários visualizam os itens deletados, a data de deleção, o tempo restante antes da exclusão física definitiva e possuem botões rápidos para *Restaurar* (que devolve o capítulo à pasta original sem perder metadados) ou *Excluir permanentemente*.
+*   **Esvaziar Lixeira:** Adicionado botão para limpar todos os itens da lixeira fisicamente de uma vez só.
+*   **Purga Automática de 30 Dias:** Integrada rotina em background no mount do editor que varre e elimina fisicamente do banco de dados (local e servidor) qualquer arquivo que esteja na lixeira há mais de 30 dias.
+
+### Código Adicionado/Modificado
+*   [types.ts](file:///home/zucchi/Projetos/Eldritch_Lich/packages/domain/src/editor/types.ts) (Inclusão da interface Folder e do campo folderId em Manuscript)
+*   [schema.ts](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/db/schema.ts) (Incremento do schema do Dexie para a versão 6, adicionando a tabela folders e indexando folderId)
+*   [auth-backend.ts](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/services/auth-backend.ts) (Leitura/gravação de folders.json)
+*   [route.ts](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/api/folders/route.ts) (Endpoints GET e POST para criar e listar pastas com detecção de ciclos)
+*   [route.ts](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/api/folders/id/route.ts) (Endpoint de deleção física de pasta)
+*   [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx) (Estado local de folders, renderização recursiva da árvore, handlers de drag-and-drop, painel visual de Lixeira com dias restantes, limpeza de 30 dias e estilos CSS)
+
 ## [2026-07-21] (Colaboração e Segurança) - Compartilhamento de Projetos e Isolamento Multi-Tenant (UC-081, UC-418, UC-421, UC-083)
 
 ### Compartilhamento e Controle de Acesso de Projetos

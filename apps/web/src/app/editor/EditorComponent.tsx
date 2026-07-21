@@ -13,6 +13,7 @@ import {
   WritingLog, 
   WritingStreak, 
   Manuscript,
+  Folder,
   calculateStreak, 
   calculateDailyQuota,
   verifyZeroShotAction, 
@@ -95,7 +96,8 @@ export default function EditorComponent() {
     aiLoadProgress, 
     aiLoadStatus, 
     loadAI: handleLoadAI,
-    setHideSidebar
+    setHideSidebar,
+    activeProject
   } = useApp();
 
   // Metas de Produtividade State
@@ -116,6 +118,12 @@ export default function EditorComponent() {
   const [newChapterTitle, setNewChapterTitle] = useState('');
   const [editingChapterId, setEditingChapterId] = useState<string | null>(null);
   const [editingChapterTitle, setEditingChapterTitle] = useState('');
+  const [showTrashPanel, setShowTrashPanel] = useState(false);
+
+  // Folders & Hierarchy State (UC-010 / UC-011)
+  const [folders, setFolders] = useState<Folder[]>([]);
+  const [expandedFolders, setExpandedFolders] = useState<{ [id: string]: boolean }>({});
+  const [showAddFolderInput, setShowAddFolderInput] = useState<{ [parentIdOrRoot: string]: boolean }>({});
 
   // Layout & Settings states
   const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
@@ -368,29 +376,62 @@ export default function EditorComponent() {
       setShortcuts(merged);
     }
 
-    // Load manuscripts
     await loadManuscripts();
+    await loadFolders();
+  };
+
+  const loadFolders = async () => {
+    const savedFolders = await db.folders.toArray();
+    setFolders(savedFolders);
   };
 
   const loadManuscripts = async () => {
     const savedManuscripts = await db.manuscripts.toArray();
-    if (savedManuscripts.length > 0) {
+    
+    // Auto purge trash older than 30 days (UC-157 Exception Flow)
+    const now = Date.now();
+    const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
+    const expiredTrash = savedManuscripts.filter(m => 
+      m.inTrash && m.deletedAt && (now - new Date(m.deletedAt).getTime() > thirtyDaysInMs)
+    );
+    if (expiredTrash.length > 0) {
+      await Promise.all(expiredTrash.map(async item => {
+        await db.manuscripts.delete(item.id);
+        try {
+          await fetch(`/api/manuscripts/${item.id}`, { method: 'DELETE' });
+        } catch (err) {
+          console.error('Purge error:', err);
+        }
+      }));
+      const reloaded = await db.manuscripts.toArray();
+      savedManuscripts.length = 0;
+      savedManuscripts.push(...reloaded);
+    }
+
+    const activeList = savedManuscripts.filter(m => !m.inTrash);
+
+    if (activeList.length > 0) {
       setManuscripts(savedManuscripts);
-      // Select the first one by default if not set
-      if (!activeManuscript) {
-        setActiveManuscript(savedManuscripts[0]);
+      
+      // Select the first active chapter by default if not set or in trash
+      if (!activeManuscript || activeManuscript.inTrash) {
+        setActiveManuscript(activeList[0]);
       } else {
         const updatedActive = savedManuscripts.find(m => m.id === activeManuscript.id);
-        if (updatedActive) setActiveManuscript(updatedActive);
+        if (updatedActive && !updatedActive.inTrash) {
+          setActiveManuscript(updatedActive);
+        } else {
+          setActiveManuscript(activeList[0]);
+        }
       }
     } else {
       // Create initial chapter
       const defaultManuscript: Manuscript = {
-        id: 'chapter_1',
+        id: crypto.randomUUID(),
         title: 'Capítulo 1 - A Travessia',
         content: `
           <p>Kael respirou fundo e deu os primeiros passos na Floresta dos Sussurros. As árvores retorcidas pareciam murmurar segredos ao vento frio da noite.</p>
-          <p>Ele caminhou por horas, guiado apenas pelo sussurro das folhas. Sob as raízes massivas de um salgueiro ancião, algo brilhava debilmente sob a terra úmida. Kael cavou freneticamente até que suas mãos tocaram a superfície gélida do Medalhão Antigo. Ele finalmente o segurou contra o peito, sentindo sua pulsação mística.</p>
+          <p>Ele caminhou por horas, guiado apenas pelo sussurro das folhas. Sob as raíces massivas de um salgueiro ancião, algo brilhava debilmente sob a terra úmida. Kael cavou freneticamente até que suas mãos tocaram a superfície gélida do Medalhão Antigo. Ele finalmente o segurou contra o peito, sentindo sua pulsação mística.</p>
           <p>Ele pensou: "Vou levar o medalhão até a estalagem e amanhã pretendo encontrar a Espada do Eclipse."</p>
         `,
         status: 'RASCUNHO',
@@ -672,20 +713,121 @@ export default function EditorComponent() {
     setActiveManuscript(newChapter);
   };
 
-  // Delete chapter
+  // Delete chapter (Move to trash - logical delete)
   const handleDeleteChapter = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (manuscripts.length <= 1) return; // keep at least 1
     
-    if (confirm('Deseja excluir permanentemente este capítulo?')) {
-      await db.manuscripts.delete(id);
+    const activeList = manuscripts.filter(m => !m.inTrash);
+    if (activeList.length <= 1) {
+      alert('Você precisa manter pelo menos um capítulo ativo.');
+      return;
+    }
+
+    if (confirm('Deseja mover este capítulo para a lixeira? Ele poderá ser restaurado nos próximos 30 dias.')) {
+      const nowString = new Date().toISOString();
+      await db.manuscripts.update(id, {
+        inTrash: true,
+        deletedAt: nowString
+      });
       
-      // If we deleted the active one, select another
+      // Sincronizar com o servidor se conectado
+      const target = manuscripts.find(m => m.id === id);
+      if (target) {
+        try {
+          await fetch('/api/manuscripts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              manuscript: {
+                ...target,
+                inTrash: true,
+                deletedAt: nowString
+              }
+            })
+          });
+        } catch (err) {
+          console.error('Falha ao sincronizar lixeira lógica com servidor:', err);
+        }
+      }
+
+      // If we deleted the active one, select another active one
       if (activeManuscript?.id === id) {
-        const remaining = manuscripts.filter(m => m.id !== id);
+        const remaining = activeList.filter(m => m.id !== id);
         setActiveManuscript(remaining[0]);
       }
       
+      await loadManuscripts();
+    }
+  };
+
+  // Restore chapter from trash (UC-157)
+  const handleRestoreChapter = async (id: string) => {
+    await db.manuscripts.update(id, {
+      inTrash: false,
+      deletedAt: undefined
+    });
+
+    const target = manuscripts.find(m => m.id === id);
+    if (target) {
+      try {
+        await fetch('/api/manuscripts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            manuscript: {
+              ...target,
+              inTrash: false,
+              deletedAt: undefined
+            }
+          })
+        });
+      } catch (err) {
+        console.error('Falha ao sincronizar restauração com servidor:', err);
+      }
+    }
+
+    await loadManuscripts();
+  };
+
+  // Permanent Delete chapter (Physical delete)
+  const handlePermanentDeleteChapter = async (id: string) => {
+    if (confirm('Deseja excluir permanentemente este capítulo? Esta ação não pode ser desfeita.')) {
+      await db.manuscripts.delete(id);
+      
+      try {
+        const res = await fetch(`/api/manuscripts/${id}`, {
+          method: 'DELETE'
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          console.warn('Servidor retornou erro na deleção física:', data.message);
+        }
+      } catch (err) {
+        console.error('Falha ao sincronizar deleção física com servidor:', err);
+      }
+
+      await loadManuscripts();
+    }
+  };
+
+  // Empty all items in trash (Physical delete all)
+  const handleEmptyTrashAll = async () => {
+    const trashItems = manuscripts.filter(m => m.inTrash);
+    if (trashItems.length === 0) return;
+
+    if (confirm('Deseja excluir permanentemente todos os itens da lixeira? Esta ação não pode ser desfeita.')) {
+      await Promise.all(trashItems.map(async item => {
+        await db.manuscripts.delete(item.id);
+        
+        try {
+          await fetch(`/api/manuscripts/${item.id}`, {
+            method: 'DELETE'
+          });
+        } catch (err) {
+          console.error('Falha ao deletar fisicamente do servidor:', err);
+        }
+      }));
+
       await loadManuscripts();
     }
   };
@@ -695,6 +837,322 @@ export default function EditorComponent() {
     e.stopPropagation();
     setEditingChapterId(chapter.id);
     setEditingChapterTitle(chapter.title);
+  };
+
+  // Create subfolder or root folder (UC-010 / UC-011)
+  const handleCreateFolder = async (name: string, parentId?: string) => {
+    if (!name.trim()) return;
+    const newFolder: Folder = {
+      id: crypto.randomUUID(),
+      name: name.trim(),
+      projectId: activeProject?.id || 'default',
+      parentFolderId: parentId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    await db.folders.put(newFolder);
+    
+    // Sincronizar com o servidor
+    try {
+      await fetch('/api/folders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folder: newFolder })
+      });
+    } catch (err) {
+      console.error('Erro ao sincronizar pasta com o servidor:', err);
+    }
+
+    await loadFolders();
+  };
+
+  // Move manuscript into a folder (UC-010 / UC-012)
+  const handleMoveManuscriptToFolder = async (manuscriptId: string, folderId?: string) => {
+    await db.manuscripts.update(manuscriptId, {
+      folderId: folderId || undefined,
+      updatedAt: new Date().toISOString()
+    });
+
+    const target = manuscripts.find(m => m.id === manuscriptId);
+    if (target) {
+      try {
+        await fetch('/api/manuscripts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            manuscript: {
+              ...target,
+              folderId: folderId || undefined,
+              updatedAt: new Date().toISOString()
+            }
+          })
+        });
+      } catch (err) {
+        console.error('Erro ao sincronizar movimento com servidor:', err);
+      }
+    }
+
+    await loadManuscripts();
+  };
+
+  // Move folder inside another folder (UC-011 / UC-012 subfolders)
+  const handleMoveFolderToFolder = async (folderId: string, parentFolderId?: string) => {
+    if (parentFolderId) {
+      if (folderId === parentFolderId) return;
+      let current = parentFolderId;
+      let hasCycle = false;
+      // Loop check
+      while (current) {
+        const f = folders.find(item => item.id === current);
+        if (!f) break;
+        if (f.id === folderId || f.parentFolderId === folderId) {
+          hasCycle = true;
+          break;
+        }
+        current = f.parentFolderId || '';
+      }
+      if (hasCycle) {
+        alert('Ação inválida: pasta pai não pode ser filha de si mesma.');
+        return;
+      }
+    }
+
+    await db.folders.update(folderId, {
+      parentFolderId: parentFolderId || undefined,
+      updatedAt: new Date().toISOString()
+    });
+
+    const target = folders.find(f => f.id === folderId);
+    if (target) {
+      try {
+        await fetch('/api/folders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            folder: {
+              ...target,
+              parentFolderId: parentFolderId || undefined,
+              updatedAt: new Date().toISOString()
+            }
+          })
+        });
+      } catch (err) {
+        console.error('Erro ao sincronizar movimento de pasta:', err);
+      }
+    }
+
+    await loadFolders();
+  };
+
+  const toggleFolder = (folderId: string) => {
+    setExpandedFolders(prev => ({
+      ...prev,
+      [folderId]: !prev[folderId]
+    }));
+  };
+
+  // Drag and Drop tree rendering logic (UC-010 / UC-011)
+  const renderFolderNode = (folder: Folder, depth = 0) => {
+    const isExpanded = !!expandedFolders[folder.id];
+    const subfolders = folders.filter(f => f.parentFolderId === folder.id);
+    const folderChapters = manuscripts.filter(m => m.folderId === folder.id && !m.inTrash);
+    
+    let hoverTimer: NodeJS.Timeout;
+
+    const onDragOver = (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    const onDragEnter = (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      // Auto expand folder after 1.5s if hover
+      if (!isExpanded) {
+        hoverTimer = setTimeout(() => {
+          setExpandedFolders(prev => ({ ...prev, [folder.id]: true }));
+        }, 1500);
+      }
+    };
+
+    const onDragLeave = () => {
+      if (hoverTimer) clearTimeout(hoverTimer);
+    };
+
+    const onDrop = async (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (hoverTimer) clearTimeout(hoverTimer);
+
+      const type = e.dataTransfer.getData('drag-type');
+      const dragId = e.dataTransfer.getData('drag-id');
+
+      if (type === 'manuscript') {
+        await handleMoveManuscriptToFolder(dragId, folder.id);
+      } else if (type === 'folder') {
+        await handleMoveFolderToFolder(dragId, folder.id);
+      }
+    };
+
+    const onDragStart = (e: React.DragEvent) => {
+      e.dataTransfer.setData('drag-type', 'folder');
+      e.dataTransfer.setData('drag-id', folder.id);
+    };
+
+    return (
+      <div 
+        key={folder.id} 
+        className="folder-node"
+        style={{ paddingLeft: `${depth * 0.25}rem` }}
+      >
+        <div 
+          className="folder-header glass"
+          draggable="true"
+          onDragStart={onDragStart}
+          onDragOver={onDragOver}
+          onDragEnter={onDragEnter}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
+          onClick={() => toggleFolder(folder.id)}
+        >
+          <div className="folder-title">
+            <span className="folder-icon">
+              {isExpanded ? '📂' : '📁'}
+            </span>
+            <span className="folder-name-text">{folder.name}</span>
+          </div>
+          <div className="folder-actions" onClick={e => e.stopPropagation()}>
+            <button 
+              onClick={() => setShowAddFolderInput(prev => ({ ...prev, [folder.id]: !prev[folder.id] }))}
+              title="Nova subpasta"
+              className="action-btn"
+            >
+              +📁
+            </button>
+            <button 
+              onClick={async () => {
+                if (confirm(`Deseja excluir a pasta "${folder.name}"? Os capítulos dentro dela serão movidos para a raiz.`)) {
+                  await db.folders.delete(folder.id);
+                  try {
+                    await fetch(`/api/folders/${folder.id}`, { method: 'DELETE' });
+                  } catch (err) {}
+                  
+                  // Desalojar capítulos locais
+                  const childChapters = manuscripts.filter(m => m.folderId === folder.id);
+                  await Promise.all(childChapters.map(async ch => {
+                    await db.manuscripts.update(ch.id, { folderId: undefined });
+                  }));
+                  
+                  // Desalojar subpastas locais
+                  const childFolders = folders.filter(f => f.parentFolderId === folder.id);
+                  await Promise.all(childFolders.map(async f => {
+                    await db.folders.update(f.id, { parentFolderId: undefined });
+                  }));
+                  
+                  await loadFolders();
+                  await loadManuscripts();
+                }
+              }}
+              title="Excluir Pasta"
+              className="action-btn delete"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+
+        {/* Input for new subfolder inside this folder */}
+        {showAddFolderInput[folder.id] && (
+          <div className="add-subfolder-row" style={{ marginLeft: '1.2rem' }}>
+            <input 
+              type="text" 
+              placeholder="Nome da subpasta..."
+              onKeyDown={async e => {
+                if (e.key === 'Enter') {
+                  const val = (e.target as HTMLInputElement).value;
+                  if (val.trim()) {
+                    await handleCreateFolder(val, folder.id);
+                    setShowAddFolderInput(prev => ({ ...prev, [folder.id]: false }));
+                  }
+                }
+              }}
+              onBlur={() => setShowAddFolderInput(prev => ({ ...prev, [folder.id]: false }))}
+              autoFocus
+              className="rename-input"
+            />
+          </div>
+        )}
+
+        {isExpanded && (
+          <div className="folder-children">
+            {/* Subfolders */}
+            {subfolders.map(sub => renderFolderNode(sub, depth + 1))}
+            
+            {/* Chapters */}
+            {folderChapters.map(chapter => renderManuscriptNode(chapter, depth + 1))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderManuscriptNode = (chapter: Manuscript, depth = 0) => {
+    const onDragStart = (e: React.DragEvent) => {
+      e.dataTransfer.setData('drag-type', 'manuscript');
+      e.dataTransfer.setData('drag-id', chapter.id);
+    };
+
+    return (
+      <div 
+        key={chapter.id} 
+        draggable="true"
+        onDragStart={onDragStart}
+        onClick={() => handleSelectChapter(chapter)}
+        className={`chapter-list-item ${activeManuscript?.id === chapter.id ? 'active' : ''}`}
+        style={{ marginLeft: `${depth * 0.25}rem` }}
+      >
+        {editingChapterId === chapter.id ? (
+          <input 
+            type="text"
+            value={editingChapterTitle}
+            onChange={(e) => setEditingChapterTitle(e.target.value)}
+            onBlur={() => handleSaveRename(chapter.id)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleSaveRename(chapter.id); }}
+            onClick={(e) => e.stopPropagation()}
+            autoFocus
+            className="rename-input"
+          />
+        ) : (
+          <div className="chapter-item-details">
+            <span className="chapter-title-text">📄 {chapter.title}</span>
+            <div className="chapter-badges">
+              <span className={`status-badge-tag ${chapter.status.toLowerCase()}`}>
+                {chapter.status === 'RASCUNHO' ? 'R' : chapter.status === 'REVISAO' ? 'Rev' : '✓'}
+              </span>
+            </div>
+          </div>
+        )}
+
+        <div className="chapter-actions">
+          <button 
+            onClick={(e) => startRenameChapter(chapter, e)} 
+            title="Renomear"
+            className="action-btn"
+          >
+            ✎
+          </button>
+          <button 
+            onClick={(e) => handleDeleteChapter(chapter.id, e)} 
+            title="Excluir"
+            disabled={manuscripts.filter(m => !m.inTrash).length <= 1}
+            className="action-btn delete"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+    );
   };
 
   // Save renamed title
@@ -923,70 +1381,139 @@ export default function EditorComponent() {
             <div className="manuscript-explorer-section">
               <h3 className="explorer-title">Capítulos</h3>
               
-              {/* Add Chapter Form */}
-              <form onSubmit={handleAddChapter} className="add-chapter-form">
-                <input 
-                  type="text" 
-                  placeholder="Novo Capítulo..." 
-                  value={newChapterTitle}
-                  onChange={(e) => setNewChapterTitle(e.target.value)}
-                  required
-                />
-                <button type="submit">+</button>
-              </form>
+              <div className="explorer-actions-row">
+                {/* Add Chapter Form */}
+                <form onSubmit={handleAddChapter} className="add-chapter-form">
+                  <input 
+                    type="text" 
+                    placeholder="Novo Capítulo..." 
+                    value={newChapterTitle}
+                    onChange={(e) => setNewChapterTitle(e.target.value)}
+                    required
+                  />
+                  <button type="submit" title="Criar Capítulo">+</button>
+                </form>
+                
+                {/* Add Folder Button */}
+                <button 
+                  type="button" 
+                  className="btn-create-folder-root"
+                  onClick={() => setShowAddFolderInput(prev => ({ ...prev, root: !prev.root }))}
+                  title="Criar Pasta na Raiz"
+                >
+                  +📁
+                </button>
+              </div>
+
+              {showAddFolderInput.root && (
+                <div className="add-subfolder-row root-folder-input">
+                  <input 
+                    type="text" 
+                    placeholder="Nome da pasta na raiz..."
+                    onKeyDown={async e => {
+                      if (e.key === 'Enter') {
+                        const val = (e.target as HTMLInputElement).value;
+                        if (val.trim()) {
+                          await handleCreateFolder(val, undefined);
+                          setShowAddFolderInput(prev => ({ ...prev, root: false }));
+                        }
+                      }
+                    }}
+                    onBlur={() => setShowAddFolderInput(prev => ({ ...prev, root: false }))}
+                    autoFocus
+                    className="rename-input"
+                  />
+                </div>
+              )}
 
               {/* Explorer List */}
-              <div className="manuscripts-list">
-                {manuscripts.map(chapter => (
-                  <div 
-                    key={chapter.id} 
-                    onClick={() => handleSelectChapter(chapter)}
-                    className={`chapter-list-item ${activeManuscript?.id === chapter.id ? 'active' : ''}`}
-                  >
-                    {editingChapterId === chapter.id ? (
-                      <input 
-                        type="text"
-                        value={editingChapterTitle}
-                        onChange={(e) => setEditingChapterTitle(e.target.value)}
-                        onBlur={() => handleSaveRename(chapter.id)}
-                        onKeyDown={(e) => { if (e.key === 'Enter') handleSaveRename(chapter.id); }}
-                        onClick={(e) => e.stopPropagation()}
-                        autoFocus
-                        className="rename-input"
-                      />
-                    ) : (
-                      <div className="chapter-item-details">
-                        <span className="chapter-title-text">{chapter.title}</span>
-                        
-                        {/* Status tag badges */}
-                        <div className="chapter-badges">
-                          <span className={`status-badge-tag ${chapter.status.toLowerCase()}`}>
-                            {chapter.status === 'RASCUNHO' ? 'R' : chapter.status === 'REVISAO' ? 'Rev' : '✓'}
-                          </span>
-                          {chapter.isLocked && <span className="lock-badge-icon">🔒</span>}
-                        </div>
-                      </div>
-                    )}
+              <div 
+                className="manuscripts-list"
+                onDragOver={e => e.preventDefault()}
+                onDrop={async e => {
+                  const type = e.dataTransfer.getData('drag-type');
+                  const dragId = e.dataTransfer.getData('drag-id');
+                  if (type === 'manuscript') {
+                    await handleMoveManuscriptToFolder(dragId, undefined);
+                  } else if (type === 'folder') {
+                    await handleMoveFolderToFolder(dragId, undefined);
+                  }
+                }}
+              >
+                {/* Render folders at root */}
+                {folders.filter(f => !f.parentFolderId).map(f => renderFolderNode(f, 0))}
+                
+                {/* Render chapters at root */}
+                {manuscripts.filter(m => !m.folderId && !m.inTrash).map(m => renderManuscriptNode(m, 0))}
+              </div>
 
-                    <div className="chapter-actions">
-                      <button 
-                        onClick={(e) => startRenameChapter(chapter, e)} 
-                        title="Renomear"
-                        className="action-btn"
-                      >
-                        ✎
-                      </button>
-                      <button 
-                        onClick={(e) => handleDeleteChapter(chapter.id, e)} 
-                        title="Excluir"
-                        disabled={manuscripts.length <= 1}
-                        className="action-btn delete"
-                      >
-                        ×
-                      </button>
-                    </div>
+              {/* Trash Area Trigger & List (UC-157) */}
+              <div className="trash-section-sidebar">
+                <button 
+                  type="button" 
+                  className={`btn-trash-trigger ${showTrashPanel ? 'active' : ''}`}
+                  onClick={() => setShowTrashPanel(!showTrashPanel)}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                  </svg>
+                  <span>Lixeira ({manuscripts.filter(m => m.inTrash).length})</span>
+                </button>
+
+                {showTrashPanel && (
+                  <div className="trash-items-list animate-fade-in">
+                    {manuscripts.filter(m => m.inTrash).length === 0 ? (
+                      <p className="empty-trash-msg">Lixeira vazia</p>
+                    ) : (
+                      <>
+                        <button 
+                          type="button" 
+                          className="btn-empty-trash-all" 
+                          onClick={handleEmptyTrashAll}
+                        >
+                          Esvaziar Lixeira
+                        </button>
+                        <div className="trash-scroller">
+                          {manuscripts.filter(m => m.inTrash).map(item => {
+                            const now = Date.now();
+                            const deletedTime = new Date(item.deletedAt || '').getTime();
+                            const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
+                            const msRemaining = thirtyDaysInMs - (now - deletedTime);
+                            const daysRemaining = Math.max(0, Math.ceil(msRemaining / (24 * 60 * 60 * 1000)));
+
+                            return (
+                              <div key={item.id} className="trash-item-card">
+                                <div className="trash-item-info">
+                                  <span className="trash-item-title" title={item.title}>{item.title}</span>
+                                  <span className="trash-item-remaining">Restam {daysRemaining} dias</span>
+                                </div>
+                                <div className="trash-item-actions">
+                                  <button 
+                                    onClick={() => handleRestoreChapter(item.id)} 
+                                    className="btn-trash-restore"
+                                    title="Restaurar capítulo"
+                                  >
+                                    Restaurar
+                                  </button>
+                                  <button 
+                                    onClick={() => handlePermanentDeleteChapter(item.id)} 
+                                    className="btn-trash-delete"
+                                    title="Excluir permanentemente"
+                                  >
+                                    Excluir
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
@@ -1692,6 +2219,248 @@ export default function EditorComponent() {
           gap: 0.4rem;
           max-height: 180px;
           overflow-y: auto;
+        }
+
+        .explorer-actions-row {
+          display: flex;
+          gap: 0.25rem;
+          margin-bottom: 0.5rem;
+        }
+
+        .explorer-actions-row .add-chapter-form {
+          flex: 1;
+          margin-bottom: 0;
+        }
+
+        .btn-create-folder-root {
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 6px;
+          color: #9ca3af;
+          font-size: 0.9rem;
+          cursor: pointer;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s;
+        }
+
+        .btn-create-folder-root:hover {
+          background: rgba(20, 184, 166, 0.15);
+          border-color: rgba(20, 184, 166, 0.3);
+          color: #2dd4bf;
+        }
+
+        .folder-node {
+          display: flex;
+          flex-direction: column;
+          margin-bottom: 0.25rem;
+        }
+
+        .folder-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0.4rem 0.6rem;
+          border-radius: 6px;
+          background: rgba(255, 255, 255, 0.01);
+          border: 1px solid transparent;
+          cursor: pointer;
+          transition: all 0.2s;
+          user-select: none;
+        }
+
+        .folder-header:hover {
+          background: rgba(255, 255, 255, 0.04);
+        }
+
+        .folder-title {
+          display: flex;
+          align-items: center;
+          gap: 0.4rem;
+        }
+
+        .folder-icon {
+          font-size: 1rem;
+        }
+
+        .folder-name-text {
+          font-size: 0.8rem;
+          font-weight: 600;
+          color: #e5e7eb;
+        }
+
+        .folder-actions {
+          display: flex;
+          gap: 0.25rem;
+          opacity: 0;
+          transition: opacity 0.2s;
+        }
+
+        .folder-header:hover .folder-actions {
+          opacity: 1;
+        }
+
+        .folder-children {
+          border-left: 1px dashed rgba(255, 255, 255, 0.08);
+          margin-left: 0.5rem;
+          padding-left: 0.25rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+          margin-top: 0.25rem;
+        }
+
+        .add-subfolder-row {
+          padding: 0.2rem 0;
+        }
+
+        .add-subfolder-row input {
+          width: 100%;
+          font-size: 0.8rem;
+          padding: 0.25rem;
+        }
+
+        .root-folder-input {
+          margin-bottom: 0.5rem;
+        }
+
+        .trash-section-sidebar {
+          margin-top: 0.75rem;
+          border-top: 1px solid rgba(255, 255, 255, 0.05);
+          padding-top: 0.75rem;
+        }
+
+        .btn-trash-trigger {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: none;
+          border: none;
+          color: #9ca3af;
+          font-size: 0.8rem;
+          font-weight: 600;
+          cursor: pointer;
+          padding: 0.4rem;
+          border-radius: 6px;
+          transition: all 0.2s;
+          text-align: left;
+        }
+
+        .btn-trash-trigger:hover, .btn-trash-trigger.active {
+          color: #f87171;
+          background: rgba(239, 68, 68, 0.06);
+        }
+
+        .trash-items-list {
+          margin-top: 0.5rem;
+          background: rgba(0, 0, 0, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.04);
+          border-radius: 6px;
+          padding: 0.5rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.4rem;
+        }
+
+        .empty-trash-msg {
+          font-size: 0.75rem;
+          color: #6b7280;
+          text-align: center;
+          margin: 0.25rem 0;
+        }
+
+        .btn-empty-trash-all {
+          width: 100%;
+          background: rgba(239, 68, 68, 0.1);
+          border: 1px solid rgba(239, 68, 68, 0.2);
+          color: #f87171;
+          padding: 0.3rem;
+          border-radius: 4px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+          margin-bottom: 0.25rem;
+        }
+
+        .btn-empty-trash-all:hover {
+          background: #ef4444;
+          color: white;
+        }
+
+        .trash-scroller {
+          max-height: 120px;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 0.35rem;
+        }
+
+        .trash-item-card {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+          background: rgba(255, 255, 255, 0.01);
+          border: 1px solid rgba(255, 255, 255, 0.03);
+          border-radius: 4px;
+          padding: 0.4rem;
+        }
+
+        .trash-item-info {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 0.25rem;
+        }
+
+        .trash-item-title {
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: #d1d5db;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 90px;
+        }
+
+        .trash-item-remaining {
+          font-size: 0.65rem;
+          color: #9ca3af;
+        }
+
+        .trash-item-actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 0.4rem;
+        }
+
+        .btn-trash-restore, .btn-trash-delete {
+          background: none;
+          border: none;
+          font-size: 0.65rem;
+          font-weight: 600;
+          cursor: pointer;
+          padding: 0;
+        }
+
+        .btn-trash-restore {
+          color: #14b8a6;
+        }
+
+        .btn-trash-restore:hover {
+          text-decoration: underline;
+        }
+
+        .btn-trash-delete {
+          color: #f87171;
+        }
+
+        .btn-trash-delete:hover {
+          text-decoration: underline;
         }
 
         .chapter-list-item {

@@ -1,5 +1,5 @@
 import Dexie, { Table } from 'dexie';
-import { MetaNode, MetaEdge, WritingGoal, WritingLog, WritingStreak, Manuscript } from '@eldritch/domain';
+import { MetaNode, MetaEdge, WritingGoal, WritingLog, WritingStreak, Manuscript, Folder } from '@eldritch/domain';
 
 export class EldritchDatabase extends Dexie {
   metaNodes!: Table<MetaNode, string>;
@@ -11,6 +11,7 @@ export class EldritchDatabase extends Dexie {
   manuscripts!: Table<Manuscript, string>;
   manuscriptVersions!: Table<{ id: string; manuscriptId: string; versionNumber: number; title: string; content: string; createdAt: string }, string>;
   pendingSaves!: Table<{ id: string; manuscriptId: string; content: string; timestamp: number }, string>;
+  folders!: Table<Folder, string>;
 
   constructor() {
     const isBrowser = typeof window !== 'undefined';
@@ -54,6 +55,18 @@ export class EldritchDatabase extends Dexie {
       manuscripts: 'id, status, title',
       manuscriptVersions: 'id, manuscriptId, versionNumber, createdAt',
       pendingSaves: 'id, manuscriptId, timestamp'
+    });
+    this.version(6).stores({
+      metaNodes: 'id, type, status, title',
+      metaEdges: 'id, fromId, toId',
+      writingGoals: 'id, type, targetWords, deadline',
+      writingLogs: 'id, date',
+      writingStreak: 'id',
+      keyboardShortcuts: 'command',
+      manuscripts: 'id, status, title, folderId',
+      manuscriptVersions: 'id, manuscriptId, versionNumber, createdAt',
+      pendingSaves: 'id, manuscriptId, timestamp',
+      folders: 'id, projectId, parentFolderId'
     });
   }
 }
