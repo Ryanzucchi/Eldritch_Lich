@@ -48,6 +48,126 @@ const ENTITIES = [
   { id: 'espada_eclipse', name: 'Espada do Eclipse', keywords: ['Espada', 'Espada do Eclipse'] }
 ];
 
+const BUILTIN_ICONS = [
+  // Category: Personagem (25 items)
+  { id: 'user', name: 'usuário silhueta personagem', type: 'Personagem', char: '👤' },
+  { id: 'users', name: 'grupo equipe aliados', type: 'Personagem', char: '👥' },
+  { id: 'mage', name: 'mago feiticeiro bruxo', type: 'Personagem', char: '🧙' },
+  { id: 'elf', name: 'elfo arqueiro', type: 'Personagem', char: '🧝' },
+  { id: 'warrior', name: 'guerreiro espada escudo', type: 'Personagem', char: '⚔️' },
+  { id: 'crown', name: 'coroa rei rainha nobreza', type: 'Personagem', char: '👑' },
+  { id: 'ghost', name: 'fantasma alma espírito', type: 'Personagem', char: '👻' },
+  { id: 'dragon', name: 'dragão fera monstro', type: 'Personagem', char: '🐉' },
+  { id: 'skull', name: 'caveira morte perigo', type: 'Personagem', char: '💀' },
+  { id: 'fairy', name: 'fada espírito magia', type: 'Personagem', char: '🧚' },
+  { id: 'vampire', name: 'vampiro morcego sangue', type: 'Personagem', char: '🧛' },
+  { id: 'monster', name: 'monstro ogro criatura', type: 'Personagem', char: '👹' },
+  { id: 'ninja', name: 'ninja assassino sombra', type: 'Personagem', char: '🥷' },
+  { id: 'angel', name: 'anjo luz celestial', type: 'Personagem', char: '👼' },
+  { id: 'alien', name: 'alienígena criatura extra', type: 'Personagem', char: '👽' },
+  { id: 'robot', name: 'robô autômato construto', type: 'Personagem', char: '🤖' },
+  { id: 'detective', name: 'detetive investigador espião', type: 'Personagem', char: '🕵️' },
+  { id: 'jester', name: 'bobo bobo-da-corte piada', type: 'Personagem', char: '🃏' },
+  { id: 'zombie', name: 'zumbi morto-vivo horda', type: 'Personagem', char: '🧟' },
+  { id: 'mermaid', name: 'sereia água mar', type: 'Personagem', char: '🧜' },
+  { id: 'devil', name: 'demônio chifres mal', type: 'Personagem', char: '😈' },
+  { id: 'doctor', name: 'médico cura curandeiro', type: 'Personagem', char: '🧑‍⚕️' },
+  { id: 'scientist', name: 'cientista alquimista pesquisador', type: 'Personagem', char: '🧑‍🔬' },
+  { id: 'artist', name: 'artista pintor escritor', type: 'Personagem', char: '🧑‍🎨' },
+  { id: 'baby', name: 'bebê criança infância', type: 'Personagem', char: '👶' },
+
+  // Category: Item (30 items)
+  { id: 'sword', name: 'espada lâmina combate', type: 'Item', char: '⚔️' },
+  { id: 'shield', name: 'escudo defesa guarda', type: 'Item', char: '🛡️' },
+  { id: 'key', name: 'chave segredo tranca', type: 'Item', char: '🔑' },
+  { id: 'scroll', name: 'pergaminho mapa rolo', type: 'Item', char: '📜' },
+  { id: 'potion', name: 'poção elixir frasco', type: 'Item', char: '🧪' },
+  { id: 'gem', name: 'gema joia rubi diamante', type: 'Item', char: '💎' },
+  { id: 'candle', name: 'vela luz fogo', type: 'Item', char: '🕯️' },
+  { id: 'crystal_ball', name: 'bola de cristal oráculo', type: 'Item', char: '🔮' },
+  { id: 'medal', name: 'medalhão relíquia amuleto', type: 'Item', char: '🏅' },
+  { id: 'ring', name: 'anel joia aliança', type: 'Item', char: '💍' },
+  { id: 'book', name: 'livro tomo grimório', type: 'Item', char: '📖' },
+  { id: 'bow', name: 'arco flecha caça', type: 'Item', char: '🏹' },
+  { id: 'axe', name: 'machado arma lenhador', type: 'Item', char: '🪓' },
+  { id: 'hammer', name: 'martelo forja ferreiro', type: 'Item', char: '🔨' },
+  { id: 'dagger', name: 'adaga faca furtivo', type: 'Item', char: '🗡️' },
+  { id: 'feather', name: 'pena escrita tinta', type: 'Item', char: '🪶' },
+  { id: 'hourglass', name: 'ampulheta tempo pressa', type: 'Item', char: '⌛' },
+  { id: 'compass', name: 'bússola direção norte', type: 'Item', char: '🧭' },
+  { id: 'lantern', name: 'lanterna luz candeeiro', type: 'Item', char: '🪔' },
+  { id: 'mirror', name: 'espelho reflexo verdade', type: 'Item', char: '🪞' },
+  { id: 'chest', name: 'baú tesouro loot', type: 'Item', char: '🧰' },
+  { id: 'coin', name: 'moeda ouro dinheiro', type: 'Item', char: '🪙' },
+  { id: 'crown_item', name: 'tiara coroa joias', type: 'Item', char: '👑' },
+  { id: 'urn', name: 'urna cinzas vaso', type: 'Item', char: '🏺' },
+  { id: 'mask', name: 'máscara disfarce segredo', type: 'Item', char: '🎭' },
+  { id: 'box', name: 'caixa pacote embrulho', type: 'Item', char: '📦' },
+  { id: 'instrument', name: 'lira harpa música', type: 'Item', char: '🪕' },
+  { id: 'bell', name: 'sino som alerta', type: 'Item', char: '🔔' },
+  { id: 'dna', name: 'dna ciência genética', type: 'Item', char: '🧬' },
+  { id: 'gear', name: 'engrenagem máquina engrenagens', type: 'Item', char: '⚙️' },
+
+  // Category: Local (25 items)
+  { id: 'castle', name: 'castelo fortaleza muralha', type: 'Local', char: '🏰' },
+  { id: 'forest', name: 'floresta árvores bosque', type: 'Local', char: '🌲' },
+  { id: 'mountain', name: 'montanha pico gelo', type: 'Local', char: '🏔️' },
+  { id: 'water', name: 'água ondas mar oceano', type: 'Local', char: '🌊' },
+  { id: 'volcano', name: 'vulcão lava fogo', type: 'Local', char: '🌋' },
+  { id: 'temple', name: 'templo ruínas pilar', type: 'Local', char: '🏛️' },
+  { id: 'map_place', name: 'mapa viagem atlas', type: 'Local', char: '🗺️' },
+  { id: 'house', name: 'casa lar cabana', type: 'Local', char: '🏠' },
+  { id: 'bridge', name: 'ponte travessia caminho', type: 'Local', char: '🌉' },
+  { id: 'gate', name: 'portal portão passagem', type: 'Local', char: '🚪' },
+  { id: 'cave', name: 'caverna mina escuro', type: 'Local', char: '🕳️' },
+  { id: 'island', name: 'ilha palmeira mar', type: 'Local', char: '🏝️' },
+  { id: 'desert', name: 'deserto areia cacto', type: 'Local', char: '🏜️' },
+  { id: 'cemetery', name: 'cemitério túmulo lápide', type: 'Local', char: '🪦' },
+  { id: 'tower', name: 'torre farol altura', type: 'Local', char: '🗼' },
+  { id: 'palace', name: 'palácio mansão rica', type: 'Local', char: '🏛️' },
+  { id: 'tent', name: 'barraca acampamento camping', type: 'Local', char: '⛺' },
+  { id: 'well', name: 'poço água fonte', type: 'Local', char: '⛲' },
+  { id: 'cloud', name: 'nuvem céu névoa', type: 'Local', char: '☁️' },
+  { id: 'stars', name: 'estrelas galáxia constelação', type: 'Local', char: '🌌' },
+  { id: 'rainbow', name: 'arco-íris cores sorte', type: 'Local', char: '🌈' },
+  { id: 'wind', name: 'vento ar sopro', type: 'Local', char: '💨' },
+  { id: 'lightning', name: 'raio tempestade eletricidade', type: 'Local', char: '⚡' },
+  { id: 'fire_place', name: 'fogueira fogueira fogo', type: 'Local', char: '🔥' },
+  { id: 'tree_fall', name: 'árvore outono folha', type: 'Local', char: '🍂' },
+
+  // Category: Geral (30 items)
+  { id: 'folder', name: 'pasta diretório', type: 'Geral', char: '📁' },
+  { id: 'folder_open', name: 'pasta aberta', type: 'Geral', char: '📂' },
+  { id: 'document', name: 'documento arquivo folha', type: 'Geral', char: '📄' },
+  { id: 'pencil_tool', name: 'lápis escrita editar', type: 'Geral', char: '📝' },
+  { id: 'notebook_tool', name: 'caderno anotações', type: 'Geral', char: '📓' },
+  { id: 'star_yellow', name: 'estrela favorito amarela', type: 'Geral', char: '⭐' },
+  { id: 'heart_red', name: 'coração vida amor', type: 'Geral', char: '❤️' },
+  { id: 'warning_sign', name: 'alerta atenção cuidado', type: 'Geral', char: '⚠️' },
+  { id: 'lock_closed', name: 'cadeado fechado segurança', type: 'Geral', char: '🔒' },
+  { id: 'lock_open', name: 'cadeado aberto livre', type: 'Geral', char: '🔓' },
+  { id: 'search', name: 'lupa buscar pesquisa', type: 'Geral', char: '🔍' },
+  { id: 'settings', name: 'configurações engrenagem ajuste', type: 'Geral', char: '⚙️' },
+  { id: 'trash', name: 'lixeira excluir remover', type: 'Geral', char: '🗑️' },
+  { id: 'calendar', name: 'calendário data prazo', type: 'Geral', char: '📅' },
+  { id: 'clock', name: 'relógio tempo hora', type: 'Geral', char: '🕒' },
+  { id: 'check_ok', name: 'confirmado correto check', type: 'Geral', char: '✅' },
+  { id: 'cross_no', name: 'cancelado errado cruz', type: 'Geral', char: '❌' },
+  { id: 'info', name: 'informação ajuda info', type: 'Geral', char: 'ℹ️' },
+  { id: 'eye', name: 'olho ver visão', type: 'Geral', char: '👁️' },
+  { id: 'eye_slash', name: 'olho oculto invisível', type: 'Geral', char: '🙈' },
+  { id: 'speech', name: 'balão conversa diálogo', type: 'Geral', char: '💬' },
+  { id: 'attachment', name: 'clipes anexo vincular', type: 'Geral', char: '📎' },
+  { id: 'share', name: 'compartilhar rede enviar', type: 'Geral', char: '🔗' },
+  { id: 'mail', name: 'carta e-mail correspondência', type: 'Geral', char: '✉️' },
+  { id: 'target', name: 'alvo meta objetivo', type: 'Geral', char: '🎯' },
+  { id: 'trophy', name: 'troféu vitória conquista', type: 'Geral', char: '🏆' },
+  { id: 'bulb', name: 'lâmpada ideia inspiração', type: 'Geral', char: '💡' },
+  { id: 'cloud_sync', name: 'nuvem sinc sincronizar', type: 'Geral', char: '☁️' },
+  { id: 'download', name: 'download baixar salvar', type: 'Geral', char: '📥' },
+  { id: 'upload', name: 'upload enviar carregar', type: 'Geral', char: '📤' }
+];
+
 interface MMSLog {
   timestamp: string;
   paragraphText: string;
@@ -209,6 +329,106 @@ export default function EditorComponent() {
   // Menu bar dropdown active state
   const [activeMenuDropdown, setActiveMenuDropdown] = useState<'file' | 'edit' | 'view' | 'insert' | 'format' | null>(null);
 
+  // Tags & Categories States (UC-013, UC-014)
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [tagInput, setTagInput] = useState('');
+  const [globalCategories, setGlobalCategories] = useState<{name: string, color: string}[]>([]);
+  const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const activeProjId = activeProject?.id || 'default';
+      const stored = localStorage.getItem(`project_categories_${activeProjId}`);
+      if (stored) {
+        setGlobalCategories(JSON.parse(stored));
+      } else {
+        const defaults = [
+          { name: 'Geral', color: '#64748b' },
+          { name: 'Lore', color: '#a855f7' },
+          { name: 'Worldbuilding', color: '#3b82f6' },
+          { name: 'Rascunho', color: '#f97316' },
+          { name: 'Personagens', color: '#ec4899' }
+        ];
+        localStorage.setItem(`project_categories_${activeProjId}`, JSON.stringify(defaults));
+        setGlobalCategories(defaults);
+      }
+    }
+  }, [activeProject?.id]);
+
+  const getCategoryColor = (catName: string) => {
+    const found = globalCategories.find(c => c.name.toLowerCase() === catName.toLowerCase());
+    return found ? found.color : '#64748b';
+  };
+
+  const handleSelectCategory = async (catName: string) => {
+    if (!activeManuscript) return;
+    const updated = { ...activeManuscript, category: catName, updatedAt: new Date().toISOString() };
+    await db.manuscripts.put(updated);
+    setActiveManuscript(updated);
+    await loadManuscripts();
+    setShowCategoryDropdown(false);
+  };
+
+  const handleCreateCategory = () => {
+    const trimmed = newCategoryName.trim();
+    if (!trimmed) return;
+    
+    const exists = globalCategories.some(c => c.name.toLowerCase() === trimmed.toLowerCase());
+    if (exists) {
+      setSuccess('Uma categoria com este nome já existe.');
+      return;
+    }
+
+    const colors = ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef', '#ec4899'];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    const newCat = { name: trimmed, color: randomColor };
+    const updatedList = [...globalCategories, newCat];
+    
+    setGlobalCategories(updatedList);
+    if (activeProject) {
+      localStorage.setItem(`project_categories_${activeProject.id}`, JSON.stringify(updatedList));
+    }
+    setNewCategoryName('');
+    handleSelectCategory(trimmed);
+  };
+
+  const handleRemoveTag = async (tagToRemove: string) => {
+    if (!activeManuscript) return;
+    const currentTags = activeManuscript.tags || [];
+    const updatedTags = currentTags.filter(t => t.toLowerCase() !== tagToRemove.toLowerCase());
+    const updated = { ...activeManuscript, tags: updatedTags, updatedAt: new Date().toISOString() };
+    await db.manuscripts.put(updated);
+    setActiveManuscript(updated);
+    await loadManuscripts();
+  };
+
+  const handleAddTag = async () => {
+    if (!activeManuscript) return;
+    const trimmed = tagInput.trim().replace(/#/g, '');
+    if (!trimmed) return;
+    
+    if (trimmed.length > 30) {
+      setSuccess('Tags devem ter no máximo 30 caracteres.');
+      return;
+    }
+
+    const currentTags = activeManuscript.tags || [];
+    const exists = currentTags.some(t => t.toLowerCase() === trimmed.toLowerCase());
+    
+    if (exists) {
+      setTagInput('');
+      return;
+    }
+
+    const updatedTags = [...currentTags, trimmed];
+    const updated = { ...activeManuscript, tags: updatedTags, updatedAt: new Date().toISOString() };
+    await db.manuscripts.put(updated);
+    setActiveManuscript(updated);
+    await loadManuscripts();
+    setTagInput('');
+  };
+
   // Link insertion handler (UC-110, UC-111)
   const handleExecuteInsertLink = () => {
     if (!editor || !linkUrl.trim()) return;
@@ -368,6 +588,89 @@ export default function EditorComponent() {
     localStorage.setItem('pinnedManuscripts', JSON.stringify(updated));
   };
 
+  // Toggle Favorite Manuscript (UC-126)
+  const handleToggleFavorite = async (manuscript: Manuscript, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const updated = {
+      ...manuscript,
+      isFavorite: !(manuscript as any).isFavorite,
+      updatedAt: new Date().toISOString()
+    } as any;
+    
+    await db.manuscripts.put(updated);
+    if (activeManuscript?.id === manuscript.id) {
+      setActiveManuscript(updated);
+    }
+    await loadManuscripts();
+    setSuccess(updated.isFavorite ? 'Capítulo adicionado aos favoritos!' : 'Capítulo removido dos favoritos.');
+    setTimeout(() => setSuccess(null), 3000);
+    addAuditLog('pin_toggle', `Status de favorito alterado para ${updated.isFavorite}`);
+  };
+
+  // Icon Customizer Operations (UC-086)
+  const handleSelectBuiltinIcon = async (iconChar: string) => {
+    if (!iconTarget) return;
+    try {
+      if (iconTarget.type === 'folder') {
+        await db.folders.update(iconTarget.id, { icon: iconChar } as any);
+        await loadFolders();
+      } else {
+        await db.manuscripts.update(iconTarget.id, { icon: iconChar } as any);
+        if (activeManuscript?.id === iconTarget.id) {
+          setActiveManuscript(prev => prev ? { ...prev, icon: iconChar } : null);
+        }
+        await loadManuscripts();
+      }
+      setSuccess('Ícone personalizado com sucesso!');
+      setTimeout(() => setSuccess(null), 3000);
+      setIconTarget(null);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleRemoveCustomIcon = async () => {
+    if (!iconTarget) return;
+    try {
+      if (iconTarget.type === 'folder') {
+        await db.folders.update(iconTarget.id, { icon: undefined } as any);
+        await loadFolders();
+      } else {
+        await db.manuscripts.update(iconTarget.id, { icon: undefined } as any);
+        if (activeManuscript?.id === iconTarget.id) {
+          setActiveManuscript(prev => prev ? { ...prev, icon: undefined } : null);
+        }
+        await loadManuscripts();
+      }
+      setSuccess('Ícone redefinido para o padrão.');
+      setTimeout(() => setSuccess(null), 3000);
+      setIconTarget(null);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleSaveCustomSVGIcon = async (svgText: string) => {
+    if (!iconTarget) return;
+    try {
+      if (iconTarget.type === 'folder') {
+        await db.folders.update(iconTarget.id, { icon: svgText } as any);
+        await loadFolders();
+      } else {
+        await db.manuscripts.update(iconTarget.id, { icon: svgText } as any);
+        if (activeManuscript?.id === iconTarget.id) {
+          setActiveManuscript(prev => prev ? { ...prev, icon: svgText } : null);
+        }
+        await loadManuscripts();
+      }
+      setSuccess('Ícone SVG carregado e salvo!');
+      setTimeout(() => setSuccess(null), 3000);
+      setIconTarget(null);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   // Insert Drawing Canvas Image (UC-062)
   const handleInsertDrawingToEditor = (dataUrl: string) => {
     if (!editor || !dataUrl) return;
@@ -386,6 +689,11 @@ export default function EditorComponent() {
 
   // Chapter Templates State (UC-137, UC-138)
   const [showTemplateModal, setShowTemplateModal] = useState(false);
+
+  // Icon Customizer State (UC-086)
+  const [iconTarget, setIconTarget] = useState<{ id: string; type: 'folder' | 'manuscript'; currentIcon?: string } | null>(null);
+  const [iconSearchQuery, setIconSearchQuery] = useState('');
+  const [iconCategory, setIconCategory] = useState('ALL');
 
   // Load comments for active manuscript (UC-114)
   const loadComments = async (manuscriptId: string) => {
@@ -969,6 +1277,8 @@ export default function EditorComponent() {
   };
 
   const loadManuscripts = async () => {
+    const isBrowser = typeof window !== 'undefined';
+    const activeProjectId = isBrowser ? localStorage.getItem('activeProjectId') || 'default' : 'default';
     const savedManuscripts = await db.manuscripts.toArray();
     
     // Auto purge trash older than 30 days (UC-157 Exception Flow)
@@ -1023,11 +1333,12 @@ export default function EditorComponent() {
         title: 'Capítulo 1 - A Travessia',
         content: `
           <p>Kael respirou fundo e deu os primeiros passos na Floresta dos Sussurros. As árvores retorcidas pareciam murmurar segredos ao vento frio da noite.</p>
-          <p>Ele caminhou por horas, guiado apenas pelo sussurro das folhas. Sob as raíces massivas de um salgueiro ancião, algo brilhava debilmente sob a terra úmida. Kael cavou freneticamente até que suas mãos tocaram a superfície gélida do Medalhão Antigo. Ele finalmente o segurou contra o peito, sentindo sua pulsação mística.</p>
+          <p>Ele caminhou por horas, guiado apenas pelo sussurro das folhas. Sob as raíces massivas de um salgueiro ancião, algo brilhava debilmente sob a terra úmida. Kael cavou freneticamente até que suas mãos tocaram a superfície gélida do Medalhão Antigo. He finalmente o segurou contra o peito, sentindo sua pulsação mística.</p>
           <p>Ele pensou: "Vou levar o medalhão até a estalagem e amanhã pretendo encontrar a Espada do Eclipse."</p>
         `,
         status: 'RASCUNHO',
         isLocked: false,
+        projectId: activeProjectId,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -1310,12 +1621,16 @@ export default function EditorComponent() {
     e.preventDefault();
     if (!newChapterTitle.trim()) return;
 
+    const isBrowser = typeof window !== 'undefined';
+    const activeProjectId = isBrowser ? localStorage.getItem('activeProjectId') || 'default' : 'default';
+
     const newChapter: Manuscript = {
       id: 'chapter_' + Date.now(),
       title: newChapterTitle.trim(),
       content: '<p>Comece a escrever...</p>',
       status: 'RASCUNHO',
       isLocked: false,
+      projectId: activeProjectId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -1631,11 +1946,26 @@ export default function EditorComponent() {
         >
           <div className="folder-title">
             <span className="folder-icon">
-              {isExpanded ? '📂' : '📁'}
+              {(folder as any).icon ? (
+                (folder as any).icon.startsWith('<svg') ? (
+                  <span className="custom-svg-icon-wrapper" dangerouslySetInnerHTML={{ __html: (folder as any).icon }} />
+                ) : (
+                  <span>{(folder as any).icon}</span>
+                )
+              ) : (
+                isExpanded ? '📂' : '📁'
+              )}
             </span>
             <span className="folder-name-text">{folder.name}</span>
           </div>
           <div className="folder-actions" onClick={e => e.stopPropagation()}>
+            <button 
+              onClick={() => setIconTarget({ id: folder.id, type: 'folder', currentIcon: (folder as any).icon })}
+              title="Mudar Ícone da Pasta (UC-086)"
+              className="action-btn"
+            >
+              🎨
+            </button>
             <button 
               onClick={() => setShowAddFolderInput(prev => ({ ...prev, [folder.id]: !prev[folder.id] }))}
               title="Nova subpasta"
@@ -1738,7 +2068,18 @@ export default function EditorComponent() {
           />
         ) : (
           <div className="chapter-item-details">
-            <span className="chapter-title-text">📄 {chapter.title}</span>
+            <span className="chapter-title-text">
+              {(chapter as any).icon ? (
+                (chapter as any).icon.startsWith('<svg') ? (
+                  <span className="custom-svg-icon-wrapper" dangerouslySetInnerHTML={{ __html: (chapter as any).icon }} />
+                ) : (
+                  <span>{(chapter as any).icon}</span>
+                )
+              ) : (
+                '📄'
+              )}
+              {' '}{chapter.title}
+            </span>
             <div className="chapter-badges">
               <span className={`status-badge-tag ${chapter.status.toLowerCase()}`}>
                 {chapter.status === 'RASCUNHO' ? 'R' : chapter.status === 'REVISAO' ? 'Rev' : '✓'}
@@ -1748,6 +2089,26 @@ export default function EditorComponent() {
         )}
 
         <div className="chapter-actions">
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              setIconTarget({ id: chapter.id, type: 'manuscript', currentIcon: (chapter as any).icon });
+            }} 
+            title="Mudar Ícone do Capítulo (UC-086)"
+            className="action-btn"
+          >
+            🎨
+          </button>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggleFavorite(chapter);
+            }} 
+            title={(chapter as any).isFavorite ? "Remover dos Favoritos (UC-126)" : "Adicionar aos Favoritos (UC-126)"}
+            className={`action-btn ${(chapter as any).isFavorite ? 'active-star' : ''}`}
+          >
+            ★
+          </button>
           <button 
             onClick={(e) => handleTogglePinManuscript(chapter.id, e)} 
             title={pinnedManuscriptIds.includes(chapter.id) ? "Desafixar do Topo" : "Fixar no Topo (UC-128)"}
@@ -1994,7 +2355,7 @@ export default function EditorComponent() {
   const graphCoverage = nodes.length > 0 ? Math.round((completedGoals.length / nodes.length) * 100) : 0;
 
   return (
-    <div className={`main-content animate-fade-in density-${uiDensity} accent-${accentColor} ${isFocusMode ? 'focus-mode-active' : ''} ${isLineFocus ? 'line-focus-mode' : ''}`}>
+    <div className={`main-content animate-fade-in density-${uiDensity} accent-${accentColor} theme-${docsTheme} ${isFocusMode ? 'focus-mode-active' : ''} ${isLineFocus ? 'line-focus-mode' : ''}`}>
       {/* Celebration overlay */}
       {showCelebration && (
         <div className="celebration-overlay">
@@ -2018,6 +2379,29 @@ export default function EditorComponent() {
       {isFocusMode && (
         <button onClick={() => triggerCommand('toggle_focus')} className="floating-btn-exit-focus glass">
           Sair do Modo Foco (ESC)
+        </button>
+      )}
+
+      {/* Floating sidebar toggles when panels are closed */}
+      {!isLeftSidebarOpen && !isFocusMode && (
+        <button
+          type="button"
+          onClick={() => setIsLeftSidebarOpen(true)}
+          className="floating-sidebar-toggle left-toggle glass"
+          title="Abrir Explorer de Capítulos"
+        >
+          📁 Explorer ▶
+        </button>
+      )}
+
+      {!isRightSidebarOpen && !isFocusMode && (
+        <button
+          type="button"
+          onClick={() => setIsRightSidebarOpen(true)}
+          className="floating-sidebar-toggle right-toggle glass"
+          title="Abrir Painel de IA e Versões"
+        >
+          ◀ 📊 IA / Versões
         </button>
       )}
 
@@ -2107,6 +2491,24 @@ export default function EditorComponent() {
                 </div>
               )}
 
+              {/* Category Filter Toolbar */}
+              <div className="sidebar-filter-toolbar">
+                <span className="filter-icon">🔍 Filtro:</span>
+                <select 
+                  value={categoryFilter} 
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="sidebar-category-filter"
+                >
+                  <option value="ALL">Todas as Categorias</option>
+                  {globalCategories.map(cat => (
+                    <option key={cat.name} value={cat.name}>
+                      📁 {cat.name}
+                    </option>
+                  ))}
+                  <option value="UNCATEGORIZED">Sem Categoria</option>
+                </select>
+              </div>
+
               {/* Explorer List */}
               <div 
                 className="manuscripts-list"
@@ -2121,22 +2523,47 @@ export default function EditorComponent() {
                   }
                 }}
               >
-                {/* Render Pinned Manuscripts (UC-128) */}
-                {pinnedManuscriptIds.length > 0 && (
-                  <div className="pinned-manuscripts-group">
-                    <span className="pinned-group-label">📌 Fixados no Topo</span>
+                {categoryFilter !== 'ALL' ? (
+                  <div className="filtered-chapters-list">
+                    <span className="filter-status-label">Categoria: {categoryFilter === 'UNCATEGORIZED' ? 'Sem Categoria' : categoryFilter}</span>
                     {manuscripts
-                      .filter(m => pinnedManuscriptIds.includes(m.id) && !m.inTrash)
+                      .filter(m => !m.inTrash && (categoryFilter === 'UNCATEGORIZED' ? !m.category : m.category === categoryFilter))
                       .map(m => renderManuscriptNode(m, 0))}
-                    <div className="pinned-group-divider" />
+                    {manuscripts.filter(m => !m.inTrash && (categoryFilter === 'UNCATEGORIZED' ? !m.category : m.category === categoryFilter)).length === 0 && (
+                      <div className="filter-empty-state">Nenhum capítulo nesta categoria.</div>
+                    )}
                   </div>
-                )}
+                ) : (
+                  <>
+                    {/* Render Favorite Manuscripts (UC-126) */}
+                    {manuscripts.some(m => (m as any).isFavorite && !m.inTrash) && (
+                      <div className="favorite-manuscripts-group">
+                        <span className="favorite-group-label">⭐ Favoritos</span>
+                        {manuscripts
+                          .filter(m => (m as any).isFavorite && !m.inTrash)
+                          .map(m => renderManuscriptNode(m, 0))}
+                        <div className="favorite-group-divider" />
+                      </div>
+                    )}
 
-                {/* Render folders at root */}
-                {folders.filter(f => !f.parentFolderId).map(f => renderFolderNode(f, 0))}
-                
-                {/* Render chapters at root */}
-                {manuscripts.filter(m => !m.folderId && !m.inTrash && !m.isArchived).map(m => renderManuscriptNode(m, 0))}
+                    {/* Render Pinned Manuscripts (UC-128) */}
+                    {pinnedManuscriptIds.length > 0 && (
+                      <div className="pinned-manuscripts-group">
+                        <span className="pinned-group-label">📌 Fixados no Topo</span>
+                        {manuscripts
+                          .filter(m => pinnedManuscriptIds.includes(m.id) && !m.inTrash)
+                          .map(m => renderManuscriptNode(m, 0))}
+                        <div className="pinned-group-divider" />
+                      </div>
+                    )}
+
+                    {/* Render folders at root */}
+                    {folders.filter(f => !f.parentFolderId).map(f => renderFolderNode(f, 0))}
+                    
+                    {/* Render chapters at root */}
+                    {manuscripts.filter(m => !m.folderId && !m.inTrash && !m.isArchived).map(m => renderManuscriptNode(m, 0))}
+                  </>
+                )}
               </div>
 
               {/* Arquivados Area Trigger & List (UC-127) */}
@@ -2308,7 +2735,7 @@ export default function EditorComponent() {
               {/* Row 1: Document Title & Main Dropdown Menus */}
               <div className="docs-top-bar">
                 <div className="docs-brand-doc">
-                  <Link href="/projects" className="docs-home-icon-btn" title="Ir para a Tela Inicial de Projetos (Estilo Google Docs Hub)">
+                  <Link href="/" className="docs-home-icon-btn" title="Ir para a Tela Inicial de Projetos (Estilo Google Docs Hub)">
                     📄
                   </Link>
                   <div className="docs-doc-meta">
@@ -2338,7 +2765,7 @@ export default function EditorComponent() {
                       <span className="docs-title-separator">/</span>
 
                       {editingChapterId === activeManuscript.id ? (
-                        <input
+                        <input 
                           type="text"
                           value={editingChapterTitle}
                           onChange={(e) => setEditingChapterTitle(e.target.value)}
@@ -2348,13 +2775,23 @@ export default function EditorComponent() {
                           autoFocus
                         />
                       ) : (
-                        <h2 
-                          className="docs-doc-title" 
-                          onClick={(e) => startRenameChapter(activeManuscript, e)}
-                          title="Clique para renomear este capítulo"
-                        >
-                          {activeManuscript.title} ✎
-                        </h2>
+                        <div className="title-and-favorite-row">
+                          <h2 
+                            className="docs-doc-title" 
+                            onClick={(e) => startRenameChapter(activeManuscript, e)}
+                            title="Clique para renomear este capítulo"
+                          >
+                            {activeManuscript.title} ✎
+                          </h2>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleFavorite(activeManuscript)}
+                            className={`btn-favorite-star ${(activeManuscript as any).isFavorite ? 'is-starred' : ''}`}
+                            title={(activeManuscript as any).isFavorite ? 'Remover dos favoritos' : 'Marcar como favorito'}
+                          >
+                            ★
+                          </button>
+                        </div>
                       )}
                       <span className={`status-badge-mini ${activeManuscript.status.toLowerCase()}`}>
                         {activeManuscript.status}
@@ -2620,6 +3057,111 @@ export default function EditorComponent() {
                 <button onClick={() => setShowSearchModal(true)} className="ribbon-btn" title="Buscar & Substituir (UC-022, UC-024)">🔍</button>
                 <button onClick={() => setShowImportModal(true)} className="ribbon-btn" title="Importar Manuscrito (UC-007)">📥</button>
                 <button onClick={() => setShowExportModal(true)} className="ribbon-btn primary" title="Exportar Manuscrito (UC-008)">📤</button>
+              </div>
+            </div>
+          )}
+
+          {/* Docs Metadata Bar (UC-013, UC-014) */}
+          {!isFocusMode && activeManuscript && (
+            <div className="docs-metadata-bar glass animate-fade-in">
+              {/* Category section */}
+              <div className="metadata-category-section">
+                <span className="metadata-label">Categoria:</span>
+                <div className="category-badge-container">
+                  <span 
+                    className="category-badge"
+                    style={{ backgroundColor: getCategoryColor(activeManuscript.category || '') }}
+                    onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                    title="Clique para selecionar ou gerenciar categorias"
+                  >
+                    📁 {activeManuscript.category || 'Sem Categoria'}
+                  </span>
+                  
+                  {showCategoryDropdown && (
+                    <div className="category-dropdown-list glass animate-fade-in">
+                      <div className="dropdown-search-wrapper">
+                        <input 
+                          type="text" 
+                          placeholder="Criar categoria..." 
+                          value={newCategoryName}
+                          onChange={(e) => setNewCategoryName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleCreateCategory();
+                            }
+                          }}
+                        />
+                        <button type="button" onClick={handleCreateCategory}>+</button>
+                      </div>
+                      <div className="dropdown-divider" />
+                      <div className="dropdown-scroll-items">
+                        {globalCategories.map(cat => (
+                          <button 
+                            key={cat.name} 
+                            type="button"
+                            onClick={() => handleSelectCategory(cat.name)}
+                            className="dropdown-cat-item"
+                          >
+                            <span className="cat-color-dot" style={{ backgroundColor: cat.color }} />
+                            <span>{cat.name}</span>
+                          </button>
+                        ))}
+                        <button 
+                          type="button" 
+                          onClick={() => handleSelectCategory('')} 
+                          className="dropdown-cat-item"
+                        >
+                          <span className="cat-color-dot" style={{ backgroundColor: '#64748b' }} />
+                          <span>Limpar Categoria</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="metadata-divider" />
+
+              {/* Tags Section */}
+              <div className="metadata-tags-section">
+                <span className="metadata-label">Tags:</span>
+                <div className="tags-list">
+                  {(activeManuscript.tags || []).map(tag => (
+                    <span key={tag} className="tag-badge">
+                      #{tag}
+                      <button 
+                        type="button" 
+                        onClick={() => handleRemoveTag(tag)}
+                        className="btn-remove-tag"
+                        title="Remover tag"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+
+                  <div className="add-tag-wrapper">
+                    <input 
+                      type="text" 
+                      placeholder="+ Tag..."
+                      value={tagInput}
+                      onChange={(e) => {
+                        if (e.target.value.length > 30) {
+                          setSuccess('Tags devem ter no máximo 30 caracteres.');
+                          setTagInput(e.target.value.substring(0, 30));
+                        } else {
+                          setTagInput(e.target.value);
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleAddTag();
+                        }
+                      }}
+                      className="add-tag-input"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -3581,6 +4123,190 @@ export default function EditorComponent() {
         </div>
       )}
 
+      {/* Icon Customizer Modal (UC-086) */}
+      {iconTarget && (
+        <div className="version-modal-overlay animate-fade-in" onClick={() => setIconTarget(null)}>
+          <div className="import-modal-card glass" style={{ maxWidth: '520px' }} onClick={e => e.stopPropagation()}>
+            <div className="import-modal-header">
+              <h3>🎨 Personalizar Ícone</h3>
+              <p className="import-subtitle">Selecione um ícone padrão ou faça upload de um SVG vetorial personalizado.</p>
+            </div>
+
+            <div className="modal-body-scrollable" style={{ maxHeight: '420px', overflowY: 'auto', padding: '0.5rem 0' }}>
+              {/* Search bar */}
+              <div className="icon-search-row" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                <input 
+                  type="text" 
+                  placeholder="Pesquisar ícones (ex: mago, castelo, espada)..."
+                  value={iconSearchQuery}
+                  onChange={(e) => setIconSearchQuery(e.target.value)}
+                  style={{
+                    flex: 1,
+                    background: 'rgba(255, 255, 255, 0.04)',
+                    border: '1px solid var(--border-light)',
+                    borderRadius: '6px',
+                    color: '#fff',
+                    padding: '0.5rem',
+                    fontSize: '0.85rem',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+
+              {/* Categories */}
+              <div className="icon-categories-tabs" style={{ display: 'flex', gap: '0.4rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+                {['ALL', 'Personagem', 'Item', 'Local', 'Geral'].map(cat => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setIconCategory(cat)}
+                    style={{
+                      background: iconCategory === cat ? '#14b8a6' : 'rgba(255, 255, 255, 0.05)',
+                      color: '#fff',
+                      border: 'none',
+                      padding: '0.35rem 0.75rem',
+                      borderRadius: '4px',
+                      fontSize: '0.75rem',
+                      cursor: 'pointer',
+                      fontWeight: 600
+                    }}
+                  >
+                    {cat === 'ALL' ? 'Todos' : cat}
+                  </button>
+                ))}
+              </div>
+
+              {/* Grid */}
+              <div className="icons-grid" style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(8, 1fr)',
+                gap: '0.5rem',
+                maxHeight: '180px',
+                overflowY: 'auto',
+                padding: '0.5rem',
+                background: 'rgba(0,0,0,0.15)',
+                borderRadius: '8px',
+                border: '1px solid var(--border-light)',
+                marginBottom: '1.25rem'
+              }}>
+                {BUILTIN_ICONS.filter(icon => {
+                  const matchesCat = iconCategory === 'ALL' || icon.type === iconCategory;
+                  const matchesSearch = !iconSearchQuery || 
+                    icon.name.toLowerCase().includes(iconSearchQuery.toLowerCase()) ||
+                    icon.type.toLowerCase().includes(iconSearchQuery.toLowerCase());
+                  return matchesCat && matchesSearch;
+                }).map(icon => (
+                  <button
+                    key={icon.id}
+                    type="button"
+                    onClick={() => handleSelectBuiltinIcon(icon.char)}
+                    style={{
+                      background: 'rgba(255,255,255,0.03)',
+                      border: '1px solid rgba(255,255,255,0.06)',
+                      borderRadius: '6px',
+                      height: '38px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1.25rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(20, 184, 166, 0.15)'; e.currentTarget.style.borderColor = '#14b8a6'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}
+                    title={icon.name}
+                  >
+                    {icon.char}
+                  </button>
+                ))}
+              </div>
+
+              {/* Custom SVG Section */}
+              <div className="custom-svg-upload-box" style={{
+                padding: '1rem',
+                background: 'rgba(255,255,255,0.02)',
+                border: '1px dashed var(--border-light)',
+                borderRadius: '8px',
+                textAlign: 'center'
+              }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
+                  📤 Upload de Ícone SVG Customizado
+                </span>
+                <input 
+                  type="file" 
+                  accept=".svg"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      if (file.type !== 'image/svg+xml' && !file.name.endsWith('.svg')) {
+                        alert('Por favor, faça upload apenas de arquivos SVG.');
+                        return;
+                      }
+                      const reader = new FileReader();
+                      reader.onload = async (event) => {
+                        const text = event.target?.result as string;
+                        const hasScript = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi.test(text) ||
+                                          /on\w+\s*=/gi.test(text) ||
+                                          /javascript:/gi.test(text);
+                        if (hasScript) {
+                          alert('Erro de Segurança: O arquivo SVG contém tags de script ou manipuladores de eventos maliciosos.');
+                          return;
+                        }
+                        await handleSaveCustomSVGIcon(text);
+                      };
+                      reader.readAsText(file);
+                    }
+                  }}
+                  id="editor-custom-svg-uploader"
+                  style={{ display: 'none' }}
+                />
+                <label 
+                  htmlFor="editor-custom-svg-uploader"
+                  style={{
+                    display: 'inline-block',
+                    background: 'rgba(20, 184, 166, 0.12)',
+                    color: '#14b8a6',
+                    border: '1px solid rgba(20, 184, 166, 0.3)',
+                    padding: '0.45rem 1rem',
+                    borderRadius: '6px',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  Selecionar Arquivo SVG
+                </label>
+                <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.5rem', margin: 0 }}>
+                  Arquivos SVG puros e higienizados.
+                </p>
+              </div>
+            </div>
+
+            <div className="import-modal-actions" style={{ marginTop: '1.25rem' }}>
+              {iconTarget.currentIcon && (
+                <button type="button" onClick={handleRemoveCustomIcon} style={{
+                  background: 'rgba(239, 68, 68, 0.12)',
+                  color: '#ef4444',
+                  border: 'none',
+                  padding: '0.55rem 1rem',
+                  borderRadius: '6px',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  marginRight: 'auto'
+                }}>
+                  Remover Ícone
+                </button>
+              )}
+              <button type="button" className="btn-modal-close" onClick={() => setIconTarget(null)}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Drawing Canvas Modal (UC-062) */}
       {showDrawingModal && (
         <div className="version-modal-overlay animate-fade-in">
@@ -3713,9 +4439,9 @@ export default function EditorComponent() {
         /* Main App Shell Layout (Fixes Left Panel Cutoff & Scrolling) */
         .main-content {
           display: flex !important;
-          width: 100vw !important;
-          max-width: 100vw !important;
-          height: 100vh !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          height: 100% !important;
           overflow: hidden !important;
           background-color: var(--bg-space);
           position: relative;
@@ -3728,7 +4454,7 @@ export default function EditorComponent() {
           width: 0 !important;
           display: flex !important;
           flex-direction: column !important;
-          height: 100vh !important;
+          height: 100% !important;
           overflow: hidden !important;
           position: relative;
         }
@@ -3787,7 +4513,7 @@ export default function EditorComponent() {
 
         .editor-side-panel {
           position: relative;
-          height: 100vh !important;
+          height: 100% !important;
           overflow-y: auto !important;
           flex-shrink: 0 !important;
           box-sizing: border-box !important;
@@ -3839,8 +4565,8 @@ export default function EditorComponent() {
           .editor-side-panel.mms-logs-panel {
             position: fixed !important;
             right: 0 !important;
-            top: 0 !important;
-            height: 100vh !important;
+            top: 48px !important;
+            height: calc(100vh - 48px) !important;
             z-index: 100 !important;
             box-shadow: -4px 0 25px rgba(0, 0, 0, 0.5) !important;
             background: rgba(15, 23, 42, 0.96) !important;
@@ -6735,6 +7461,667 @@ export default function EditorComponent() {
         .btn-modal-close:hover {
           color: var(--text-primary);
           background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* Complete Light Theme Overrides (UC-159) */
+        .main-content.theme-light {
+          --bg-space: #f1f5f9;
+          --bg-card: rgba(255, 255, 255, 0.9);
+          --bg-card-hover: rgba(241, 245, 249, 0.95);
+          --border-light: rgba(15, 23, 42, 0.12);
+          --border-glow: rgba(20, 184, 166, 0.35);
+          --border-active: rgba(20, 184, 166, 0.8);
+
+          --text-primary: #0f172a;
+          --text-secondary: #475569;
+          --text-muted: #64748b;
+        }
+
+        .main-content.theme-light .google-docs-header-ribbon {
+          background: rgba(255, 255, 255, 0.92) !important;
+          border-bottom: 1px solid rgba(15, 23, 42, 0.08) !important;
+        }
+
+        .main-content.theme-light .docs-formatting-ribbon {
+          background: rgba(15, 23, 42, 0.04) !important;
+          border-bottom: 1px solid rgba(15, 23, 42, 0.08) !important;
+        }
+
+        .main-content.theme-light .ribbon-select,
+        .main-content.theme-light .font-size-control-group,
+        .main-content.theme-light .docs-status-select {
+          background: rgba(255, 255, 255, 0.9) !important;
+          border: 1px solid rgba(15, 23, 42, 0.15) !important;
+          color: #0f172a !important;
+        }
+
+        .main-content.theme-light .dropdown-menu-list {
+          background: rgba(255, 255, 255, 0.98) !important;
+          border: 1px solid rgba(147, 51, 234, 0.4) !important;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12) !important;
+        }
+
+        .main-content.theme-light .dropdown-menu-list button {
+          color: #0f172a !important;
+        }
+
+        .main-content.theme-light .dropdown-menu-list button:hover {
+          background: rgba(147, 51, 234, 0.12) !important;
+          color: #6b21a8 !important;
+        }
+
+        .main-content.theme-light .menu-btn:hover,
+        .main-content.theme-light .ribbon-btn:hover {
+          background: rgba(0, 0, 0, 0.06) !important;
+          color: #0f172a !important;
+        }
+
+        .main-content.theme-light .google-docs-status-bar {
+          background: rgba(255, 255, 255, 0.92) !important;
+          border-top: 1px solid rgba(15, 23, 42, 0.08) !important;
+        }
+
+        .main-content.theme-light .modal-card {
+          background: #ffffff !important;
+          border: 1px solid rgba(15, 23, 42, 0.1) !important;
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12) !important;
+          color: #0f172a !important;
+        }
+
+        .main-content.theme-light .modal-card h2,
+        .main-content.theme-light .modal-card h3 {
+          color: #0f172a !important;
+        }
+
+        .main-content.theme-light .form-group input,
+        .main-content.theme-light .form-group select {
+          background: rgba(15, 23, 42, 0.04) !important;
+          border: 1px solid rgba(15, 23, 42, 0.1) !important;
+          color: #0f172a !important;
+        }
+
+        .main-content.theme-light .form-group label {
+          color: #334155 !important;
+        }
+
+        .main-content.theme-light .trash-item-card {
+          background: rgba(15, 23, 42, 0.04) !important;
+          border: 1px solid rgba(15, 23, 42, 0.08) !important;
+          color: #0f172a !important;
+        }
+        
+        .main-content.theme-light .trash-item-title {
+          color: #0f172a !important;
+        }
+
+        /* Narrative Goals (.goals-vertical-list & .goal-item-card) (UC-085, UC-086) */
+        .goals-vertical-list {
+          display: flex;
+          flex-direction: column;
+          gap: 0.85rem;
+          margin-top: 1.25rem;
+          width: 100%;
+        }
+
+        .goal-item-card {
+          padding: 1.1rem 1.2rem;
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+          display: flex;
+          flex-direction: column;
+          gap: 0.45rem;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .goal-item-card:hover {
+          transform: translateY(-2px);
+          background: rgba(255, 255, 255, 0.04);
+          border-color: rgba(255, 255, 255, 0.1);
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Border accent based on status */
+        .goal-item-card.concluido {
+          border-left: 4px solid #10b981 !important;
+          background: rgba(16, 185, 129, 0.04) !important;
+        }
+
+        .goal-item-card.pendente {
+          border-left: 4px solid #f59e0b !important;
+          background: rgba(245, 158, 11, 0.03) !important;
+        }
+
+        .goal-item-card.inconsistente {
+          border-left: 4px solid #ef4444 !important;
+          background: rgba(239, 68, 68, 0.04) !important;
+        }
+
+        .goal-item-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 0.75rem;
+          margin-bottom: 0.1rem;
+        }
+
+        .goal-item-status-icon {
+          font-weight: 800;
+          font-size: 0.85rem;
+        }
+
+        .goal-item-card.concluido .goal-item-status-icon {
+          color: #10b981;
+        }
+
+        .goal-item-card.pendente .goal-item-status-icon {
+          color: #f59e0b;
+        }
+
+        .goal-item-card.inconsistente .goal-item-status-icon {
+          color: #ef4444;
+        }
+
+        .goal-item-type {
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.75px;
+          color: var(--brand-primary, #14b8a6);
+          opacity: 0.85;
+          font-size: 0.7rem;
+        }
+
+        .goal-item-title {
+          font-size: 0.98rem;
+          font-weight: 600;
+          color: var(--text-primary);
+          line-height: 1.35;
+          margin: 0.1rem 0;
+        }
+
+        .goal-item-desc {
+          font-size: 0.85rem;
+          color: var(--text-secondary);
+          line-height: 1.45;
+        }
+
+        .goal-item-meta {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 0.75rem;
+          color: var(--text-muted);
+          margin-top: 0.45rem;
+          padding-top: 0.6rem;
+          border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .goal-item-meta span {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.25rem;
+        }
+
+        /* Light Theme Overrides for Goals */
+        .main-content.theme-light .goal-item-card {
+          background: rgba(15, 23, 42, 0.02) !important;
+          border: 1px solid rgba(15, 23, 42, 0.06) !important;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+
+        .main-content.theme-light .goal-item-card:hover {
+          background: rgba(15, 23, 42, 0.04) !important;
+          border-color: rgba(15, 23, 42, 0.1) !important;
+          box-shadow: 0 10px 20px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
+        }
+
+        .main-content.theme-light .goal-item-card.concluido {
+          background: rgba(16, 185, 129, 0.05) !important;
+        }
+
+        .main-content.theme-light .goal-item-card.pendente {
+          background: rgba(245, 158, 11, 0.04) !important;
+        }
+
+        .main-content.theme-light .goal-item-card.inconsistente {
+          background: rgba(239, 68, 68, 0.05) !important;
+        }
+
+        .main-content.theme-light .goal-item-meta {
+          border-top-color: rgba(15, 23, 42, 0.06);
+        }
+
+        /* Floating sidebar toggles */
+        .floating-sidebar-toggle {
+          position: fixed;
+          top: 50%;
+          transform: translateY(-50%);
+          z-index: 95;
+          background: rgba(15, 23, 42, 0.85) !important;
+          border: 1px solid rgba(20, 184, 166, 0.3) !important;
+          color: #14b8a6 !important;
+          padding: 0.85rem 0.5rem;
+          font-size: 0.72rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+          writing-mode: vertical-rl;
+          text-orientation: mixed;
+          display: flex;
+          align-items: center;
+          gap: 0.4rem;
+        }
+
+        .floating-sidebar-toggle:hover {
+          background: #14b8a6 !important;
+          color: #ffffff !important;
+          box-shadow: 0 0 15px rgba(20, 184, 166, 0.5);
+        }
+
+        .floating-sidebar-toggle.left-toggle {
+          left: 0;
+          border-left: none !important;
+          border-radius: 0 8px 8px 0;
+        }
+
+        .floating-sidebar-toggle.left-toggle:hover {
+          padding-left: 0.75rem;
+        }
+
+        .floating-sidebar-toggle.right-toggle {
+          right: 0;
+          border-right: none !important;
+          border-radius: 8px 0 0 8px;
+        }
+
+        .floating-sidebar-toggle.right-toggle:hover {
+          padding-right: 0.75rem;
+        }
+
+        /* Light Theme Overrides for Floating Toggles */
+        .main-content.theme-light .floating-sidebar-toggle {
+          background: rgba(255, 255, 255, 0.9) !important;
+          border: 1px solid rgba(15, 23, 42, 0.15) !important;
+          color: #0f172a !important;
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-content.theme-light .floating-sidebar-toggle:hover {
+          background: #14b8a6 !important;
+          color: #ffffff !important;
+          border-color: #14b8a6 !important;
+        }
+
+        /* Docs Metadata Bar (UC-013, UC-014) */
+        .docs-metadata-bar {
+          display: flex;
+          align-items: center;
+          padding: 0.5rem 1.5rem;
+          background: rgba(15, 23, 42, 0.4);
+          border-bottom: 1px solid var(--border-light);
+          gap: 1.25rem;
+          z-index: 15;
+          font-family: var(--font-sans);
+          flex-wrap: wrap;
+        }
+
+        .main-content.theme-light .docs-metadata-bar {
+          background: rgba(255, 255, 255, 0.8) !important;
+          border-bottom-color: rgba(15, 23, 42, 0.08) !important;
+        }
+
+        .metadata-category-section, .metadata-tags-section {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .metadata-label {
+          font-size: 0.72rem;
+          font-weight: 700;
+          color: var(--text-muted);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .category-badge-container {
+          position: relative;
+        }
+
+        .category-badge {
+          display: inline-flex;
+          align-items: center;
+          padding: 0.25rem 0.65rem;
+          border-radius: 6px;
+          color: #fff;
+          font-size: 0.8rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+        }
+
+        .category-badge:hover {
+          filter: brightness(1.15);
+          transform: translateY(-1px);
+        }
+
+        .category-dropdown-list {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          margin-top: 0.4rem;
+          background: rgba(15, 23, 42, 0.98);
+          border: 1px solid var(--border-light);
+          border-radius: 8px;
+          padding: 0.75rem;
+          min-width: 220px;
+          z-index: 100;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+          display: flex;
+          flex-direction: column;
+          gap: 0.6rem;
+        }
+
+        .main-content.theme-light .category-dropdown-list {
+          background: #ffffff !important;
+          border-color: rgba(15, 23, 42, 0.1) !important;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .dropdown-search-wrapper {
+          display: flex;
+          gap: 0.35rem;
+        }
+
+        .dropdown-search-wrapper input {
+          flex: 1;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid var(--border-light);
+          color: #fff;
+          padding: 0.35rem 0.55rem;
+          border-radius: 4px;
+          font-size: 0.8rem;
+        }
+
+        .main-content.theme-light .dropdown-search-wrapper input {
+          background: rgba(15, 23, 42, 0.03) !important;
+          border-color: rgba(15, 23, 42, 0.15) !important;
+          color: #0f172a !important;
+        }
+
+        .dropdown-search-wrapper button {
+          background: #14b8a6;
+          border: none;
+          color: #fff;
+          width: 28px;
+          height: 28px;
+          border-radius: 4px;
+          font-weight: bold;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .dropdown-search-wrapper button:hover {
+          background: #0d9488;
+        }
+
+        .dropdown-scroll-items {
+          max-height: 160px;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 0.35rem;
+        }
+
+        .dropdown-cat-item {
+          background: none;
+          border: none;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.4rem 0.5rem;
+          border-radius: 4px;
+          color: var(--text-secondary);
+          width: 100%;
+          text-align: left;
+          font-size: 0.82rem;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .dropdown-cat-item:hover {
+          background: rgba(255, 255, 255, 0.05);
+          color: var(--text-primary);
+        }
+
+        .main-content.theme-light .dropdown-cat-item:hover {
+          background: rgba(15, 23, 42, 0.04) !important;
+        }
+
+        .cat-color-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+        }
+
+        .metadata-divider {
+          width: 1px;
+          height: 18px;
+          background: var(--border-light);
+        }
+
+        .tags-list {
+          display: flex;
+          align-items: center;
+          gap: 0.4rem;
+          flex-wrap: wrap;
+        }
+
+        .tag-badge {
+          display: inline-flex;
+          align-items: center;
+          background: rgba(20, 184, 166, 0.1);
+          border: 1px solid rgba(20, 184, 166, 0.2);
+          color: #14b8a6;
+          padding: 0.18rem 0.5rem;
+          border-radius: 12px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          gap: 0.25rem;
+        }
+
+        .main-content.theme-light .tag-badge {
+          background: rgba(20, 184, 166, 0.06) !important;
+          border-color: rgba(20, 184, 166, 0.18) !important;
+        }
+
+        .btn-remove-tag {
+          background: none;
+          border: none;
+          color: inherit;
+          padding: 0;
+          font-size: 0.85rem;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          transition: background 0.15s;
+        }
+
+        .btn-remove-tag:hover {
+          background: rgba(20, 184, 166, 0.2);
+        }
+
+        .add-tag-wrapper {
+          display: flex;
+          align-items: center;
+        }
+
+        .add-tag-input {
+          background: none;
+          border: 1px dashed var(--border-light);
+          color: var(--text-secondary);
+          padding: 0.15rem 0.45rem;
+          border-radius: 12px;
+          font-size: 0.75rem;
+          width: 70px;
+          outline: none;
+          transition: all 0.2s;
+        }
+
+        .add-tag-input:focus {
+          border-color: #14b8a6;
+          width: 110px;
+          color: var(--text-primary);
+          background: rgba(255, 255, 255, 0.02);
+        }
+
+        .main-content.theme-light .add-tag-input:focus {
+          background: rgba(15, 23, 42, 0.02) !important;
+        }
+
+        /* Sidebar Filter Toolbar */
+        .sidebar-filter-toolbar {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.35rem 0.5rem;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid var(--border-light);
+          border-radius: 6px;
+          margin-bottom: 0.75rem;
+        }
+
+        .main-content.theme-light .sidebar-filter-toolbar {
+          background: rgba(15, 23, 42, 0.03) !important;
+        }
+
+        .filter-icon {
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: var(--text-muted);
+        }
+
+        .sidebar-category-filter {
+          flex: 1;
+          background: none;
+          border: none;
+          color: var(--text-primary);
+          font-size: 0.8rem;
+          font-weight: 600;
+          outline: none;
+          cursor: pointer;
+        }
+
+        .sidebar-category-filter option {
+          background: #111827;
+          color: #fff;
+        }
+
+        .main-content.theme-light .sidebar-category-filter option {
+          background: #ffffff !important;
+          color: #0f172a !important;
+        }
+
+        .filtered-chapters-list {
+          display: flex;
+          flex-direction: column;
+          gap: 0.35rem;
+        }
+
+        .filter-status-label {
+          font-size: 0.7rem;
+          font-weight: 600;
+          color: #14b8a6;
+          margin-bottom: 0.25rem;
+          display: block;
+        }
+
+        .filter-empty-state {
+          font-size: 0.78rem;
+          color: var(--text-muted);
+          text-align: center;
+          padding: 1rem;
+        }
+
+        .btn-favorite-star {
+          background: none;
+          border: none;
+          color: var(--text-muted);
+          font-size: 1.15rem;
+          cursor: pointer;
+          transition: all 0.2s;
+          padding: 0 0.25rem;
+        }
+
+        .btn-favorite-star:hover {
+          transform: scale(1.2);
+          color: #f59e0b;
+        }
+
+        .btn-favorite-star.is-starred {
+          color: #f59e0b;
+          text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+        }
+
+        .title-and-favorite-row {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .action-btn.active-star {
+          color: #f59e0b !important;
+        }
+
+        .favorite-manuscripts-group {
+          margin-bottom: 0.85rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.2rem;
+        }
+
+        .favorite-group-label {
+          font-size: 0.72rem;
+          font-weight: 700;
+          color: #f59e0b;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          margin-bottom: 0.25rem;
+          display: block;
+          padding-left: 0.5rem;
+        }
+
+        .favorite-group-divider {
+          height: 1px;
+          background: var(--border-light);
+          margin-top: 0.5rem;
+          margin-bottom: 0.5rem;
+        }
+
+        /* Custom SVG Icon Styling (UC-086) */
+        .custom-svg-icon-wrapper {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 15px;
+          height: 15px;
+          vertical-align: middle;
+          margin-right: 0.15rem;
+        }
+
+        .custom-svg-icon-wrapper svg {
+          width: 100%;
+          height: 100%;
+          fill: currentColor;
         }
       `}</style>
     </div>
