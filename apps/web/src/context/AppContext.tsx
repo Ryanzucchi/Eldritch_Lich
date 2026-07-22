@@ -84,6 +84,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           
           if (current) {
             setActiveProject(current);
+            if (current.id !== savedActiveId && typeof window !== 'undefined') {
+              window.location.reload();
+            }
           }
         }
         if (projData.pendingInvites) {
@@ -92,38 +95,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setPendingInvites([]);
         }
       } else {
-        // Fallback for local-first dev mode: Always maintain an active Writer Session & Project
-        const defaultLocalUser: UserSession = {
-          id: 'local_writer_id',
-          name: 'Escritor Eldritch',
-          email: 'autor@eldritch.local'
-        };
-        setUser(defaultLocalUser);
-        
-        const defaultProj: Project = {
-          id: 'proj_default',
-          ownerId: 'local_writer_id',
-          name: 'Meu Manuscrito Eldritch',
-          genre: 'Fantasia',
-          visibility: 'PRIVADO',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
-        setProjects([defaultProj]);
-        if (!activeProject) {
-          setActiveProject(defaultProj);
-        }
+        setUser(null);
+        setProjects([]);
+        setActiveProject(null);
         setPendingInvites([]);
       }
     } catch (err) {
       console.error('Falha ao inicializar a sessão do AppContext:', err);
-      // Fallback local user on network error
-      const defaultLocalUser: UserSession = {
-        id: 'local_writer_id',
-        name: 'Escritor Eldritch',
-        email: 'autor@eldritch.local'
-      };
-      setUser(defaultLocalUser);
+      setUser(null);
+      setProjects([]);
+      setActiveProject(null);
     } finally {
       setLoadingSession(false);
     }
@@ -141,7 +122,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const selectProject = (project: Project) => {
     localStorage.setItem('activeProjectId', project.id);
     setActiveProject(project);
-    window.location.reload(); // Recarrega para inicializar o Dexie no namespace correto
+    if (typeof window !== 'undefined') {
+      if (window.location.pathname === '/' || window.location.pathname === '/projects') {
+        window.location.href = '/editor';
+      } else {
+        window.location.href = window.location.pathname; // Recarrega limpando parâmetros de consulta de capítulos antigos
+      }
+    }
   };
 
   const createProject = async (name: string, genre: string, visibility: 'PRIVADO' | 'COMPARTILHADO') => {
@@ -160,12 +147,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setProjects(prev => [...prev, newProj]);
     localStorage.setItem('activeProjectId', newProj.id);
     setActiveProject(newProj);
-    window.location.reload(); // Recarrega para usar o novo db namespace
+    if (typeof window !== 'undefined') {
+      window.location.href = '/editor'; // Recarrega para usar o novo db namespace no editor
+    }
     return newProj;
   };
 
   const logout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
+    localStorage.removeItem('activeProjectId');
     setUser(null);
     setProjects([]);
     setActiveProject(null);

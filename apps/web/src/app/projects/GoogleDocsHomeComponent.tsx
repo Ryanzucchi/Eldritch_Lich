@@ -1,870 +1,725 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useApp } from '../../context/AppContext';
-import { db } from '../../db/schema';
-import { Manuscript } from '@eldritch/domain';
+import { Project } from '@eldritch/domain';
 
 export default function GoogleDocsHomeComponent() {
   const router = useRouter();
-  const { user, projects, activeProject, selectProject, logout } = useApp();
+  const { user, projects, activeProject, selectProject, createProject, logout } = useApp();
 
-  const [manuscripts, setManuscripts] = useState<Manuscript[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterCategory, setFilterCategory] = useState<'ALL' | 'PINNED' | 'ARCHIVED'>('ALL');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [loading, setLoading] = useState(true);
-
-  // New Project / Rename Modal
-  const [showNewProjectModal, setShowNewProjectModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectGenre, setNewProjectGenre] = useState('Fantasia');
+  const [newProjectVisibility, setNewProjectVisibility] = useState<'PRIVADO' | 'COMPARTILHADO'>('PRIVADO');
   const [creating, setCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Rename Manuscript Modal
-  const [renamingId, setRenamingId] = useState<string | null>(null);
-  const [renamingTitle, setRenamingTitle] = useState('');
-
-  useEffect(() => {
-    loadManuscripts();
-  }, [activeProject]);
-
-  const loadManuscripts = async () => {
-    try {
-      setLoading(true);
-      const all = await db.manuscripts.filter(m => !m.inTrash).toArray();
-      setManuscripts(all);
-    } catch (err) {
-      console.error('Erro ao carregar documentos:', err);
-    } finally {
-      setLoading(false);
-    }
+  // Auto-redirect if they select a project to /editor
+  const handleOpenProject = (proj: Project) => {
+    selectProject(proj);
+    router.push('/editor');
   };
 
-  // Create document with optional template
-  const handleCreateDocument = async (templateType: 'BLANK' | 'HERO' | 'CHARACTER' | 'WORLDBUILDING' | 'THREE_ACT') => {
-    try {
-      setCreating(true);
-      let title = 'Novo Capítulo sem Título';
-      let content = '<p>Comece a escrever seu capítulo aqui...</p>';
-
-      if (templateType === 'HERO') {
-        title = 'Jornada do Herói - Capítulo 1';
-        content = `
-          <h2>A Jornada do Herói: Chamado à Aventura</h2>
-          <p><strong>Mundo Comum:</strong> Apresente o protagonista em seu ambiente cotidiano antes do incidente incitante.</p>
-          <hr />
-          <p><strong>O Chamado:</strong> Qual evento inesperado rompe a rotina do protagonista?</p>
-          <hr />
-          <p><strong>Recusa do Chamado:</strong> Quais medos ou hesitações o impedem de agir?</p>
-        `;
-      } else if (templateType === 'CHARACTER') {
-        title = 'Ficha de Personagem - Protagonista';
-        content = `
-          <h2>Ficha de Personagem</h2>
-          <p><strong>Nome Completo:</strong> </p>
-          <p><strong>Papel Narrativo:</strong> Protagonista / Antagonista / Mentor</p>
-          <p><strong>Desejo Consciente:</strong> O que ele quer?</p>
-          <p><strong>Necessidade Inconsciente:</strong> Do que ele realmente precisa?</p>
-          <p><strong>Fraqueza / Falha Fatal:</strong> </p>
-        `;
-      } else if (templateType === 'WORLDBUILDING') {
-        title = 'Worldbuilding - Bíblia do Universo';
-        content = `
-          <h2>Bíblia de Worldbuilding</h2>
-          <p><strong>Regras de Magia / Tecnologia:</strong> Limites e custos do sistema.</p>
-          <p><strong>Facções & Conflitos Politicos:</strong> Quem governa e quem resiste?</p>
-          <p><strong>Geografia & Locais Chave:</strong> </p>
-        `;
-      } else if (templateType === 'THREE_ACT') {
-        title = 'Estrutura de 3 Atos - Capítulo 1';
-        content = `
-          <h2>Ato I: Apresentação & Incidente Incitante</h2>
-          <p>Estabeleça o objetivo central e o ponto de virada do Ato I.</p>
-        `;
-      }
-
-      const newDoc: Manuscript = {
-        id: `ms_${Date.now()}`,
-        projectId: activeProject?.id || 'proj_default',
-        title,
-        content,
-        status: 'RASCUNHO',
-        isLocked: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        inTrash: false
-      };
-
-      await db.manuscripts.put(newDoc);
-      router.push(`/editor?chapterId=${newDoc.id}`);
-    } catch (err) {
-      console.error('Erro ao criar documento:', err);
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  // Create New Project
-  const handleCreateProject = async (e: React.FormEvent) => {
+  const handleCreateNewProject = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newProjectName.trim()) return;
 
-    try {
-      setCreating(true);
-      const res = await fetch('/api/projects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newProjectName.trim(), genre: newProjectGenre })
-      });
+    setError(null);
+    setCreating(true);
 
-      if (res.ok) {
-        const proj = await res.json();
-        selectProject(proj);
-        setShowNewProjectModal(false);
-        setNewProjectName('');
-        await handleCreateDocument('BLANK');
-      }
-    } catch (err) {
+    try {
+      // Create project using AppContext's createProject
+      await createProject(newProjectName.trim(), newProjectGenre, newProjectVisibility);
+      setNewProjectName('');
+      router.push('/editor');
+    } catch (err: any) {
       console.error('Erro ao criar projeto:', err);
+      setError(err.message || 'Erro ao criar o projeto.');
     } finally {
       setCreating(false);
     }
   };
 
-  // Save renamed manuscript
-  const handleSaveRename = async (id: string) => {
-    if (!renamingTitle.trim()) {
-      setRenamingId(null);
-      return;
-    }
-    await db.manuscripts.update(id, {
-      title: renamingTitle.trim(),
-      updatedAt: new Date().toISOString()
-    });
-    setRenamingId(null);
-    await loadManuscripts();
-  };
-
-  // Filter & Search Manuscripts
-  const filteredManuscripts = manuscripts.filter(m => {
-    const matchesSearch = m.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          (m.content && m.content.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    if (filterCategory === 'ARCHIVED') return matchesSearch && m.isArchived;
-    if (filterCategory === 'PINNED') return matchesSearch && m.tags?.includes('PINNED');
-    return matchesSearch && !m.isArchived;
-  });
-
   return (
-    <div className="google-docs-home-container">
-      {/* Header Bar (Google Docs Style) */}
-      <header className="docs-hub-header glass">
-        <div className="docs-hub-brand">
-          <span className="hub-logo-icon">📄</span>
-          <h1 className="hub-logo-title">Eldritch<span>Docs</span></h1>
+    <div className="projects-portal-container">
+      {/* Header Bar */}
+      <header className="portal-header glass">
+        <div className="portal-brand">
+          <span className="portal-logo-icon">⚡</span>
+          <h1 className="portal-logo-title">Eldritch<span>Lich</span></h1>
         </div>
 
-        {/* Search Bar */}
-        <div className="docs-hub-search-wrapper">
-          <span className="search-icon">🔍</span>
-          <input 
-            type="text" 
-            placeholder="Pesquisar documentos, capítulos ou templates..." 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="docs-hub-search-input"
-          />
-          {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="btn-clear-search">✕</button>
+        <div className="portal-header-actions">
+          {user && (
+            <span className="user-welcome-badge">
+              Olá, <strong>{user.name}</strong>
+            </span>
           )}
-        </div>
-
-        {/* Top User Actions & Profile / Logout */}
-        <div className="docs-hub-actions">
-          {activeProject && (
-            <div className="hub-active-project-tag" title="Projeto Ativo">
-              📁 {activeProject.name}
-            </div>
-          )}
-          <button onClick={() => setShowNewProjectModal(true)} className="btn-create-proj-hub">
-            ➕ Novo Projeto
+          <button onClick={logout} className="btn-portal-logout">
+            🚪 Sair
           </button>
-
-          {user ? (
-            <div className="user-profile-menu">
-              <span className="user-email-badge" title={user.email}>
-                👤 {user.name}
-              </span>
-              <button 
-                onClick={logout} 
-                className="btn-hub-logout" 
-                title="Sair da Plataforma (Logout)"
-              >
-                🚪 Sair
-              </button>
-            </div>
-          ) : (
-            <Link href="/auth/login" className="btn-hub-login">
-              Entrar
-            </Link>
-          )}
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="docs-hub-main-viewport">
-        {/* Template Gallery Section */}
-        <section className="template-gallery-section">
-          <div className="section-header">
-            <h2 className="section-title">Iniciar um novo documento</h2>
-            <span className="section-subtitle">Escolha um modelo narrativo ou comece em branco</span>
-          </div>
+      {/* Main Grid Layout */}
+      <main className="portal-main-layout">
+        
+        {/* Left Column: Profile Card */}
+        <section className="portal-profile-column">
+          <div className="profile-glass-card glass animate-fade-in">
+            <div className="profile-header">
+              {user?.avatar ? (
+                <img src={user.avatar} alt={user.name} className="profile-avatar" />
+              ) : (
+                <div className="profile-avatar-placeholder">
+                  {user?.name?.substring(0, 2).toUpperCase() || 'US'}
+                </div>
+              )}
+              <h2 className="profile-name">{user?.name || 'Escritor'}</h2>
+              <span className="profile-email">{user?.email}</span>
+            </div>
 
-          <div className="template-cards-grid">
-            <button type="button" className="template-card blank" onClick={() => handleCreateDocument('BLANK')}>
-              <div className="template-thumbnail">
-                <span className="plus-icon">➕</span>
-              </div>
-              <span className="template-name">Documento em Branco</span>
-            </button>
+            <div className="profile-details-divider" />
 
-            <button type="button" className="template-card" onClick={() => handleCreateDocument('HERO')}>
-              <div className="template-thumbnail hero">
-                <span>📑</span>
+            <div className="profile-info-section">
+              <div className="profile-info-item">
+                <span className="info-label">Biografia</span>
+                <p className="info-value">{user?.bio || 'Nenhuma biografia informada.'}</p>
               </div>
-              <span className="template-name">Jornada do Herói</span>
-            </button>
+              <div className="profile-info-item">
+                <span className="info-label">Fuso Horário</span>
+                <p className="info-value">🕒 {user?.timezone || 'America/Sao_Paulo'}</p>
+              </div>
+            </div>
 
-            <button type="button" className="template-card" onClick={() => handleCreateDocument('CHARACTER')}>
-              <div className="template-thumbnail char">
-                <span>👤</span>
-              </div>
-              <span className="template-name">Ficha de Personagem</span>
-            </button>
-
-            <button type="button" className="template-card" onClick={() => handleCreateDocument('WORLDBUILDING')}>
-              <div className="template-thumbnail world">
-                <span>🏛️</span>
-              </div>
-              <span className="template-name">Worldbuilding Local</span>
-            </button>
-
-            <button type="button" className="template-card" onClick={() => handleCreateDocument('THREE_ACT')}>
-              <div className="template-thumbnail act">
-                <span>🎬</span>
-              </div>
-              <span className="template-name">Estrutura de 3 Atos</span>
-            </button>
+            <div className="profile-actions">
+              <Link href="/profile" className="btn-profile-link">
+                👤 Meu Perfil / Configurações
+              </Link>
+            </div>
           </div>
         </section>
 
-        {/* Recent Documents & Projects List */}
-        <section className="recent-docs-section">
-          <div className="recent-docs-header">
-            <h2 className="recent-title">Documentos Recentes</h2>
-            
-            <div className="recent-controls">
-              {/* Category Filter */}
-              <div className="filter-pill-group">
-                <button 
-                  className={`filter-pill ${filterCategory === 'ALL' ? 'active' : ''}`}
-                  onClick={() => setFilterCategory('ALL')}
-                >
-                  Todos os Documentos
-                </button>
-                <button 
-                  className={`filter-pill ${filterCategory === 'PINNED' ? 'active' : ''}`}
-                  onClick={() => setFilterCategory('PINNED')}
-                >
-                  📌 Fixados
-                </button>
-                <button 
-                  className={`filter-pill ${filterCategory === 'ARCHIVED' ? 'active' : ''}`}
-                  onClick={() => setFilterCategory('ARCHIVED')}
-                >
-                  📦 Arquivados
-                </button>
+        {/* Right Column: Projects Management */}
+        <section className="portal-projects-column animate-fade-in">
+          
+          {/* Active Project Quick Access */}
+          {activeProject && (
+            <div className="active-project-card glass">
+              <div className="active-details">
+                <span className="active-badge">PROJETO ATIVO ATUAL</span>
+                <h3>📁 {activeProject.name}</h3>
+                <p>{activeProject.genre} • {activeProject.visibility.toLowerCase()}</p>
               </div>
-
-              {/* View Toggle */}
-              <div className="view-toggle-btns">
-                <button 
-                  className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
-                  onClick={() => setViewMode('grid')}
-                  title="Visualização em Grade"
-                >
-                  ▦
-                </button>
-                <button 
-                  className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
-                  onClick={() => setViewMode('list')}
-                  title="Visualização em Lista"
-                >
-                  ☰
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Documents Grid / List */}
-          {loading ? (
-            <div className="docs-loading-state">
-              <div className="spinner"></div>
-              <p>Carregando seus manuscritos...</p>
-            </div>
-          ) : filteredManuscripts.length === 0 ? (
-            <div className="docs-empty-state glass">
-              <span className="empty-icon">📄</span>
-              <h3>Nenhum documento encontrado</h3>
-              <p>Crie um novo documento acima ou altere os filtros de pesquisa.</p>
-              <button onClick={() => handleCreateDocument('BLANK')} className="btn-empty-create">
-                Criar Documento em Branco
+              <button 
+                onClick={() => handleOpenProject(activeProject)}
+                className="btn-active-open"
+              >
+                Abrir Editor Principal ➔
               </button>
             </div>
-          ) : viewMode === 'grid' ? (
-            <div className="docs-cards-grid">
-              {filteredManuscripts.map(doc => (
-                <div 
-                  key={doc.id} 
-                  className="doc-card glass"
-                  onClick={() => router.push(`/editor?chapterId=${doc.id}`)}
-                >
-                  <div className="doc-card-preview">
-                    <span className="doc-badge-status">{doc.status}</span>
-                    <p className="preview-text">
-                      {doc.content ? doc.content.replace(/<[^>]*>?/gm, '').slice(0, 140) + '...' : 'Documento em branco'}
-                    </p>
-                  </div>
-                  
-                  <div className="doc-card-footer">
-                    <div className="doc-info">
-                      {renamingId === doc.id ? (
-                        <input
-                          type="text"
-                          value={renamingTitle}
-                          onChange={(e) => setRenamingTitle(e.target.value)}
-                          onBlur={() => handleSaveRename(doc.id)}
-                          onKeyDown={(e) => { if (e.key === 'Enter') handleSaveRename(doc.id); }}
-                          onClick={(e) => e.stopPropagation()}
-                          className="doc-rename-input"
-                          autoFocus
-                        />
-                      ) : (
-                        <h3 className="doc-title" title={doc.title}>{doc.title}</h3>
-                      )}
-                      <span className="doc-date">
-                        Modificado {new Date(doc.updatedAt).toLocaleDateString()}
-                      </span>
-                    </div>
-
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setRenamingId(doc.id);
-                        setRenamingTitle(doc.title);
-                      }}
-                      className="btn-card-action"
-                      title="Renomear"
-                    >
-                      ✎
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="docs-list-view glass">
-              {filteredManuscripts.map(doc => (
-                <div 
-                  key={doc.id} 
-                  className="doc-list-row"
-                  onClick={() => router.push(`/editor?chapterId=${doc.id}`)}
-                >
-                  <span className="doc-row-icon">📄</span>
-                  <div className="doc-row-title-area">
-                    <h3 className="doc-row-title">{doc.title}</h3>
-                    <span className="doc-row-status">{doc.status}</span>
-                  </div>
-                  <span className="doc-row-words">{doc.content ? doc.content.replace(/<[^>]*>?/gm, '').trim().split(/\s+/).filter(Boolean).length : 0} palavras</span>
-                  <span className="doc-row-date">{new Date(doc.updatedAt).toLocaleDateString()}</span>
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setRenamingId(doc.id);
-                      setRenamingTitle(doc.title);
-                    }}
-                    className="btn-card-action"
-                    title="Renomear"
-                  >
-                    ✎
-                  </button>
-                </div>
-              ))}
-            </div>
           )}
-        </section>
-      </main>
 
-      {/* New Project Modal */}
-      {showNewProjectModal && (
-        <div className="modal-backdrop glass">
-          <div className="modal-card glass animate-fade-in">
-            <h2>Criar Novo Projeto</h2>
-            <p>Um projeto agrupa manuscritos, capítulos e grafos de metas.</p>
-            <form onSubmit={handleCreateProject}>
-              <div className="form-group">
+          {/* Projects List */}
+          <div className="projects-section-header">
+            <h2 className="portal-section-title">Seus Projetos</h2>
+            <span className="portal-section-subtitle">Selecione um projeto para continuar escrevendo</span>
+          </div>
+
+          <div className="projects-grid">
+            {projects.map((proj) => (
+              <div key={proj.id} className="project-portal-card glass">
+                <div className="project-card-header">
+                  <span className="project-card-icon">📁</span>
+                  <div className="project-card-meta">
+                    <span className="project-card-visibility">{proj.visibility}</span>
+                  </div>
+                </div>
+                <h3 className="project-card-name" title={proj.name}>{proj.name}</h3>
+                <p className="project-card-genre">{proj.genre}</p>
+                <div className="project-card-divider" />
+                <button 
+                  onClick={() => handleOpenProject(proj)}
+                  className="btn-project-open"
+                >
+                  Entrar no Manuscrito
+                </button>
+              </div>
+            ))}
+
+            {projects.length === 0 && (
+              <div className="projects-empty-state glass">
+                <span className="empty-icon">📂</span>
+                <h3>Nenhum projeto encontrado</h3>
+                <p>Crie um novo projeto ao lado para começar sua jornada.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Create Project Form Card */}
+          <div className="create-project-portal-card glass">
+            <h3>➕ Criar Novo Projeto</h3>
+            <p className="create-desc">Um projeto isola seus capítulos, metas de progresso, cronograma e grafo de lore.</p>
+            
+            {error && <div className="portal-error-msg">{error}</div>}
+
+            <form onSubmit={handleCreateNewProject} className="portal-create-form">
+              <div className="portal-form-group">
                 <label>Nome do Projeto</label>
                 <input 
                   type="text" 
-                  placeholder="Ex: O Império da Mente, Crônicas de Eldritch..."
+                  placeholder="Ex: As Crônicas de Eldritch..."
                   value={newProjectName}
                   onChange={(e) => setNewProjectName(e.target.value)}
                   required
-                  autoFocus
                 />
               </div>
-              <div className="form-group">
-                <label>Gênero Literário</label>
-                <select value={newProjectGenre} onChange={(e) => setNewProjectGenre(e.target.value)}>
-                  <option value="Fantasia">Fantasia</option>
-                  <option value="Ficção Científica">Ficção Científica</option>
-                  <option value="Mistério / Thriller">Mistério / Thriller</option>
-                  <option value="Romance">Romance</option>
-                  <option value="Horror / Terror">Horror / Terror</option>
-                  <option value="Não-Ficção">Não-Ficção</option>
-                </select>
+
+              <div className="portal-form-row">
+                <div className="portal-form-group flex-1">
+                  <label>Gênero Literário</label>
+                  <select value={newProjectGenre} onChange={(e) => setNewProjectGenre(e.target.value)}>
+                    <option value="Fantasia">Fantasia</option>
+                    <option value="Ficção Científica">Ficção Científica</option>
+                    <option value="Mistério / Thriller">Mistério / Thriller</option>
+                    <option value="Romance">Romance</option>
+                    <option value="Horror / Terror">Horror / Terror</option>
+                    <option value="Não-Ficção">Não-Ficção</option>
+                  </select>
+                </div>
+
+                <div className="portal-form-group flex-1">
+                  <label>Visibilidade</label>
+                  <select 
+                    value={newProjectVisibility} 
+                    onChange={(e) => setNewProjectVisibility(e.target.value as any)}
+                  >
+                    <option value="PRIVADO">Privado (Local-First)</option>
+                    <option value="COMPARTILHADO">Compartilhado (Colaborativo)</option>
+                  </select>
+                </div>
               </div>
 
-              <div className="modal-actions">
-                <button type="button" onClick={() => setShowNewProjectModal(false)} className="btn-secondary">
-                  Cancelar
-                </button>
-                <button type="submit" disabled={creating} className="btn-primary">
-                  {creating ? 'Criando...' : 'Criar & Abrir Editor'}
-                </button>
-              </div>
+              <button type="submit" disabled={creating} className="btn-portal-create">
+                {creating ? 'Criando Projeto...' : 'Criar & Abrir Manuscrito'}
+              </button>
             </form>
           </div>
-        </div>
-      )}
 
-      {/* Styles */}
+        </section>
+
+      </main>
+
       <style jsx global>{`
-        .google-docs-home-container {
+        .projects-portal-container {
           min-height: 100vh;
-          background-color: #0b0f17;
-          color: #f1f5f9;
+          background-color: #0b0d10;
+          color: #f3f4f6;
           display: flex;
           flex-direction: column;
+          font-family: var(--font-sans);
         }
 
-        .docs-hub-header {
+        .portal-header {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 0.8rem 2rem;
-          background: rgba(15, 23, 42, 0.9);
+          padding: 1rem 2.5rem;
+          background: rgba(15, 23, 42, 0.95);
           border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-          position: sticky;
-          top: 0;
-          z-index: 100;
+          backdrop-filter: blur(16px);
         }
 
-        .docs-hub-brand {
+        .portal-brand {
           display: flex;
           align-items: center;
           gap: 0.6rem;
         }
 
-        .hub-logo-icon {
-          font-size: 1.8rem;
-          color: #3b82f6;
+        .portal-logo-icon {
+          font-size: 1.6rem;
+          color: #14b8a6;
         }
 
-        .hub-logo-title {
-          font-size: 1.25rem;
+        .portal-logo-title {
+          font-size: 1.35rem;
           font-weight: 700;
           color: #f8fafc;
+          font-family: var(--font-display);
         }
 
-        .hub-logo-title span {
-          color: #3b82f6;
+        .portal-logo-title span {
+          color: #14b8a6;
         }
 
-        .docs-hub-search-wrapper {
-          position: relative;
-          width: 40%;
-          max-width: 600px;
-        }
-
-        .search-icon {
-          position: absolute;
-          left: 1rem;
-          top: 50%;
-          transform: translateY(-50%);
-          color: #94a3b8;
-        }
-
-        .docs-hub-search-input {
-          width: 100%;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 24px;
-          padding: 0.6rem 2.8rem;
-          color: #fff;
-          font-size: 0.95rem;
-          transition: all 0.2s ease;
-        }
-
-        .docs-hub-search-input:focus {
-          outline: none;
-          background: rgba(255, 255, 255, 0.08);
-          border-color: #3b82f6;
-          box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
-        }
-
-        .btn-clear-search {
-          position: absolute;
-          right: 1rem;
-          top: 50%;
-          transform: translateY(-50%);
-          background: none;
-          border: none;
-          color: #94a3b8;
-          cursor: pointer;
-        }
-
-        .docs-hub-actions {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-        }
-
-        .hub-active-project-tag {
-          font-size: 0.85rem;
-          background: rgba(59, 130, 246, 0.12);
-          border: 1px solid rgba(59, 130, 246, 0.3);
-          color: #60a5fa;
-          padding: 0.35rem 0.75rem;
-          border-radius: 20px;
-        }
-
-        .btn-create-proj-hub {
-          background: #3b82f6;
-          color: #fff;
-          border: none;
-          padding: 0.45rem 1rem;
-          border-radius: 8px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .btn-create-proj-hub:hover {
-          background: #2563eb;
-          box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
-        }
-
-        .docs-hub-main-viewport {
-          max-width: 1200px;
-          width: 100%;
-          margin: 0 auto;
-          padding: 2rem;
-          display: flex;
-          flex-direction: column;
-          gap: 2.5rem;
-        }
-
-        .template-gallery-section {
-          background: rgba(15, 23, 42, 0.5);
-          border: 1px solid rgba(255, 255, 255, 0.05);
-          border-radius: 12px;
-          padding: 1.5rem;
-        }
-
-        .section-header {
-          margin-bottom: 1.2rem;
-        }
-
-        .section-title {
-          font-size: 1.1rem;
-          font-weight: 600;
-          color: #f1f5f9;
-        }
-
-        .section-subtitle {
-          font-size: 0.85rem;
-          color: #94a3b8;
-        }
-
-        .template-cards-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-          gap: 1.25rem;
-        }
-
-        .template-card {
-          cursor: pointer;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 0.6rem;
-          transition: all 0.2s ease;
-        }
-
-        .template-card:hover {
-          transform: translateY(-4px);
-        }
-
-        .template-thumbnail {
-          width: 100%;
-          height: 130px;
-          background: rgba(30, 41, 59, 0.8);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 2.2rem;
-          transition: all 0.2s ease;
-        }
-
-        .template-card.blank .template-thumbnail {
-          background: rgba(59, 130, 246, 0.1);
-          border-color: rgba(59, 130, 246, 0.3);
-          color: #3b82f6;
-        }
-
-        .template-card:hover .template-thumbnail {
-          border-color: #3b82f6;
-          box-shadow: 0 4px 20px rgba(59, 130, 246, 0.25);
-        }
-
-        .template-name {
-          font-size: 0.85rem;
-          font-weight: 500;
-          color: #cbd5e1;
-          text-align: center;
-        }
-
-        .recent-docs-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 1.5rem;
-        }
-
-        .recent-title {
-          font-size: 1.1rem;
-          font-weight: 600;
-        }
-
-        .recent-controls {
+        .portal-header-actions {
           display: flex;
           align-items: center;
           gap: 1.5rem;
         }
 
-        .filter-pill-group {
+        .user-welcome-badge {
+          font-size: 0.9rem;
+          color: #cbd5e1;
+        }
+
+        .btn-portal-logout {
+          background: rgba(239, 68, 68, 0.12);
+          border: 1px solid rgba(239, 68, 68, 0.3);
+          color: #f87171;
+          padding: 0.45rem 1rem;
+          border-radius: 8px;
+          font-size: 0.85rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .btn-portal-logout:hover {
+          background: rgba(239, 68, 68, 0.25);
+          color: #ef4444;
+          box-shadow: 0 0 12px rgba(239, 68, 68, 0.2);
+        }
+
+        .portal-main-layout {
+          max-width: 1300px;
+          width: 100%;
+          margin: 0 auto;
+          padding: 2.5rem 2rem;
           display: flex;
+          gap: 2.5rem;
+          flex-direction: row;
+          align-items: flex-start;
+        }
+
+        @media (max-width: 968px) {
+          .portal-main-layout {
+            flex-direction: column;
+            align-items: stretch;
+          }
+        }
+
+        .portal-profile-column {
+          flex: 1;
+          max-width: 380px;
+          width: 100%;
+        }
+
+        @media (max-width: 968px) {
+          .portal-profile-column {
+            max-width: 100%;
+          }
+        }
+
+        .profile-glass-card {
+          padding: 2rem;
+          border-radius: 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+        }
+
+        .profile-header {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
           gap: 0.5rem;
         }
 
-        .filter-pill {
+        .profile-avatar {
+          width: 96px;
+          height: 96px;
+          border-radius: 50%;
+          border: 3px solid rgba(20, 184, 166, 0.3);
+          object-fit: cover;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+          margin-bottom: 0.5rem;
+        }
+
+        .profile-avatar-placeholder {
+          width: 96px;
+          height: 96px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+          color: #fff;
+          font-size: 2.2rem;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 8px 24px rgba(20, 184, 166, 0.25);
+          margin-bottom: 0.5rem;
+        }
+
+        .profile-name {
+          font-size: 1.35rem;
+          font-weight: 700;
+          color: #f8fafc;
+          font-family: var(--font-display);
+        }
+
+        .profile-email {
+          font-size: 0.85rem;
+          color: #9ca3af;
+        }
+
+        .profile-details-divider {
+          height: 1px;
+          background: rgba(255, 255, 255, 0.08);
+          width: 100%;
+        }
+
+        .profile-info-section {
+          display: flex;
+          flex-direction: column;
+          gap: 1.25rem;
+        }
+
+        .profile-info-item {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+        }
+
+        .info-label {
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: #94a3b8;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .info-value {
+          font-size: 0.9rem;
+          color: #cbd5e1;
+          line-height: 1.5;
+        }
+
+        .profile-actions {
+          margin-top: 0.5rem;
+        }
+
+        .btn-profile-link {
+          display: flex;
+          align-items: center;
+          justify-content: center;
           background: rgba(255, 255, 255, 0.05);
           border: 1px solid rgba(255, 255, 255, 0.1);
-          color: #94a3b8;
-          padding: 0.35rem 0.8rem;
-          border-radius: 16px;
-          font-size: 0.8rem;
-          cursor: pointer;
+          color: #e2e8f0;
+          padding: 0.75rem;
+          border-radius: 8px;
+          font-weight: 600;
+          font-size: 0.85rem;
+          text-decoration: none;
           transition: all 0.2s ease;
         }
 
-        .filter-pill.active {
-          background: rgba(59, 130, 246, 0.2);
-          border-color: #3b82f6;
-          color: #60a5fa;
+        .btn-profile-link:hover {
+          background: rgba(20, 184, 166, 0.1);
+          border-color: rgba(20, 184, 166, 0.3);
+          color: #14b8a6;
         }
 
-        .view-toggle-btns {
+        .portal-projects-column {
+          flex: 2.2;
           display: flex;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 6px;
-          overflow: hidden;
+          flex-direction: column;
+          gap: 2rem;
         }
 
-        .view-btn {
-          background: none;
-          border: none;
-          color: #94a3b8;
-          padding: 0.35rem 0.6rem;
-          cursor: pointer;
-        }
-
-        .view-btn.active {
-          background: rgba(255, 255, 255, 0.1);
-          color: #fff;
-        }
-
-        .docs-cards-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        .active-project-card {
+          padding: 1.5rem 2rem;
+          border-radius: 12px;
+          border-left: 4px solid #14b8a6;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
           gap: 1.5rem;
         }
 
-        .doc-card {
-          background: rgba(15, 23, 42, 0.8);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 10px;
-          overflow: hidden;
+        @media (max-width: 600px) {
+          .active-project-card {
+            flex-direction: column;
+            align-items: stretch;
+          }
+        }
+
+        .active-badge {
+          font-size: 0.7rem;
+          font-weight: 700;
+          color: #14b8a6;
+          background: rgba(20, 184, 166, 0.12);
+          padding: 0.2rem 0.5rem;
+          border-radius: 4px;
+          letter-spacing: 0.5px;
+          display: inline-block;
+          margin-bottom: 0.4rem;
+        }
+
+        .active-details h3 {
+          font-size: 1.25rem;
+          font-weight: 700;
+          color: #f8fafc;
+          margin-bottom: 0.2rem;
+        }
+
+        .active-details p {
+          font-size: 0.85rem;
+          color: #9ca3af;
+        }
+
+        .btn-active-open {
+          background: #14b8a6;
+          color: #fff;
+          border: none;
+          padding: 0.75rem 1.5rem;
+          border-radius: 8px;
+          font-weight: 600;
+          font-size: 0.9rem;
           cursor: pointer;
           transition: all 0.2s ease;
+          box-shadow: 0 4px 12px rgba(20, 184, 166, 0.2);
+          white-space: nowrap;
+        }
+
+        .btn-active-open:hover {
+          background: #0d9488;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(20, 184, 166, 0.35);
+        }
+
+        .projects-section-header {
           display: flex;
           flex-direction: column;
+          gap: 0.25rem;
         }
 
-        .doc-card:hover {
-          border-color: #3b82f6;
-          transform: translateY(-3px);
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        .portal-section-title {
+          font-size: 1.25rem;
+          font-weight: 700;
+          color: #f8fafc;
+          font-family: var(--font-display);
         }
 
-        .doc-card-preview {
-          padding: 1.25rem;
-          background: rgba(30, 41, 59, 0.4);
-          height: 120px;
-          position: relative;
-          overflow: hidden;
+        .portal-section-subtitle {
+          font-size: 0.85rem;
+          color: #9ca3af;
         }
 
-        .doc-badge-status {
-          position: absolute;
-          top: 0.6rem;
-          right: 0.6rem;
+        .projects-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+          gap: 1.5rem;
+        }
+
+        .project-portal-card {
+          padding: 1.5rem;
+          border-radius: 12px;
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+          transition: all 0.25s ease;
+        }
+
+        .project-portal-card:hover {
+          border-color: rgba(20, 184, 166, 0.3);
+          box-shadow: 0 8px 30px rgba(20, 184, 166, 0.08);
+          transform: translateY(-4px);
+        }
+
+        .project-card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .project-card-icon {
+          font-size: 1.6rem;
+        }
+
+        .project-card-visibility {
           font-size: 0.65rem;
-          background: rgba(59, 130, 246, 0.2);
+          font-weight: 700;
           color: #60a5fa;
+          background: rgba(59, 130, 246, 0.12);
+          border: 1px solid rgba(59, 130, 246, 0.2);
           padding: 0.15rem 0.45rem;
           border-radius: 4px;
           text-transform: uppercase;
         }
 
-        .preview-text {
-          font-size: 0.75rem;
+        .project-card-name {
+          font-size: 1.05rem;
+          font-weight: 600;
+          color: #f1f5f9;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .project-card-genre {
+          font-size: 0.8rem;
+          color: #94a3b8;
+        }
+
+        .project-card-divider {
+          height: 1px;
+          background: rgba(255, 255, 255, 0.05);
+          margin-top: auto;
+          margin-bottom: 0.25rem;
+        }
+
+        .btn-project-open {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: #e2e8f0;
+          padding: 0.55rem;
+          border-radius: 6px;
+          font-weight: 600;
+          font-size: 0.82rem;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .project-portal-card:hover .btn-project-open {
+          background: #14b8a6;
+          border-color: #14b8a6;
+          color: #fff;
+          box-shadow: 0 4px 10px rgba(20, 184, 166, 0.25);
+        }
+
+        .projects-empty-state {
+          grid-column: 1 / -1;
+          padding: 3rem;
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.75rem;
+          border-style: dashed;
+        }
+
+        .projects-empty-state .empty-icon {
+          font-size: 2.5rem;
+          color: #6b7280;
+        }
+
+        .projects-empty-state h3 {
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: #cbd5e1;
+        }
+
+        .projects-empty-state p {
+          font-size: 0.85rem;
+          color: #6b7280;
+        }
+
+        .create-project-portal-card {
+          padding: 2rem;
+          border-radius: 12px;
+          display: flex;
+          flex-direction: column;
+          gap: 1.25rem;
+          margin-top: 1rem;
+        }
+
+        .create-project-portal-card h3 {
+          font-size: 1.15rem;
+          font-weight: 700;
+          color: #f8fafc;
+        }
+
+        .create-desc {
+          font-size: 0.85rem;
           color: #94a3b8;
           line-height: 1.4;
         }
 
-        .doc-card-footer {
-          padding: 1rem;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          border-top: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .doc-title {
-          font-size: 0.9rem;
-          font-weight: 600;
-          color: #f8fafc;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-width: 170px;
-        }
-
-        .doc-date {
-          font-size: 0.7rem;
-          color: #64748b;
-          display: block;
-        }
-
-        .btn-card-action {
-          background: none;
-          border: none;
-          color: #94a3b8;
-          cursor: pointer;
-          padding: 0.2rem 0.4rem;
-          border-radius: 4px;
-        }
-
-        .btn-card-action:hover {
-          background: rgba(255, 255, 255, 0.1);
-          color: #fff;
-        }
-
-        .docs-list-view {
+        .portal-create-form {
           display: flex;
           flex-direction: column;
-          border-radius: 10px;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          overflow: hidden;
+          gap: 1.25rem;
         }
 
-        .doc-list-row {
+        .portal-form-group {
           display: flex;
-          align-items: center;
-          padding: 1rem 1.5rem;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-          cursor: pointer;
-          transition: background 0.15s ease;
+          flex-direction: column;
+          gap: 0.4rem;
         }
 
-        .doc-list-row:hover {
-          background: rgba(59, 130, 246, 0.1);
+        .portal-form-row {
+          display: flex;
+          gap: 1.25rem;
         }
 
-        .doc-row-icon {
-          font-size: 1.2rem;
-          margin-right: 1rem;
+        @media (max-width: 600px) {
+          .portal-form-row {
+            flex-direction: column;
+          }
         }
 
-        .doc-row-title-area {
-          flex: 1;
-        }
-
-        .doc-row-title {
-          font-size: 0.95rem;
+        .portal-form-group label {
+          font-size: 0.78rem;
           font-weight: 600;
-        }
-
-        .doc-row-status {
-          font-size: 0.7rem;
-          color: #3b82f6;
-        }
-
-        .doc-row-words, .doc-row-date {
-          font-size: 0.8rem;
           color: #94a3b8;
-          width: 140px;
         }
 
-        .docs-empty-state {
-          padding: 3rem;
-          text-align: center;
-          border-radius: 12px;
-          border: 1px dashed rgba(255, 255, 255, 0.15);
+        .portal-form-group input,
+        .portal-form-group select {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 8px;
+          padding: 0.7rem 0.9rem;
+          color: #fff;
+          font-size: 0.9rem;
+          transition: all 0.2s ease;
         }
 
-        .empty-icon {
-          font-size: 3rem;
-          margin-bottom: 1rem;
-          display: block;
+        .portal-form-group input:focus,
+        .portal-form-group select:focus {
+          outline: none;
+          background: rgba(255, 255, 255, 0.08);
+          border-color: #14b8a6;
+          box-shadow: 0 0 10px rgba(20, 184, 166, 0.15);
         }
 
-        .btn-empty-create {
-          margin-top: 1.25rem;
-          background: #3b82f6;
+        .btn-portal-create {
+          background: #14b8a6;
           color: #fff;
           border: none;
-          padding: 0.6rem 1.2rem;
-          border-radius: 6px;
+          padding: 0.75rem;
+          border-radius: 8px;
           font-weight: 600;
+          font-size: 0.9rem;
           cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: 0 4px 12px rgba(20, 184, 166, 0.15);
+        }
+
+        .btn-portal-create:hover {
+          background: #0d9488;
+          box-shadow: 0 4px 16px rgba(20, 184, 166, 0.3);
+          transform: translateY(-1px);
+        }
+
+        .btn-portal-create:disabled {
+          background: #4b5563;
+          color: #9ca3af;
+          cursor: not-allowed;
+          box-shadow: none;
+        }
+
+        .portal-error-msg {
+          background: rgba(239, 68, 68, 0.1);
+          border: 1px solid rgba(239, 68, 68, 0.2);
+          color: #f87171;
+          padding: 0.75rem 1rem;
+          border-radius: 8px;
+          font-size: 0.85rem;
         }
       `}</style>
     </div>

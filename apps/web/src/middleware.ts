@@ -5,8 +5,9 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value;
   const { pathname } = request.nextUrl;
 
-  const protectedPaths = ['/gmn', '/kanban', '/editor'];
-  const isProtected = protectedPaths.some(path => pathname.startsWith(path) || pathname === '/');
+  // Protect all paths except auth-related ones
+  const isAuthRoute = pathname.startsWith('/auth');
+  const isProtected = !isAuthRoute;
 
   if (isProtected && !token) {
     // Redirect to login page
@@ -15,9 +16,9 @@ export function middleware(request: NextRequest) {
   }
 
   if (pathname === '/auth' && token) {
-    // Redirect to dashboard page
-    const dashboardUrl = new URL('/gmn', request.url);
-    return NextResponse.redirect(dashboardUrl);
+    // Redirect to home page
+    const homeUrl = new URL('/', request.url);
+    return NextResponse.redirect(homeUrl);
   }
 
   return NextResponse.next();

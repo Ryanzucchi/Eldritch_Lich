@@ -24,7 +24,7 @@ export default function AuthPage() {
         const res = await fetch('/api/auth/session');
         const data = await res.json();
         if (data.authenticated) {
-          router.push('/dashboard');
+          router.push('/');
         }
       } catch (err) {
         console.error('Session check failed:', err);
@@ -69,7 +69,7 @@ export default function AuthPage() {
       if (mode === 'login') {
         setSuccess('Autenticado com sucesso! Redirecionando...');
         setTimeout(() => {
-          router.push('/dashboard');
+          router.push('/');
           router.refresh();
         }, 800);
       } else if (mode === 'register') {
