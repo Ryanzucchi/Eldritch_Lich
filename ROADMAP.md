@@ -175,10 +175,10 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-012** — Mover textos entre pastas (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
   - Depende de: UC-001, UC-011, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-013** — Organizar textos por tags (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
+- [x] **UC-013** — Organizar textos por tags (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-014** — Organizar textos por categorias (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
+- [x] **UC-014** — Organizar textos por categorias (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
 - [x] **UC-022** — Procurar palavras (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
@@ -220,7 +220,7 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-085** — Personalizar cores (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-086** — Personalizar ícones (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-086** — Personalizar ícones (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-090** — Gerar wiki automaticamente (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
@@ -232,10 +232,10 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-092** — Padronizar nomes automaticamente (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-093** — Visualizar estatísticas do projeto (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-093** — Visualizar estatísticas do projeto (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-098** — Filtrar grafo por personagem (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-098** — Filtrar grafo por personagem (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [x] **UC-110** — Criar hyperlinks entre textos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
@@ -250,7 +250,7 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-115** — Adicionar anotações (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-116** — Adicionar lembretes (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
+- [x] **UC-116** — Adicionar lembretes (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [x] **UC-122** — Desfazer alterações (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
@@ -265,7 +265,7 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-125** — Restaurar versões anteriores (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-124, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-126** — Favoritar textos (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
+- [x] **UC-126** — Favoritar textos (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
 - [x] **UC-127** — Arquivar textos (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)

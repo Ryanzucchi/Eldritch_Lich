@@ -36,6 +36,9 @@ graph TD
     KanbanBoard -->|Lê/Grava Metas| DexieSchema
     ManuscriptEditor[app/editor/page.tsx] -->|Analisa digitação| MMSService
     ManuscriptEditor -->|Atualiza status| DexieSchema
+    StatsPage[app/stats/page.tsx] -->|Layout unificado| DashboardLayout
+    StatsPage -->|Lê estatísticas| DexieSchema
+    DashboardLayout -->|Gerencia lembretes| DexieSchema
 ```
 
 ## Resumo das Dependências Físicas

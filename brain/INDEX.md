@@ -10,7 +10,8 @@ Bem-vindo à base de conhecimento ativa e atualizada do projeto **Eldritch Lich*
 *   [Módulo MMS (Mapeamento Semântico Local)](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/mms.md) - Pipeline NLP local (Transformers.js + e5 + NER).
 *   [Mapeamento de Metas de Escrita](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/metas-escrita.md) - Estatísticas de produtividade, cotas e streaks.
 *   [Modo Foco e Atalhos de Teclado](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/atalhos-foco.md) - Mapeamento customizável e layout sem distrações.
-*   [Fluxos de Trabalho e Manuscritos](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/workflows-manuscritos.md) - Gerenciador de capítulos e status do manuscrito.
+*   [Fluxos de Trabalho e Manuscritos](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/workflows-manuscritos.md) - Gerenciador de capítulos, favoritos e status do manuscrito.
+*   [Lembretes & Alertas Causa-Temporais](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/reminders.md) - Agendador offline-first de lembretes vinculados e snooze.
 *   [Registro de Mudanças](file:///home/zucchi/Projetos/Eldritch_Lich/brain/mudancas/CHANGELOG.md) - Histórico de updates de sincronização do cérebro.
 
 ## Decisões Arquiteturais (ADRs)

@@ -2,6 +2,29 @@
 
 Este registro lista em ordem cronológica todas as atualizações de desenvolvimento integradas a esta base de conhecimento.
 
+## [2026-07-22] (Correção de Navegação e Autenticação) - Correção de Fluxo e Interface do Usuário
+
+### 🎯 Correção do Fluxo de Navegação & Tela de Entrada
+*   **Ajuste de Redirecionamento Inicial:** Corrigido o `middleware.ts` para redirecionar usuários logados em `/auth` para a Home (`/`) em vez da tela de grafo (`/gmn`).
+*   **Redirect Seguro pós-Login:** Ajustada a tela `/auth/page.tsx` para redirecionar para `/` após autenticação bem-sucedida em vez de `/dashboard`.
+*   **Eliminação de Rotas Duplicadas:** Normalizados os links para usar a rota raiz (`/`) como a Home (seletor de projetos) e adicionada a rota `/dashboard` nas exclusões de renderização de barra lateral para evitar conflito de layout flexbox.
+
+### 🛡️ Lógica de Autenticação e Segurança
+*   **Remoção de Sessão Fallback Incorreta:** Removido o login automático do usuário local fictício (`local_writer_id`) em `AppContext.tsx` quando a chamada de API de sessão falhava ou retornava `authenticated: false`, forçando o redirecionamento correto à tela de login.
+*   **Limpeza de localStorage no Logout:** O identificador `activeProjectId` agora é excluído do `localStorage` no logout para evitar vazamento de estado de projeto entre sessões de usuários diferentes.
+*   **Guarda Client-Side de Sessão:** Injetada lógica em `ClientLayout.tsx` para redirecionar usuários para `/auth` caso a sessão carregue e não haja usuário ativo.
+
+### 🧱 Correção de Interface Bloqueada no Editor
+*   **Integração do Editor ao DashboardLayout:** Removido `/editor` do bloqueio de renderização do `ClientLayout`, restaurando a Sidebar e a Barra de Ferramentas superior no Editor de Manuscritos para viabilizar a navegação entre as demais áreas do projeto.
+*   **Guarda de Projeto no Editor:** Adicionado `/editor` à verificação de existência de projeto ativo no `ClientLayout`, redirecionando o escritor para a Home (`/`) para criar ou selecionar um projeto caso tente acessar o editor sem contexto.
+
+### Código Adicionado/Modificado
+*   [middleware.ts](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/middleware.ts) (Nova regra de rotas protegidas globais e destino de redirect de login)
+*   [page.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/auth/page.tsx) (Destino correto do push de login)
+*   [AppContext.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/context/AppContext.tsx) (Tratamento correto de erro de autenticação e remoção de dados locais)
+*   [ClientLayout.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/components/ClientLayout.tsx) (Ajuste nas exclusões de layout, guarda client-side de sessão e projeto ativo)
+*   [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx) (Atualização do link do ícone Home)
+
 ## [2026-07-21] (Correção de Carregamento de Documento por ID & Elementos de Botão Nativo) - Abertura Direta de Templates e Manuscritos (UC-084, UC-085, UC-127)
 
 ### 🎯 Leitura de Parâmetro `chapterId` no Editor
@@ -221,4 +244,58 @@ Este registro lista em ordem cronológica todas as atualizações de desenvolvim
 *   [INDEX.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/INDEX.md)
 *   [gmn.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/gmn.md)
 *   [mms.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/mms.md)
+*   [mapa.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/dependencias/mapa.md)
+
+## [2026-07-22] - Correção de Consistência Visual, Isolamento de Capítulos e Novo Fluxo de Projetos
+
+### Código Adicionado/Modificado
+*   **Redesenho da Central de Projetos e Simplificação da Navegação (Novo Fluxo)**:
+    *   [GoogleDocsHomeComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/projects/GoogleDocsHomeComponent.tsx): Redesenhada completamente a tela inicial pós-login para atuar como Central de Projetos (Acessar/Criar Projetos / Meu Perfil). Exibe uma coluna lateral com card de dados do perfil do usuário logado (avatar, nome, email, bio e link de edição) e uma coluna principal com o projeto ativo em destaque, a grade com todos os projetos do usuário (incluindo compartilhados) para seleção direta (redirecionando para o `/editor`), e o formulário de criação de novo projeto.
+    *   [ClientLayout.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/components/ClientLayout.tsx):
+        *   Removidas as abas duplicadas de navegação (`global-nav-tabs`) e a marca secundária da barra de cabeçalho superior (`global-workspace-topbar`), substituindo-as por um indicador limpo do título da página ativa (ex: "🖋️ Manuscrito Principal", "📊 Quadro Kanban"), o que eliminou a confusão de dupla barra de navegação.
+        *   Adicionado o link de navegação "Voltar a Projetos" no topo do menu lateral para fácil retorno ao Portal Geral.
+        *   Modificado o link "Editor Rica" no menu para "Manuscrito" e removido o item redundante "Meu Perfil" do menu principal da sidebar.
+        *   Transformado o badge de perfil do usuário logado no rodapé da sidebar em um link clicável (`user-profile-badge-link`) que aponta diretamente para `/profile`.
+        *   Ajustado o tooltip do logotipo da marca no topo da sidebar para "Voltar para a Central de Projetos".
+        *   Modificado o título do menu suspenso de projetos da sidebar de "Seus Manuscritos" para "Trocar de Projeto".
+*   **Correção de Layout e Largura/Altura dos Painéis do Editor**:
+    *   [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx):
+        *   Corrigida a largura absoluta de `100vw` para `100%` (e `max-width: 100%`) no seletor `.main-content`. Isso impediu que o editor se estendesse além da tela e resolvesse o problema do painel lateral direito de MMS/versões ser empurrado para fora e cortado à direita pelo tamanho correspondente da barra de navegação esquerda.
+        *   Corrigida a altura absoluta de `100vh` para `100%` nos seletores `.main-content`, `.editor-workspace` e `.editor-side-panel`. Isso resolveu o corte vertical inferior (inclusive da barra de status) causado pela sobreposição da barra superior de cabeçalho de 48px.
+        *   Ajustada a visualização responsiva do painel de logs MMS sob telas menores (`@media (max-width: 1536px)`) para iniciar abaixo da barra superior (`top: 48px` e `height: calc(100vh - 48px)`).
+        *   Adicionados botões flutuantes e responsivos nas laterais da tela (`floating-sidebar-toggle`) que surgem como abas discretas na vertical quando as respectivas barras laterais de Explorer (esquerda) ou de IA/Versões (direita) são fechadas pelo usuário. Isso possibilita reabrir qualquer um dos painéis com apenas um clique a partir das bordas da tela.
+*   **Design Premium das Metas Narrativas do GMN**:
+    *   [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx): Injetado estilo CSS moderno e refinado para o componente vertical de metas (`.goals-vertical-list` e `.goal-item-card`). As metas agora são renderizadas como cards de estilo glassmorphism, com bordas laterais coloridas dinâmicas indicando o status (verde para concluído, amarelo para pendente, vermelho para inconsistente), escala tipográfica nítida, espaçamento interno proporcional e suporte visual completo a temas escuros e claros.
+*   **Melhoria de Consistência Visual (Tema Claro do Editor)**:
+    *   [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx): Adicionada a classe `theme-${docsTheme}` ao container raiz `.main-content` no render do editor, e injetados estilos CSS globais completos sob o seletor `.main-content.theme-light` no bloco `<style jsx global>` para atualizar variáveis de cores de forma homogênea.
+*   **Correção de Isolamento de Capítulos e Redirecionamentos**:
+    *   [AppContext.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/context/AppContext.tsx):
+        *   Atualizada a função `selectProject` para redirecionar explicitamente para o editor (`/editor`) quando executada a partir da página inicial (`/` ou `/projects`), em vez de recarregar a própria página inicial.
+        *   Ajustada a função `createProject` para redirecionar diretamente para o editor (`/editor`) em vez de recarregar a home page ao criar um projeto com sucesso.
+        *   Ajustado o carregador de sessão `refreshSession` para forçar `window.location.reload()` quando o ID de projeto resolvido for alterado em relação ao persistido no `localStorage`, garantindo a correta inicialização do namespace local do banco IndexedDB.
+    *   [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx):
+        *   Corrigida a criação de novos capítulos no manipulador `handleAddChapter` e no seed padrão em `loadManuscripts` para incluir explicitamente o campo `projectId` do projeto ativo nos registros locais do IndexedDB.
+
+### Documentação Vinculada
+*   [INDEX.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/INDEX.md)
+*   [autenticacao-workspace.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/autenticacao-workspace.md)
+
+## [2026-07-22] - Foco em Personagens GMN, Lembretes Causa-Temporais, Favoritos e Ícones Personalizados
+
+### Código Adicionado/Modificado
+*   **Filtragem de Foco do Grafo Narrativo (UC-098)**:
+    *   [page.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/gmn/page.tsx): Adicionados controles de busca rápida de personagem e seleção de graus de separação (1º, 2º ou 3º grau via busca BFS) na barra de ferramentas superior. A seleção esmaece nós e conexões não correspondentes para 10% de opacidade e desativa cliques nos mesmos. Adicionado manipulador de clique com o botão direito para ocultar nós de forma seletiva do grafo.
+*   **Sistema de Lembretes & Alertas Causa-Temporais (UC-116)**:
+    *   [schema.ts](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/db/schema.ts): Criado esquema de migração da versão 10 do IndexedDB, adicionando a tabela `reminders` para persistência offline de notas e gatilhos de tempo de alertas.
+    *   [ClientLayout.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/components/ClientLayout.tsx): Integrado um botão de sino 🔔 reativo no cabeçalho geral com badge dinâmico de contagem. Implementada a gaveta lateral de notificações e formulário para cadastro e associação de lembrete com capítulo. Implementado loop temporizador de segundo plano (5s) que dispara popup central com snoozing (adiamento de 5m) e linkagem de documento.
+*   **Favoritar Capítulos do Manuscrito (UC-126)**:
+    *   [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx): Inserido o botão interativo de Estrela (★) no cabeçalho do documento ativo e na listagem do explorer lateral. Favoritar um capítulo o insere dinamicamente em uma seção de atalho rápido "⭐ Favoritos" no topo da sidebar.
+*   **Personalização de Ícones da Árvore de Diretórios (UC-086)**:
+    *   [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx): Adicionado catálogo contendo 110 ícones categorizados e buscáveis por palavras-chave. Integrado upload de ícones SVG customizados com verificação regex que rejeita injeções maliciosas de scripts (XSS).
+
+### Documentação Vinculada
+*   [INDEX.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/INDEX.md)
+*   [gmn.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/gmn.md)
+*   [workflows-manuscritos.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/workflows-manuscritos.md)
+*   [reminders.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/reminders.md)
 *   [mapa.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/dependencias/mapa.md)
