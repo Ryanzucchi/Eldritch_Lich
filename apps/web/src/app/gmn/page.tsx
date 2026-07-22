@@ -5,10 +5,11 @@ import Link from 'next/link';
 import { db, deleteNodeTransaction } from '../../db/schema';
 import { MetaNode, MetaEdge, MetaType, MetaStatus, hasNoCycle, propagateStatus } from '@eldritch/domain';
 
-// Mock wiki entities for selection
+// Mock wiki entities for selection (UC-098)
 const WIKI_ENTITIES = [
   { id: 'kael', name: 'Kael (Protagonista)', type: 'Personagem' },
   { id: 'elara', name: 'Elara (Mentor)', type: 'Personagem' },
+  { id: 'varis', name: 'Lorde Varis (Antagonista)', type: 'Personagem' },
   { id: 'castelo_sombrio', name: 'Castelo Sombrio', type: 'Local' },
   { id: 'floresta_sussurros', name: 'Floresta dos Sussurros', type: 'Local' },
   { id: 'medalhao_antigo', name: 'Medalhão Antigo', type: 'Item' },
@@ -25,6 +26,20 @@ export default function GMNPage() {
   const [nodes, setNodes] = useState<MetaNode[]>([]);
   const [edges, setEdges] = useState<MetaEdge[]>([]);
   const [alerts, setAlerts] = useState<string[]>([]);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  // Filter / Highlight States (UC-098)
+  const [selectedFilterEntity, setSelectedFilterEntity] = useState<string | null>(null);
+  const [filterDegree, setFilterDegree] = useState<number>(1);
+  const [hiddenNodes, setHiddenNodes] = useState<string[]>([]);
+
+  // Clear success notification
+  useEffect(() => {
+    if (success) {
+      const t = setTimeout(() => setSuccess(null), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [success]);
   
   // Form State
   const [title, setTitle] = useState('');
@@ -186,6 +201,57 @@ export default function GMNPage() {
   const inconsistentCount = nodes.filter(node => node.status === 'INCONSISTENTE').length;
   const graphCoverage = nodes.length > 0 ? Math.round((completedCount / nodes.length) * 100) : 0;
   const nextNode = nodes.find(node => node.status === 'PENDENTE' || node.status === 'EM_ANDAMENTO');
+
+  // BFS / Separation Degree Highlighter for character focus (UC-098)
+  const getHighlightStates = () => {
+    if (!selectedFilterEntity) {
+      const visibleMap = new Map<string, boolean>();
+      nodes.forEach(n => {
+        visibleMap.set(n.id, !hiddenNodes.includes(n.id));
+      });
+      return visibleMap;
+    }
+
+    const seeds = new Set<string>();
+    nodes.forEach(n => {
+      if (n.relatedEntities.includes(selectedFilterEntity)) {
+        seeds.add(n.id);
+      }
+    });
+
+    const highlighted = new Set<string>(seeds);
+    let currentFrontier = Array.from(seeds);
+
+    for (let d = 0; d < filterDegree; d++) {
+      const nextFrontier: string[] = [];
+      currentFrontier.forEach(u => {
+        edges.forEach(e => {
+          if (e.fromId === u && !highlighted.has(e.toId)) {
+            highlighted.add(e.toId);
+            nextFrontier.push(e.toId);
+          }
+          if (e.toId === u && !highlighted.has(e.fromId)) {
+            highlighted.add(e.fromId);
+            nextFrontier.push(e.fromId);
+          }
+        });
+      });
+      currentFrontier = nextFrontier;
+    }
+
+    const highlightMap = new Map<string, boolean>();
+    nodes.forEach(n => {
+      if (hiddenNodes.includes(n.id)) {
+        highlightMap.set(n.id, false);
+      } else {
+        highlightMap.set(n.id, highlighted.has(n.id));
+      }
+    });
+
+    return highlightMap;
+  };
+
+  const highlightMap = getHighlightStates();
   
   // Group nodes by level columns
   const columns: MetaNode[][] = [];
@@ -400,10 +466,65 @@ export default function GMNPage() {
         {/* Graph Workspace Canvas */}
         <main className="canvas-area" ref={canvasRef}>
           <div className="canvas-header">
-            <div>
+            <div className="header-text-section">
               <h2>Grafo de Metas Narrativas (GMN)</h2>
               <p className="subtitle">Ordene a causalidade da sua história. Conecte metas para declarar precedência lógica.</p>
             </div>
+
+            {/* Filter controls toolbar (UC-098) */}
+            <div className="graph-filter-toolbar glass animate-fade-in">
+              <div className="filter-field">
+                <label htmlFor="entity-filter-select">🔍 Foco no Personagem/Entidade:</label>
+                <select
+                  id="entity-filter-select"
+                  value={selectedFilterEntity || ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSelectedFilterEntity(val ? val : null);
+                  }}
+                  className="filter-select"
+                >
+                  <option value="">-- Nenhum (Mostrar Tudo) --</option>
+                  {WIKI_ENTITIES.map(ent => (
+                    <option key={ent.id} value={ent.id}>
+                      {ent.type}: {ent.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {selectedFilterEntity && (
+                <div className="filter-field animate-fade-in">
+                  <label htmlFor="degree-select">Grau:</label>
+                  <select
+                    id="degree-select"
+                    value={filterDegree}
+                    onChange={(e) => setFilterDegree(Number(e.target.value))}
+                    className="filter-select-mini"
+                  >
+                    <option value="1">1º Grau (Diretos)</option>
+                    <option value="2">2º Grau (Indireto)</option>
+                    <option value="3">3º Grau (Amplo)</option>
+                  </select>
+                </div>
+              )}
+
+              {(selectedFilterEntity || hiddenNodes.length > 0) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedFilterEntity(null);
+                    setFilterDegree(1);
+                    setHiddenNodes([]);
+                  }}
+                  className="btn-clear-filters animate-fade-in"
+                  title="Limpar Foco e reexibir todos os nós"
+                >
+                  Limpar Foco
+                </button>
+              )}
+            </div>
+
             {connectingFromId && (
               <div className="connection-prompt animate-fade-in">
                 <span>Conectando de <strong>{nodes.find(n => n.id === connectingFromId)?.title}</strong>. Selecione o nó de destino...</span>
@@ -417,55 +538,72 @@ export default function GMNPage() {
               <div key={colIdx} className="graph-column">
                 <div className="column-badge">Nível {colIdx + 1}</div>
                 <div className="column-nodes">
-                  {columnNodes.map(node => (
-                    <div 
-                      key={node.id} 
-                      id={`node-card-${node.id}`}
-                      className={`node-card ${node.type.toLowerCase()} ${node.status.toLowerCase()} ${connectingFromId === node.id ? 'connecting' : ''}`}
-                    >
-                      <div className="node-header">
-                        <span className={`node-type-badge ${node.type.toLowerCase()}`}>
-                          {node.type === 'Exposicao' ? 'Espacial' : node.type === 'Personagem' ? 'Ator' : 'Confronto'}
-                        </span>
-                        <button onClick={() => handleDeleteNode(node.id)} className="delete-btn" title="Excluir Meta">×</button>
-                      </div>
-                      
-                      <h3 className="node-title">{node.title}</h3>
-                      <p className="node-description">{node.description}</p>
-                      
-                      <div className="node-entities">
-                        {node.relatedEntities.map(entId => {
-                          const ent = WIKI_ENTITIES.find(e => e.id === entId);
-                          return ent ? <span key={entId} className="entity-tag">{ent.name.split(' ')[0]}</span> : null;
-                        })}
-                      </div>
+                  {columnNodes.map(node => {
+                    const isHighlighted = highlightMap.get(node.id);
+                    const isHidden = hiddenNodes.includes(node.id);
+                    if (isHidden) return null;
 
-                      <div className="node-footer">
-                        <select
-                          value={node.status}
-                          onChange={(e) => updateNodeStatus(node.id, e.target.value as MetaStatus)}
-                          className={`status-select ${node.status.toLowerCase()}`}
-                        >
-                          <option value="PENDENTE">Pendente</option>
-                          <option value="EM_ANDAMENTO">Escrevendo</option>
-                          <option value="CONCLUIDO">Escrito</option>
-                          <option value="INCONSISTENTE">Inconsistente</option>
-                        </select>
+                    return (
+                      <div 
+                        key={node.id} 
+                        id={`node-card-${node.id}`}
+                        className={`node-card ${node.type.toLowerCase()} ${node.status.toLowerCase()} ${connectingFromId === node.id ? 'connecting' : ''}`}
+                        style={{
+                          opacity: isHighlighted ? 1 : 0.1,
+                          pointerEvents: isHighlighted ? 'auto' : 'none',
+                          transition: 'opacity 0.25s ease'
+                        }}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          setHiddenNodes(prev => [...prev, node.id]);
+                          setSuccess('Nó ocultado do grafo. Use "Limpar Foco" para reexibir todos os nós.');
+                        }}
+                        title="Clique direito para Ocultar do Grafo"
+                      >
+                        <div className="node-header">
+                          <span className={`node-type-badge ${node.type.toLowerCase()}`}>
+                            {node.type === 'Exposicao' ? 'Espacial' : node.type === 'Personagem' ? 'Ator' : 'Confronto'}
+                          </span>
+                          <button onClick={() => handleDeleteNode(node.id)} className="delete-btn" title="Excluir Meta">×</button>
+                        </div>
+                        
+                        <h3 className="node-title">{node.title}</h3>
+                        <p className="node-description">{node.description}</p>
+                        
+                        <div className="node-entities">
+                          {node.relatedEntities.map(entId => {
+                            const ent = WIKI_ENTITIES.find(e => e.id === entId);
+                            return ent ? <span key={entId} className="entity-tag">{ent.name.split(' ')[0]}</span> : null;
+                          })}
+                        </div>
 
-                        {connectingFromId ? (
-                          connectingFromId !== node.id && (
-                            <button onClick={() => handleCompleteConnection(node.id)} className="btn-connect-target">
-                              Definir Alvo
+                        <div className="node-footer">
+                          <select
+                            value={node.status}
+                            onChange={(e) => updateNodeStatus(node.id, e.target.value as MetaStatus)}
+                            className={`status-select ${node.status.toLowerCase()}`}
+                          >
+                            <option value="PENDENTE">Pendente</option>
+                            <option value="EM_ANDAMENTO">Escrevendo</option>
+                            <option value="CONCLUIDO">Escrito</option>
+                            <option value="INCONSISTENTE">Inconsistente</option>
+                          </select>
+
+                          {connectingFromId ? (
+                            connectingFromId !== node.id && (
+                              <button onClick={() => handleCompleteConnection(node.id)} className="btn-connect-target">
+                                Definir Alvo
+                              </button>
+                            )
+                          ) : (
+                            <button onClick={() => handleStartConnection(node.id)} className="btn-connect-start" title="Ligar dependência a outra meta">
+                              Ligar meta →
                             </button>
-                          )
-                        ) : (
-                          <button onClick={() => handleStartConnection(node.id)} className="btn-connect-start" title="Ligar dependência a outra meta">
-                            Ligar meta →
-                          </button>
-                        )}
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))}
@@ -478,6 +616,14 @@ export default function GMNPage() {
               const end = nodePositions.get(`${edge.toId}-left`);
               if (!start || !end) return null;
               
+              // Hide completely if either node is hidden
+              if (hiddenNodes.includes(edge.fromId) || hiddenNodes.includes(edge.toId)) {
+                return null;
+              }
+
+              // Highlight if filter is inactive, or if both nodes are highlighted
+              const isEdgeHighlighted = !selectedFilterEntity || (highlightMap.get(edge.fromId) && highlightMap.get(edge.toId));
+
               // Compute smooth bezier curve
               const dx = end.x - start.x;
               const controlX1 = start.x + dx * 0.4;
@@ -485,7 +631,7 @@ export default function GMNPage() {
               const pathData = `M ${start.x} ${start.y} C ${controlX1} ${start.y}, ${controlX2} ${end.y}, ${end.x} ${end.y}`;
 
               return (
-                <g key={edge.id}>
+                <g key={edge.id} style={{ opacity: isEdgeHighlighted ? 1 : 0.1, transition: 'opacity 0.25s ease' }}>
                   <path
                     d={pathData}
                     fill="none"
@@ -499,6 +645,14 @@ export default function GMNPage() {
               );
             })}
           </svg>
+
+          {/* Success toast notification */}
+          {success && (
+            <div className="success-toast glass animate-fade-in">
+              <span className="toast-icon">✓</span>
+              <span>{success}</span>
+            </div>
+          )}
         </main>
 
       <style jsx global>{`
@@ -983,6 +1137,145 @@ export default function GMNPage() {
 
         @keyframes flowDash {
           to { stroke-dashoffset: -100; }
+        }
+
+        /* Graph Filter Toolbar (UC-098) */
+        .graph-filter-toolbar {
+          display: flex;
+          align-items: center;
+          gap: 1.25rem;
+          padding: 0.5rem 1rem;
+          background: rgba(15, 23, 42, 0.4);
+          border: 1px solid var(--border-light);
+          border-radius: 8px;
+          flex-wrap: wrap;
+        }
+
+        .main-content.theme-light .graph-filter-toolbar {
+          background: rgba(255, 255, 255, 0.8) !important;
+          border-color: rgba(15, 23, 42, 0.1) !important;
+        }
+
+        .filter-field {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .filter-field label {
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: var(--text-muted);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .filter-select {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid var(--border-light);
+          border-radius: 6px;
+          color: #fff;
+          padding: 0.35rem 0.55rem;
+          font-size: 0.8rem;
+          outline: none;
+          cursor: pointer;
+        }
+
+        .main-content.theme-light .filter-select {
+          background: rgba(15, 23, 42, 0.03) !important;
+          border-color: rgba(15, 23, 42, 0.12) !important;
+          color: #0f172a !important;
+        }
+
+        .filter-select option {
+          background: #111827;
+          color: #fff;
+        }
+
+        .main-content.theme-light .filter-select option {
+          background: #ffffff !important;
+          color: #0f172a !important;
+        }
+
+        .filter-select-mini {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid var(--border-light);
+          border-radius: 6px;
+          color: #fff;
+          padding: 0.35rem 0.55rem;
+          font-size: 0.8rem;
+          outline: none;
+          cursor: pointer;
+        }
+
+        .main-content.theme-light .filter-select-mini {
+          background: rgba(15, 23, 42, 0.03) !important;
+          border-color: rgba(15, 23, 42, 0.12) !important;
+          color: #0f172a !important;
+        }
+
+        .filter-select-mini option {
+          background: #111827;
+          color: #fff;
+        }
+
+        .main-content.theme-light .filter-select-mini option {
+          background: #ffffff !important;
+          color: #0f172a !important;
+        }
+
+        .btn-clear-filters {
+          background: rgba(20, 184, 166, 0.12);
+          border: 1px solid rgba(20, 184, 166, 0.3);
+          color: #14b8a6;
+          padding: 0.35rem 0.75rem;
+          font-size: 0.8rem;
+          font-weight: 600;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-clear-filters:hover {
+          background: #14b8a6;
+          color: #fff;
+          box-shadow: 0 0 10px rgba(20, 184, 166, 0.3);
+        }
+
+        /* Success Toast */
+        .success-toast {
+          position: fixed;
+          bottom: 2rem;
+          right: 2rem;
+          background: rgba(15, 23, 42, 0.95);
+          border: 1px solid rgba(20, 184, 166, 0.3);
+          color: #14b8a6;
+          padding: 0.75rem 1.25rem;
+          border-radius: 8px;
+          font-size: 0.88rem;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+          z-index: 200;
+        }
+
+        .main-content.theme-light .success-toast {
+          background: #ffffff !important;
+          border-color: rgba(20, 184, 166, 0.25) !important;
+          box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08) !important;
+        }
+
+        .toast-icon {
+          background: rgba(20, 184, 166, 0.15);
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.78rem;
         }
       `}</style>
     </div>
