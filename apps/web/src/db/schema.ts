@@ -1,6 +1,17 @@
 import Dexie, { Table } from 'dexie';
 import { MetaNode, MetaEdge, WritingGoal, WritingLog, WritingStreak, Manuscript, Folder, InlineComment, SystemActivity } from '@eldritch/domain';
 
+export interface Reminder {
+  id: string;
+  text: string;
+  projectId: string;
+  manuscriptId?: string;
+  alertTime: string;
+  importance: 'LOW' | 'MEDIUM' | 'HIGH';
+  isRead: boolean;
+  createdAt: string;
+}
+
 export class EldritchDatabase extends Dexie {
   metaNodes!: Table<MetaNode, string>;
   metaEdges!: Table<MetaEdge, string>;
@@ -14,6 +25,7 @@ export class EldritchDatabase extends Dexie {
   folders!: Table<Folder, string>;
   comments!: Table<InlineComment, string>;
   auditLogs!: Table<SystemActivity, string>;
+  reminders!: Table<Reminder, string>;
 
   constructor() {
     const isBrowser = typeof window !== 'undefined';
@@ -110,6 +122,21 @@ export class EldritchDatabase extends Dexie {
       folders: 'id, projectId, parentFolderId',
       comments: 'id, manuscriptId, isResolved, createdAt',
       auditLogs: 'id, type, timestamp'
+    });
+    this.version(10).stores({
+      metaNodes: 'id, type, status, title',
+      metaEdges: 'id, fromId, toId',
+      writingGoals: 'id, type, targetWords, deadline',
+      writingLogs: 'id, date',
+      writingStreak: 'id',
+      keyboardShortcuts: 'command',
+      manuscripts: 'id, status, title, folderId, category, isArchived',
+      manuscriptVersions: 'id, manuscriptId, versionNumber, createdAt',
+      pendingSaves: 'id, manuscriptId, timestamp',
+      folders: 'id, projectId, parentFolderId',
+      comments: 'id, manuscriptId, isResolved, createdAt',
+      auditLogs: 'id, type, timestamp',
+      reminders: 'id, projectId, alertTime, isRead'
     });
   }
 }

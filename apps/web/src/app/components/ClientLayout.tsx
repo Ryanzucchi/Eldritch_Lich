@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useApp } from '../../context/AppContext';
+import { db, Reminder } from '../../db/schema';
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -60,6 +61,129 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
   const [shareError, setShareError] = useState<string | null>(null);
   const [shareSuccess, setShareSuccess] = useState<string | null>(null);
   const [shareLoading, setShareLoading] = useState(false);
+
+  // Reminders / Alerts States (UC-116)
+  const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [showReminderPanel, setShowReminderPanel] = useState(false);
+  const [dueReminder, setDueReminder] = useState<Reminder | null>(null);
+  
+  // Creation States
+  const [isCreatingReminder, setIsCreatingReminder] = useState(false);
+  const [remText, setRemText] = useState('');
+  const [remTime, setRemTime] = useState('');
+  const [remImportance, setRemImportance] = useState<'LOW' | 'MEDIUM' | 'HIGH'>('MEDIUM');
+  const [linkActiveChapter, setLinkActiveChapter] = useState(false);
+
+  // Load reminders from DB
+  const loadReminders = async () => {
+    if (!activeProject) return;
+    try {
+      const all = await db.reminders.where('projectId').equals(activeProject.id).toArray();
+      setReminders(all.sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
+    if (activeProject) {
+      loadReminders();
+    }
+  }, [activeProject]);
+
+  // Alert Checking Engine (checks unread alerts every 5 seconds)
+  useEffect(() => {
+    if (!activeProject || !user) return;
+    
+    const interval = setInterval(async () => {
+      const nowStr = new Date().toISOString();
+      try {
+        const unread = await db.reminders
+          .where('projectId')
+          .equals(activeProject.id)
+          .filter(r => !r.isRead && r.alertTime <= nowStr)
+          .toArray();
+        
+        if (unread.length > 0) {
+          setDueReminder(unread[0]);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [activeProject, user]);
+
+  const getActiveChapterId = () => {
+    if (typeof window !== 'undefined' && pathname === '/editor') {
+      return new URLSearchParams(window.location.search).get('chapterId') || undefined;
+    }
+    return undefined;
+  };
+
+  const handleAddReminder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!remText.trim() || !remTime) return;
+    if (!activeProject) return;
+
+    const newReminder: Reminder = {
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 11),
+      text: remText,
+      projectId: activeProject.id,
+      manuscriptId: linkActiveChapter ? getActiveChapterId() : undefined,
+      alertTime: new Date(remTime).toISOString(),
+      importance: remImportance,
+      isRead: false,
+      createdAt: new Date().toISOString()
+    };
+
+    try {
+      await db.reminders.add(newReminder);
+      setRemText('');
+      setRemTime('');
+      setIsCreatingReminder(false);
+      await loadReminders();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      await db.reminders.update(id, { isRead: true });
+      if (dueReminder?.id === id) {
+        setDueReminder(null);
+      }
+      await loadReminders();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleSnoozeReminder = async (id: string) => {
+    try {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() + 5);
+      const newAlertTime = now.toISOString();
+      await db.reminders.update(id, { alertTime: newAlertTime });
+      if (dueReminder?.id === id) {
+        setDueReminder(null);
+      }
+      await loadReminders();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleDeleteReminder = async (id: string) => {
+    try {
+      await db.reminders.delete(id);
+      await loadReminders();
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const handleOpenShareModal = async () => {
     if (!activeProject) return;
@@ -166,18 +290,24 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    // Flow Validation: If user accesses /gmn or /kanban without an active project, redirect to Google Docs Hub (/)
-    if (!loadingSession && !activeProject && (pathname === '/gmn' || pathname === '/kanban')) {
+    // Client-side authentication guard: redirect to login if session loaded and no user
+    if (!loadingSession && !user && !pathname.startsWith('/auth')) {
+      router.push('/auth');
+    }
+  }, [user, loadingSession, pathname, router]);
+
+  useEffect(() => {
+    // Flow Validation: If user accesses /gmn, /kanban, /editor or /stats without an active project, redirect to Google Docs Hub (/)
+    if (!loadingSession && !activeProject && (pathname === '/gmn' || pathname === '/kanban' || pathname === '/editor' || pathname === '/stats')) {
       router.push('/');
     }
   }, [activeProject, loadingSession, pathname, router]);
 
-  // If we are on auth pages, home hub, or full-screen editor, do not render the outer dashboard wrapper
+  // If we are on auth pages or home hub, do not render the outer dashboard wrapper
   const isAuthPage = pathname.startsWith('/auth');
-  const isHomePage = pathname === '/' || pathname === '/projects';
-  const isEditorPage = pathname === '/editor';
+  const isHomePage = pathname === '/' || pathname === '/projects' || pathname === '/dashboard';
 
-  if (isAuthPage || isHomePage || isEditorPage) {
+  if (isAuthPage || isHomePage) {
     return <>{children}</>;
   }
 
@@ -268,7 +398,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
             />
           )}
         <div className="sidebar-brand">
-          <Link href="/" className="brand-logo" title="Ir para a Tela Inicial (Google Docs Hub)">
+          <Link href="/" className="brand-logo" title="Voltar para a Central de Projetos">
             {isSidebarCollapsed ? <span>⚡</span> : <>Eldritch<span>Lich</span></>}
           </Link>
           <button 
@@ -305,7 +435,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
 
             {showDropdown && (
               <div className="project-dropdown animate-fade-in">
-                <div className="dropdown-title">Seus Manuscritos</div>
+                <div className="dropdown-title">Trocar de Projeto</div>
                 <div className="dropdown-scroller">
                   {projects.map(p => (
                     <button
@@ -396,12 +526,19 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
 
         {/* Navigation links */}
         <nav className="sidebar-nav">
+          <Link href="/" className="nav-link-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            <span>Voltar a Projetos</span>
+          </Link>
+
           <Link href="/editor" className={`nav-link-item ${pathname === '/editor' ? 'active' : ''}`}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 20h9"></path>
               <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
             </svg>
-            <span>Editor Rica</span>
+            <span>Manuscrito</span>
           </Link>
           
           <Link href="/gmn" className={`nav-link-item ${pathname === '/gmn' ? 'active' : ''}`}>
@@ -424,31 +561,34 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
             <span>Quadro Kanban</span>
           </Link>
 
-          <Link href="/profile" className={`nav-link-item ${pathname === '/profile' ? 'active' : ''}`}>
+          <Link href="/stats" className={`nav-link-item ${pathname === '/stats' ? 'active' : ''}`}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
             </svg>
-            <span>Meu Perfil</span>
+            <span>Estatísticas</span>
           </Link>
         </nav>
 
-        {/* User profile footer */}
+        {/* User profile footer (Clickable as a link to Profile) */}
         {user && (
           <div className="sidebar-footer">
-            <div className="user-profile-badge">
-              {user.avatar ? (
-                <img src={user.avatar} alt={user.name} className="user-avatar" />
-              ) : (
-                <div className="user-avatar-placeholder">
-                  {user.name.substring(0, 2).toUpperCase()}
+            <Link href="/profile" className="user-profile-badge-link" title="Ir para as Configurações de Perfil">
+              <div className="user-profile-badge">
+                {user.avatar ? (
+                  <img src={user.avatar} alt={user.name} className="user-avatar" />
+                ) : (
+                  <div className="user-avatar-placeholder">
+                    {user.name.substring(0, 2).toUpperCase()}
+                  </div>
+                )}
+                <div className="user-info">
+                  <span className="user-name">{user.name}</span>
+                  <span className="user-email">{user.email}</span>
                 </div>
-              )}
-              <div className="user-info">
-                <span className="user-name">{user.name}</span>
-                <span className="user-email">{user.email}</span>
               </div>
-            </div>
+            </Link>
             <button type="button" onClick={logout} className="btn-sidebar-logout" title="Sair da plataforma">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
@@ -466,38 +606,13 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
         {/* Universal Top Workspace Header */}
         <header className="global-workspace-topbar glass">
           <div className="topbar-left">
-            <Link href="/" className="global-brand-logo" title="Ir para a Tela Inicial (Google Docs Hub)">
-              <span className="brand-icon">📄</span>
-              <span className="brand-title">Eldritch<span>Docs</span></span>
-            </Link>
-
-            {/* Active Module Switcher Tabs */}
-            <nav className="global-nav-tabs">
-              <Link 
-                href="/editor" 
-                className={`global-tab-item ${pathname === '/editor' ? 'active' : ''}`}
-              >
-                📄 Editor Rico
-              </Link>
-              <Link 
-                href="/gmn" 
-                className={`global-tab-item ${pathname === '/gmn' ? 'active' : ''}`}
-              >
-                ⚡ Grafo de Metas
-              </Link>
-              <Link 
-                href="/kanban" 
-                className={`global-tab-item ${pathname === '/kanban' ? 'active' : ''}`}
-              >
-                📊 Quadro Kanban
-              </Link>
-              <Link 
-                href="/profile" 
-                className={`global-tab-item ${pathname === '/profile' ? 'active' : ''}`}
-              >
-                👤 Meu Perfil
-              </Link>
-            </nav>
+            <div className="topbar-page-title">
+              {pathname === '/editor' && <strong>🖋️ Manuscrito Principal</strong>}
+              {pathname === '/gmn' && <strong>⚡ Grafo de Metas Causal</strong>}
+              {pathname === '/kanban' && <strong>📊 Quadro Kanban</strong>}
+              {pathname === '/stats' && <strong>📈 Estatísticas & Métricas</strong>}
+              {pathname === '/profile' && <strong>👤 Configurações do Perfil</strong>}
+            </div>
           </div>
 
           <div className="topbar-right">
@@ -507,6 +622,20 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
               </span>
             )}
             <span className="global-ai-status">🟢 IA Local Pronta</span>
+
+            {/* Notification Bell (UC-116) */}
+            {user && activeProject && (
+              <button 
+                onClick={() => setShowReminderPanel(!showReminderPanel)} 
+                className={`global-bell-btn ${reminders.filter(r => !r.isRead).length > 0 ? 'has-unread' : ''}`}
+                title="Lembretes & Notificações"
+              >
+                🔔
+                {reminders.filter(r => !r.isRead).length > 0 && (
+                  <span className="bell-badge">{reminders.filter(r => !r.isRead).length}</span>
+                )}
+              </button>
+            )}
           </div>
         </header>
 
@@ -514,6 +643,197 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
+
+      {/* Reminders Slide-over Panel (UC-116) */}
+      {showReminderPanel && (
+        <div className="reminders-slide-over glass animate-fade-in">
+          <div className="reminders-panel-header">
+            <h4>🔔 Lembretes & Alertas</h4>
+            <button onClick={() => { setShowReminderPanel(false); setIsCreatingReminder(false); }} className="btn-close-panel">×</button>
+          </div>
+
+          <div className="reminders-panel-body">
+            {!isCreatingReminder ? (
+              <>
+                <button 
+                  onClick={() => {
+                    setIsCreatingReminder(true);
+                    const defaultTime = new Date();
+                    defaultTime.setHours(defaultTime.getHours() + 1);
+                    defaultTime.setMinutes(defaultTime.getMinutes() - defaultTime.getTimezoneOffset());
+                    setRemTime(defaultTime.toISOString().slice(0, 16));
+                    setLinkActiveChapter(!!getActiveChapterId());
+                  }} 
+                  className="btn-add-reminder-trigger"
+                >
+                  + Criar Novo Lembrete
+                </button>
+
+                {reminders.length === 0 ? (
+                  <div className="no-reminders-state">
+                    <span>Nenhum lembrete configurado.</span>
+                  </div>
+                ) : (
+                  <div className="reminders-list">
+                    {reminders.map(rem => (
+                      <div 
+                        key={rem.id} 
+                        className={`reminder-item-card glass-card importance-${rem.importance.toLowerCase()} ${rem.isRead ? 'read' : 'unread'}`}
+                      >
+                        <div className="reminder-item-header">
+                          <span className="importance-dot" />
+                          <span className="importance-label">
+                            {rem.importance === 'LOW' ? 'Baixa' : rem.importance === 'MEDIUM' ? 'Média' : 'Alta'}
+                          </span>
+                          <span className="reminder-date">
+                            {new Date(rem.alertTime).toLocaleDateString('pt-BR')} {new Date(rem.alertTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                        <p className="reminder-text">{rem.text}</p>
+                        
+                        {rem.manuscriptId && (
+                          <Link 
+                            href={`/editor?chapterId=${rem.manuscriptId}`}
+                            onClick={() => setShowReminderPanel(false)}
+                            className="reminder-linked-doc"
+                          >
+                            📄 Abrir Capítulo Vinculado
+                          </Link>
+                        )}
+
+                        <div className="reminder-card-actions">
+                          {!rem.isRead && (
+                            <>
+                              <button 
+                                onClick={() => handleMarkAsRead(rem.id)} 
+                                className="btn-rem-action read"
+                              >
+                                ✓ Lido
+                              </button>
+                              <button 
+                                onClick={() => handleSnoozeReminder(rem.id)} 
+                                className="btn-rem-action snooze"
+                              >
+                                ⏰ Adiar 5m
+                              </button>
+                            </>
+                          )}
+                          <button 
+                            onClick={() => handleDeleteReminder(rem.id)} 
+                            className="btn-rem-action delete"
+                          >
+                            Excluir
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <form onSubmit={handleAddReminder} className="reminder-creation-form animate-fade-in">
+                <h5>Novo Lembrete Causal</h5>
+                
+                <div className="form-group">
+                  <label>Texto do Lembrete:</label>
+                  <textarea 
+                    value={remText}
+                    onChange={(e) => setRemText(e.target.value)}
+                    placeholder="Escreva a anotação do lembrete..."
+                    required
+                    maxLength={200}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Data & Hora do Alerta:</label>
+                  <input 
+                    type="datetime-local"
+                    value={remTime}
+                    onChange={(e) => setRemTime(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Importância:</label>
+                  <select 
+                    value={remImportance}
+                    onChange={(e) => setRemImportance(e.target.value as any)}
+                  >
+                    <option value="LOW">🔵 Baixa</option>
+                    <option value="MEDIUM">🟡 Média</option>
+                    <option value="HIGH">🔴 Alta</option>
+                  </select>
+                </div>
+
+                {getActiveChapterId() && (
+                  <div className="form-group checkbox-group">
+                    <input 
+                      type="checkbox"
+                      id="link-chapter-checkbox"
+                      checked={linkActiveChapter}
+                      onChange={(e) => setLinkActiveChapter(e.target.checked)}
+                    />
+                    <label htmlFor="link-chapter-checkbox">Vincular ao capítulo ativo</label>
+                  </div>
+                )}
+
+                <div className="form-actions">
+                  <button type="submit" className="btn-save-reminder">Agendar Lembrete</button>
+                  <button 
+                    type="button" 
+                    onClick={() => setIsCreatingReminder(false)} 
+                    className="btn-cancel-reminder"
+                  >
+                    Voltar
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Due Alert Floating Popup Modal */}
+      {dueReminder && (
+        <div className="due-reminder-overlay animate-fade-in">
+          <div className="due-reminder-card glass-card animate-scale-up">
+            <div className={`due-banner importance-${dueReminder.importance.toLowerCase()}`}>
+              <span className="due-bell-animation">⏰</span>
+              <strong>ALERTA DE LEMBRETE ({dueReminder.importance === 'LOW' ? 'BAIXA' : dueReminder.importance === 'MEDIUM' ? 'MÉDIA' : 'ALTA'})</strong>
+            </div>
+            <div className="due-body">
+              <h3>{dueReminder.text}</h3>
+              
+              {dueReminder.manuscriptId && (
+                <Link 
+                  href={`/editor?chapterId=${dueReminder.manuscriptId}`} 
+                  onClick={() => setDueReminder(null)}
+                  className="due-reminder-link"
+                >
+                  📄 Acessar Capítulo Vinculado
+                </Link>
+              )}
+            </div>
+
+            <div className="due-card-actions">
+              <button 
+                onClick={() => handleMarkAsRead(dueReminder.id)} 
+                className="btn-due-action read"
+              >
+                Marcar como Lido
+              </button>
+              <button 
+                onClick={() => handleSnoozeReminder(dueReminder.id)} 
+                className="btn-due-action snooze"
+              >
+                Adiar 5 minutos
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Create Project Modal */}
       {showModal && (
@@ -801,35 +1121,26 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
           color: #3b82f6;
         }
 
-        .global-nav-tabs {
-          display: flex;
-          align-items: center;
-          gap: 0.4rem;
-        }
-
-        .global-tab-item {
-          color: #94a3b8;
-          text-decoration: none;
-          font-size: 0.82rem;
-          font-weight: 500;
-          padding: 0.35rem 0.75rem;
-          border-radius: 6px;
-          transition: all 0.15s ease;
-          display: flex;
-          align-items: center;
-          gap: 0.3rem;
-        }
-
-        .global-tab-item:hover {
-          color: #f1f5f9;
-          background: rgba(255, 255, 255, 0.06);
-        }
-
-        .global-tab-item.active {
-          color: #60a5fa;
-          background: rgba(59, 130, 246, 0.15);
-          border: 1px solid rgba(59, 130, 246, 0.3);
+        .topbar-page-title {
+          font-size: 0.92rem;
           font-weight: 600;
+          color: #f1f5f9;
+          letter-spacing: 0.2px;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .user-profile-badge-link {
+          text-decoration: none;
+          display: block;
+          flex: 1;
+          min-width: 0;
+          transition: transform 0.2s ease;
+        }
+
+        .user-profile-badge-link:hover {
+          transform: translateX(2px);
         }
 
         .topbar-right {
@@ -1696,6 +2007,547 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
 
         .btn-modal-close:hover {
           background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* Universal Notification Bell (UC-116) */
+        .global-bell-btn {
+          position: relative;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          color: #fff;
+          width: 32px;
+          height: 32px;
+          border-radius: 6px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          font-size: 0.95rem;
+          transition: all 0.2s;
+          margin-left: 0.5rem;
+        }
+
+        .global-bell-btn:hover {
+          background: rgba(255, 255, 255, 0.1);
+          transform: scale(1.05);
+        }
+
+        .global-bell-btn.has-unread {
+          animation: wiggle 1s ease infinite;
+          border-color: rgba(20, 184, 166, 0.4);
+        }
+
+        @keyframes wiggle {
+          0%, 100% { transform: rotate(0); }
+          15% { transform: rotate(-15deg); }
+          30% { transform: rotate(10deg); }
+          45% { transform: rotate(-10deg); }
+          60% { transform: rotate(5deg); }
+          75% { transform: rotate(-5deg); }
+        }
+
+        .bell-badge {
+          position: absolute;
+          top: -5px;
+          right: -5px;
+          background: #ef4444;
+          color: #fff;
+          font-size: 0.65rem;
+          font-weight: 800;
+          padding: 0.05rem 0.25rem;
+          border-radius: 10px;
+          min-width: 16px;
+          text-align: center;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* Reminders Slide-over Panel */
+        .reminders-slide-over {
+          position: fixed;
+          top: 0;
+          right: 0;
+          width: 380px;
+          height: 100vh;
+          background: rgba(15, 23, 42, 0.98);
+          border-left: 1px solid var(--border-light);
+          z-index: 150;
+          display: flex;
+          flex-direction: column;
+          box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+          font-family: var(--font-sans);
+        }
+
+        .workspace-main-wrapper:has(.main-content.theme-light) .reminders-slide-over {
+          background: #ffffff !important;
+          border-left-color: rgba(15, 23, 42, 0.1) !important;
+          box-shadow: -10px 0 30px rgba(15, 23, 42, 0.05) !important;
+        }
+
+        .reminders-panel-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 1.25rem 1.5rem;
+          border-bottom: 1px solid var(--border-light);
+        }
+
+        .workspace-main-wrapper:has(.main-content.theme-light) .reminders-panel-header h4 {
+          color: #0f172a !important;
+        }
+
+        .reminders-panel-header h4 {
+          font-size: 1.05rem;
+          font-weight: 750;
+          color: #fff;
+          margin: 0;
+        }
+
+        .btn-close-panel {
+          background: none;
+          border: none;
+          color: var(--text-muted);
+          font-size: 1.5rem;
+          cursor: pointer;
+          line-height: 1;
+        }
+
+        .btn-close-panel:hover {
+          color: var(--text-primary);
+        }
+
+        .reminders-panel-body {
+          flex: 1;
+          overflow-y: auto;
+          padding: 1.25rem 1.5rem;
+          display: flex;
+          flex-direction: column;
+          gap: 1.25rem;
+        }
+
+        .btn-add-reminder-trigger {
+          background: rgba(20, 184, 166, 0.12);
+          border: 1px solid rgba(20, 184, 166, 0.3);
+          color: #14b8a6;
+          padding: 0.6rem;
+          font-size: 0.85rem;
+          font-weight: 700;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.2s;
+          text-align: center;
+          width: 100%;
+        }
+
+        .btn-add-reminder-trigger:hover {
+          background: #14b8a6;
+          color: #fff;
+          box-shadow: 0 2px 10px rgba(20, 184, 166, 0.25);
+        }
+
+        .no-reminders-state {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 3rem 1rem;
+          color: var(--text-muted);
+          font-size: 0.88rem;
+          text-align: center;
+        }
+
+        .reminders-list {
+          display: flex;
+          flex-direction: column;
+          gap: 0.85rem;
+        }
+
+        .reminder-item-card {
+          padding: 1rem;
+          border-radius: 10px;
+          border: 1px solid var(--border-light);
+          background: rgba(255, 255, 255, 0.02);
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          transition: transform 0.2s;
+        }
+
+        .workspace-main-wrapper:has(.main-content.theme-light) .reminder-item-card {
+          background: rgba(15, 23, 42, 0.02) !important;
+          border-color: rgba(15, 23, 42, 0.08) !important;
+        }
+
+        .reminder-item-card:hover {
+          transform: translateY(-2px);
+        }
+
+        .reminder-item-card.read {
+          opacity: 0.6;
+        }
+
+        .reminder-item-header {
+          display: flex;
+          align-items: center;
+          gap: 0.4rem;
+          font-size: 0.72rem;
+          font-weight: 600;
+        }
+
+        .importance-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          display: inline-block;
+        }
+
+        .importance-low .importance-dot { background: #3b82f6; }
+        .importance-medium .importance-dot { background: #f59e0b; }
+        .importance-high .importance-dot { background: #ef4444; }
+
+        .importance-label {
+          font-weight: 700;
+          text-transform: uppercase;
+        }
+
+        .importance-low .importance-label { color: #3b82f6; }
+        .importance-medium .importance-label { color: #f59e0b; }
+        .importance-high .importance-label { color: #ef4444; }
+
+        .reminder-date {
+          margin-left: auto;
+          color: var(--text-muted);
+        }
+
+        .reminder-text {
+          font-size: 0.88rem;
+          color: var(--text-primary);
+          line-height: 1.4;
+          margin: 0;
+          word-break: break-word;
+        }
+
+        .workspace-main-wrapper:has(.main-content.theme-light) .reminder-text {
+          color: #0f172a !important;
+        }
+
+        .reminder-linked-doc {
+          font-size: 0.78rem;
+          color: #14b8a6;
+          text-decoration: none;
+          font-weight: 600;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.25rem;
+        }
+
+        .reminder-linked-doc:hover {
+          text-decoration: underline;
+        }
+
+        .reminder-card-actions {
+          display: flex;
+          gap: 0.4rem;
+          margin-top: 0.35rem;
+          border-top: 1px solid var(--border-light);
+          padding-top: 0.5rem;
+        }
+
+        .btn-rem-action {
+          padding: 0.25rem 0.5rem;
+          font-size: 0.72rem;
+          font-weight: 700;
+          border-radius: 4px;
+          border: none;
+          cursor: pointer;
+          transition: background 0.15s;
+        }
+
+        .btn-rem-action.read {
+          background: rgba(16, 185, 129, 0.15);
+          color: #10b981;
+        }
+
+        .btn-rem-action.read:hover {
+          background: #10b981;
+          color: #fff;
+        }
+
+        .btn-rem-action.snooze {
+          background: rgba(245, 158, 11, 0.15);
+          color: #f59e0b;
+        }
+
+        .btn-rem-action.snooze:hover {
+          background: #f59e0b;
+          color: #fff;
+        }
+
+        .btn-rem-action.delete {
+          background: rgba(239, 68, 68, 0.12);
+          color: #ef4444;
+          margin-left: auto;
+        }
+
+        .btn-rem-action.delete:hover {
+          background: #ef4444;
+          color: #fff;
+        }
+
+        /* Reminder Form */
+        .reminder-creation-form {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .reminder-creation-form h5 {
+          font-size: 0.95rem;
+          font-weight: 700;
+          color: #fff;
+          margin: 0 0 0.5rem 0;
+        }
+
+        .workspace-main-wrapper:has(.main-content.theme-light) .reminder-creation-form h5 {
+          color: #0f172a !important;
+        }
+
+        .reminder-creation-form .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.35rem;
+        }
+
+        .reminder-creation-form label {
+          font-size: 0.72rem;
+          font-weight: 700;
+          color: var(--text-muted);
+          text-transform: uppercase;
+        }
+
+        .reminder-creation-form textarea {
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid var(--border-light);
+          color: #fff;
+          padding: 0.5rem;
+          border-radius: 6px;
+          font-size: 0.85rem;
+          min-height: 80px;
+          resize: none;
+          outline: none;
+          font-family: inherit;
+        }
+
+        .workspace-main-wrapper:has(.main-content.theme-light) .reminder-creation-form textarea {
+          background: rgba(15, 23, 42, 0.03) !important;
+          border-color: rgba(15, 23, 42, 0.15) !important;
+          color: #0f172a !important;
+        }
+
+        .reminder-creation-form textarea:focus {
+          border-color: #14b8a6;
+        }
+
+        .reminder-creation-form input[type="datetime-local"],
+        .reminder-creation-form select {
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid var(--border-light);
+          color: #fff;
+          padding: 0.5rem;
+          border-radius: 6px;
+          font-size: 0.85rem;
+          outline: none;
+        }
+
+        .workspace-main-wrapper:has(.main-content.theme-light) .reminder-creation-form input[type="datetime-local"],
+        .workspace-main-wrapper:has(.main-content.theme-light) .reminder-creation-form select {
+          background: rgba(15, 23, 42, 0.03) !important;
+          border-color: rgba(15, 23, 42, 0.15) !important;
+          color: #0f172a !important;
+        }
+
+        .reminder-creation-form input[type="datetime-local"]:focus,
+        .reminder-creation-form select:focus {
+          border-color: #14b8a6;
+        }
+
+        .checkbox-group {
+          flex-direction: row !important;
+          align-items: center;
+          gap: 0.5rem !important;
+          margin: 0.25rem 0;
+        }
+
+        .checkbox-group input {
+          cursor: pointer;
+        }
+
+        .checkbox-group label {
+          cursor: pointer;
+          text-transform: none !important;
+          font-size: 0.82rem !important;
+          font-weight: 500 !important;
+        }
+
+        .form-actions {
+          display: flex;
+          gap: 0.5rem;
+          margin-top: 0.5rem;
+        }
+
+        .btn-save-reminder {
+          flex: 1;
+          background: #14b8a6;
+          border: none;
+          color: #fff;
+          padding: 0.55rem;
+          font-size: 0.82rem;
+          font-weight: 700;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: background 0.15s;
+        }
+
+        .btn-save-reminder:hover {
+          background: #0d9488;
+        }
+
+        .btn-cancel-reminder {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid var(--border-light);
+          color: var(--text-muted);
+          padding: 0.55rem 1rem;
+          font-size: 0.82rem;
+          font-weight: 700;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-cancel-reminder:hover {
+          color: var(--text-primary);
+          background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* Due Alert Overlay */
+        .due-reminder-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          background: rgba(7, 8, 11, 0.8);
+          backdrop-filter: blur(8px);
+          z-index: 300;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-family: var(--font-sans);
+        }
+
+        .due-reminder-card {
+          width: 440px;
+          padding: 0;
+          border-radius: 16px;
+          border: 1px solid rgba(255,255,255,0.08);
+          overflow: hidden;
+          background: #0f172a;
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+        }
+
+        .due-banner {
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+          padding: 1rem 1.5rem;
+          font-size: 0.8rem;
+          color: #fff;
+        }
+
+        .due-banner.importance-low { background: #1e3a8a; }
+        .due-banner.importance-medium { background: #78350f; }
+        .due-banner.importance-high { background: #7f1d1d; }
+
+        .due-bell-animation {
+          display: inline-block;
+          animation: ringBell 0.5s ease infinite alternate;
+        }
+
+        @keyframes ringBell {
+          from { transform: rotate(-15deg); }
+          to { transform: rotate(15deg); }
+        }
+
+        .due-body {
+          padding: 1.5rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+
+        .due-body h3 {
+          font-size: 1.2rem;
+          font-weight: 750;
+          color: #fff;
+          margin: 0;
+          line-height: 1.4;
+        }
+
+        .due-body p {
+          font-size: 0.88rem;
+          color: var(--text-muted);
+          margin: 0;
+        }
+
+        .due-reminder-link {
+          font-size: 0.85rem;
+          color: #14b8a6;
+          text-decoration: none;
+          font-weight: 700;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.3rem;
+          margin-top: 0.25rem;
+        }
+
+        .due-reminder-link:hover {
+          text-decoration: underline;
+        }
+
+        .due-card-actions {
+          display: flex;
+          padding: 1rem 1.5rem;
+          border-top: 1px solid rgba(255,255,255,0.06);
+          background: rgba(0, 0, 0, 0.2);
+          gap: 0.75rem;
+        }
+
+        .btn-due-action {
+          flex: 1;
+          padding: 0.6rem;
+          border-radius: 8px;
+          border: none;
+          font-size: 0.82rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.15s;
+        }
+
+        .btn-due-action.read {
+          background: #14b8a6;
+          color: #fff;
+        }
+
+        .btn-due-action.read:hover {
+          background: #0d9488;
+        }
+
+        .btn-due-action.snooze {
+          background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(255,255,255,0.08);
+          color: #e5e7eb;
+        }
+
+        .btn-due-action.snooze:hover {
+          background: rgba(255,255,255,0.1);
         }
       `}</style>
     </div>
