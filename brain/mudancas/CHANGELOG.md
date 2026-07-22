@@ -2,6 +2,99 @@
 
 Este registro lista em ordem cronológica todas as atualizações de desenvolvimento integradas a esta base de conhecimento.
 
+## [2026-07-21] (Correção de Carregamento de Documento por ID & Elementos de Botão Nativo) - Abertura Direta de Templates e Manuscritos (UC-084, UC-085, UC-127)
+
+### 🎯 Leitura de Parâmetro `chapterId` no Editor
+*   **Carregamento Direto por ID:** O `EditorComponent.tsx` agora inspeciona o parâmetro de busca `searchParams.get('chapterId')` na URL para carregar e ativar instantaneamente o manuscrito recém-criado ou selecionado na Tela Inicial.
+*   **Eliminação da Abertura de Documento Errado:** Sanado o problema onde o editor sempre forçava a abertura do primeiro elemento (`activeList[0]`), ignorando o modelo escolhido.
+
+### 🖱️ Elementos Nativos de Botão nos Templates
+*   **Conversão para `<button type="button">`:** Todos os cartões da Galeria de Templates (*Documento em Branco, Jornada do Herói, Ficha de Personagem, Worldbuilding, 3 Atos*) foram convertidos em elementos de botão nativos, garantindo 100% de propagação de clique e foco em todos os navegadores.
+
+### Novos Casos de Uso Concluídos
+*   **Arquivar Textos (`UC-127`):** Botão `📦 Arquivar` nas ações do capítulo e painel retrátil "📦 Arquivados" no Explorer para consultar e desarquivar manuscritos a qualquer momento.
+*   **Personalizar Densidade da Interface (`UC-084`):** Seletor no painel de configurações para alternar entre as densidades *Compacta*, *Padrão* e *Confortável*, ajustando padding e espaçamento global.
+*   **Personalizar Cores do Editor (`UC-085`):** Seletor de cores de destaque (*Roxo Eldritch*, *Azul Mágico*, *Esmeralda*, *Âmbar*, *Rosa/Rubro*) com propagação instantânea de variáveis CSS.
+
+### Código Adicionado/Modificado
+*   [types.ts](file:///C:/Users/RyanZ/Documents/antigravity/projeto_uni/packages/domain/src/editor/types.ts) (Atualização da interface `Manuscript` com `isArchived`, `tags` e `category`)
+*   [schema.ts](file:///C:/Users/RyanZ/Documents/antigravity/projeto_uni/apps/web/src/db/schema.ts) (Atualização do esquema Dexie IndexedDB para a versão 9)
+*   [EditorComponent.tsx](file:///C:/Users/RyanZ/Documents/antigravity/projeto_uni/apps/web/src/app/editor/EditorComponent.tsx) (Quebra de texto do painel direito, densidade de UI, temas de cores de destaque e painel de textos arquivados)
+
+## [2026-07-21] (Correção do Painel Lateral & Recursos Avançados) - Correção do Layout Flexbox (Zero Corte), Fixar Capítulos (Pins), Categorização Automática, Audit Log do Sistema e Quadro de Desenho Inline (UC-010, UC-011, UC-012, UC-040, UC-042, UC-061, UC-062, UC-128)
+
+### Correção de Layout & Ergonomia
+*   **Correção Definitiva do Corte no Painel Esquerdo:** Adição de `min-width: 0 !important` no `.editor-workspace` e `flex-shrink: 0 !important` no `.editor-side-panel`, impedindo o estouro de largura e garantindo exibição 100% perfeita do explorer e estatísticas à esquerda.
+
+### Novos Casos de Uso Concluídos
+*   **Fixar Capítulos no Topo do Explorer (`UC-128`):** Botão `📌` nas ações do capítulo para fixar manuscritos preferidos no grupo destacado "📌 Fixados no Topo".
+*   **Quadro de Desenho & Rascunho Visual Inline (`UC-062`):** Ferramenta com canvas HTML5 2D interativo e paleta de cores para desenhar mapas, diagramas ou rascunhos à mão livre e inseri-los diretamente no documento.
+*   **Log de Atividades Automáticas do Sistema (`UC-061`):** Modal acessível no menu *Exibir* que registra o histórico em tempo real de auto-salvamentos, backups, auto-títulos e sincronizações do sistema.
+*   **Categorização Automática de Textos (`UC-042`):** Algoritmo semântico que lê a frequência de diálogos e palavras-chave para classificar automaticamente o capítulo (*Cena de Diálogo*, *Ação & Tensão*, *Romance*, *Mistério & Suspense*).
+*   **Organização Completa em Pastas & Subpastas (`UC-010`, `UC-011`, `UC-012`, `UC-040`):** Suporte completo a criação de estruturas de pastas, movimentação por drag & drop e renomeação.
+
+### Código Adicionado/Modificado
+*   [categories.ts](file:///C:/Users/RyanZ/Documents/antigravity/projeto_uni/packages/domain/src/editor/categories.ts) (Classificador automático de categorias e métricas de diálogo)
+*   [audit.ts](file:///C:/Users/RyanZ/Documents/antigravity/projeto_uni/packages/domain/src/editor/audit.ts) (Gerenciador de logs de auditoria de sistema)
+*   [schema.ts](file:///C:/Users/RyanZ/Documents/antigravity/projeto_uni/apps/web/src/db/schema.ts) (Tabela `auditLogs` adicionada ao Dexie IndexedDB v8)
+*   [EditorComponent.tsx](file:///C:/Users/RyanZ/Documents/antigravity/projeto_uni/apps/web/src/app/editor/EditorComponent.tsx) (Correção do App Shell Flexbox, grupo de fixados no topo, modais de desenho 2D e histórico de atividades)
+
+## [2026-07-21] (Google Docs Fidelidade 1:1 & Ferramentas Avançadas) - Comentários na Margem, Divisão de Capítulos, Duplicação, Auto-Título com IA, Templates e Tema Claro/Escuro (UC-006, UC-009, UC-041, UC-114, UC-137, UC-138, UC-159)
+
+### Recursos 1:1 do Google Docs & Estrutura Literária
+*   **Coluna de Comentários na Margem Direita (UC-114):** Permite selecionar qualquer trecho do texto e fixar comentários flutuantes na margem direita com avatar do autor, timestamp, trecho citado e botão para resolver o comentário (`✓ Resolver`).
+*   **Régua Superior Graduada estilo Google Docs (`.google-docs-ruler`):** Régua visual com marcações de recuo e margens.
+*   **Alternância de Temas Claro/Escuro estilo Google Docs (UC-159):** Troca fluida entre o tema padrão escuro do Eldritch Lich e o tema original branco/claro do Google Docs (`#ffffff` sheet sobre `#f8f9fa` workspace).
+*   **Divisão Inteligente de Capítulo no Cursor (UC-009):** Permite cortar um capítulo extenso no meio ou no parágrafo ativo, criando um novo capítulo `[Título] - Parte 2` automaticamente.
+*   **Duplicação Instantânea de Manuscrito (UC-006):** Criação de cópia exata do capítulo selecionado (`[Título] (Cópia)`) preservando todo o conteúdo e formato.
+*   **Geração Automática de Título com IA (UC-041):** Leitura do primeiro parágrafo do manuscrito para sugerir e aplicar um título conciso automaticamente.
+*   **Galeria de Modelos/Templates de Capítulos (UC-137, UC-138):** Modal com estruturas narrativas pré-definidas (*Jornada do Herói*, *Ficha de Personagem*, *Worldbuilding de Local*, *Estrutura de 3 Atos*).
+
+### Código Adicionado/Modificado
+*   [templates.ts](file:///C:/Users/RyanZ/Documents/antigravity/projeto_uni/packages/domain/src/editor/templates.ts) (Módulo de templates narrativos e gerador de auto-título)
+*   [comments.ts](file:///C:/Users/RyanZ/Documents/antigravity/projeto_uni/packages/domain/src/editor/comments.ts) (Módulo de comentários inline com respostas e resolução)
+*   [schema.ts](file:///C:/Users/RyanZ/Documents/antigravity/projeto_uni/apps/web/src/db/schema.ts) (Tabela `comments` adicionada ao Dexie IndexedDB v7)
+*   [EditorComponent.tsx](file:///C:/Users/RyanZ/Documents/antigravity/projeto_uni/apps/web/src/app/editor/EditorComponent.tsx) (Coluna de comentários flutuante na margem, régua do Google Docs, alternador de tema claro/escuro, modais de comentário e templates)
+
+## [2026-07-21] (Design System & Editor Literário) - Interface Estilo Google Docs / MS Word, Ribbon de Formatação, Métricas de Leitura, Hyperlinks e Notas (UC-028, UC-029, UC-063, UC-110, UC-111, UC-115, UC-186, UC-187, UC-243, UC-244, UC-393)
+
+### Interface Estilo Google Docs / MS Word
+*   **Barra Superior de Menus Estilo Processador de Texto:** Menus dropdown retráteis (*Arquivo*, *Editar*, *Exibir*, *Inserir*, *Formatar*) com atalhos rápidos para ações do sistema.
+*   **Ribbon Bar de Formatação:** Barra de ferramentas com seletores de fonte (Georgia, Inter, Times, Courier, Arial - UC-063, UC-244), ajuste de tamanho de fonte em pontos (UC-243), botões de estilo (Negrito, Itálico, Tachado, Código), alinhamento (Esquerda, Centro, Direita, Justificado), espaçamento entre linhas (1.2, 1.5, 1.8, 2.0) e listas.
+*   **Visualização em Papel Virtual A4:** Canvas central estilizado como uma folha de papel física com sombras realistas, margens configuráveis e tipografia fluida para máxima ergonomia cognitiva.
+*   **Barra de Status do Documento:** Exibição dinâmica de contagem de palavras (UC-028), contagem de caracteres (UC-029), tempo estimado de leitura (UC-186), progresso de meta diária e selo do modo de exibição.
+
+### Inserção de Elementos Rica & Modos de Leitura
+*   **Modo Leitura Apenas (UC-187):** Alternância rápida para modo somente leitura sem barras de edição, bloqueando mutações acidentais.
+*   **Modal de Hyperlinks (UC-110, UC-111):** Inserção de links para navegação web e referências internas no manuscrito.
+*   **Modal de Notas de Rodapé e Anotações (UC-115, UC-393):** Inserção de anotações explicativas no texto com pré-visualização em tooltip.
+
+### Código Adicionado/Modificado
+*   [EditorComponent.tsx](file:///C:/Users/RyanZ/Documents/antigravity/projeto_uni/apps/web/src/app/editor/EditorComponent.tsx) (Redesign da interface no padrão Google Docs/Word, barra ribbon de ferramentas, folha de papel A4, barra de status, modais de hyperlink/nota e estilos CSS)
+
+## [2026-07-21] (Core Editor, Versões e Interoperabilidade) - Busca & Substituição no Editor, Diff de Versões e Importação/Exportação Multiformato (UC-007, UC-008, UC-022, UC-023, UC-024, UC-124, UC-125, UC-163, UC-194, UC-195, UC-196, UC-197)
+
+### Busca & Substituição no Editor (UC-022, UC-023, UC-024)
+*   **Módulo de Busca & Substituição:** Painel flutuante no editor acionado por botão na barra do documento ou atalho de teclado (`Ctrl+F`).
+*   **Filtros de Busca Avançados:** Suporte para busca exata de palavras (UC-022), frases completas (UC-023) e padrões de contexto/regex (UC-024), com opções de diferenciar maiúsculas/minúsculas e palavra inteira.
+*   **Navegação e Substituição:** Contador de correspondências ativas (ex: `1/8`), botões de navegação Próximo/Anterior e ações de *Substituir* (ocorrência selecionada) e *Substituir Tudo* instantâneo.
+
+### Versionamento Avançado e Visualizador de Diff (UC-124, UC-125, UC-195, UC-196, UC-197)
+*   **Snapshots com Rótulos Customizados (UC-124):** Além dos pontos de restauração automáticos, o escritor pode criar versões rotuladas manualmente (ex: "Draft Final", "Revisão dos Diálogos").
+*   **Comparador Visual de Diff (UC-196):** Modal interativo de comparação entre a versão atual e qualquer snapshot anterior. Exibe contagem de palavras adicionadas/removidas/inalteradas com marcação visual colorida (adições em verde e remoções tachadas em vermelho).
+*   **Restauração Segura (UC-125, UC-197):** Restauração de qualquer versão anterior preservando um backup automático do estado presente antes de sobrescrever o manuscrito.
+
+### Importação e Exportação Multiformato (UC-007, UC-008, UC-163, UC-194)
+*   **Exportação Multiformato (UC-008, UC-163):** Pipeline de compilação e download direto para **Word (.docx)**, **PDF para impressão (.pdf)**, **E-book ePub (.epub)**, **Markdown (.md)**, **Texto Puro (.txt)** e **HTML (.html)**. Suporta exportar apenas o capítulo ativo ou compilar o livro inteiro em um único documento.
+*   **Importação de Manuscritos (UC-007, UC-194):** Upload e conversão automática de arquivos `.txt`, `.md`, `.docx`, `.html` e `.json`. O autor pode importar como um novo capítulo ou substituir o conteúdo do capítulo ativo.
+
+### Código Adicionado/Modificado
+*   [diff.ts](file:///C:/Users/RyanZ/Documents/antigravity/projeto_uni/packages/domain/src/editor/diff.ts) (Algoritmo de cálculo de diff de palavras entre versões)
+*   [search.ts](file:///C:/Users/RyanZ/Documents/antigravity/projeto_uni/packages/domain/src/editor/search.ts) (Motor de busca e substituição por palavra, frase e regex)
+*   [exporter.ts](file:///C:/Users/RyanZ/Documents/antigravity/projeto_uni/packages/domain/src/editor/exporter.ts) (Conversores e compiladores para DOCX, PDF, ePub, Markdown, TXT, HTML)
+*   [index.ts](file:///C:/Users/RyanZ/Documents/antigravity/projeto_uni/packages/domain/src/index.ts) (Exportação dos módulos no pacote de domínio)
+*   [EditorComponent.tsx](file:///C:/Users/RyanZ/Documents/antigravity/projeto_uni/apps/web/src/app/editor/EditorComponent.tsx) (Painéis e modais de Busca/Substituição, Visualizador de Diff, Importação/Exportação e estilos CSS)
+
 ## [2026-07-21] (Escrita e Organização) - Sistema de Pastas Hierárquicas, Drag-and-Drop e Lixeira com Purga de 30 Dias (UC-010, UC-011, UC-012, UC-157)
 
 ### Organização de Arquivos e Pastas

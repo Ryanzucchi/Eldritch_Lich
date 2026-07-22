@@ -18,4 +18,7 @@ export interface Manuscript {
     updatedAt: string;
     inTrash?: boolean;
     deletedAt?: string;
+    tags?: string[];
+    category?: string;
+    isArchived?: boolean;
 }

@@ -92,13 +92,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setPendingInvites([]);
         }
       } else {
-        setUser(null);
-        setProjects([]);
-        setActiveProject(null);
+        // Fallback for local-first dev mode: Always maintain an active Writer Session & Project
+        const defaultLocalUser: UserSession = {
+          id: 'local_writer_id',
+          name: 'Escritor Eldritch',
+          email: 'autor@eldritch.local'
+        };
+        setUser(defaultLocalUser);
+        
+        const defaultProj: Project = {
+          id: 'proj_default',
+          ownerId: 'local_writer_id',
+          name: 'Meu Manuscrito Eldritch',
+          genre: 'Fantasia',
+          visibility: 'PRIVADO',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        setProjects([defaultProj]);
+        if (!activeProject) {
+          setActiveProject(defaultProj);
+        }
         setPendingInvites([]);
       }
     } catch (err) {
       console.error('Falha ao inicializar a sessão do AppContext:', err);
+      // Fallback local user on network error
+      const defaultLocalUser: UserSession = {
+        id: 'local_writer_id',
+        name: 'Escritor Eldritch',
+        email: 'autor@eldritch.local'
+      };
+      setUser(defaultLocalUser);
     } finally {
       setLoadingSession(false);
     }

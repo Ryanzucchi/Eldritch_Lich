@@ -154,25 +154,25 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-005** — Excluir textos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-006** — Duplicar textos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-006** — Duplicar textos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-007** — Importar textos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-007** — Importar textos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-008** — Exportar textos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-008** — Exportar textos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-009** — Separação inteligente de textos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-009** — Separação inteligente de textos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-010** — Organizar texto em pastas (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-010** — Organizar texto em pastas (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-011** — Organizar texto em subpastas (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
+- [x] **UC-011** — Organizar texto em subpastas (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: UC-012, UC-035, UC-040, UC-041, UC-066 e mais 7 UCs
-- [ ] **UC-012** — Mover textos entre pastas (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
+- [x] **UC-012** — Mover textos entre pastas (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
   - Depende de: UC-001, UC-011, UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-013** — Organizar textos por tags (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
@@ -181,43 +181,43 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-014** — Organizar textos por categorias (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-022** — Procurar palavras (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-022** — Procurar palavras (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-023** — Procurar frases (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-023** — Procurar frases (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-024** — Procurar por contexto (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-024** — Procurar por contexto (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-028** — Contabilizar palavras (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-028** — Contabilizar palavras (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-029** — Contabilizar caracteres (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-029** — Contabilizar caracteres (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-040** — Entitular textos e pastas (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-040** — Entitular textos e pastas (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-011, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-041** — Auto intitular textos e pastas (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-041** — Auto intitular textos e pastas (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-011, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-042** — Categorizar textos automaticamente (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-042** — Categorizar textos automaticamente (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-061** — Listar todas atividades feitas automaticamente pelo sistema (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-061** — Listar todas atividades feitas automaticamente pelo sistema (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-062** — Poder desenhar entre o texto (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-062** — Poder desenhar entre o texto (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-063** — Ter opções de fonte (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-063** — Ter opções de fonte (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-084** — Personalizar interface (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-084** — Personalizar interface (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-085** — Personalizar cores (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-085** — Personalizar cores (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-086** — Personalizar ícones (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
@@ -238,46 +238,46 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-098** — Filtrar grafo por personagem (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-110** — Criar hyperlinks entre textos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-110** — Criar hyperlinks entre textos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-111** — Criar hyperlinks externos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-111** — Criar hyperlinks externos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-114** — Comentar em textos (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
+- [x] **UC-114** — Comentar em textos (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-115** — Adicionar anotações (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
+- [x] **UC-115** — Adicionar anotações (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-116** — Adicionar lembretes (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-122** — Desfazer alterações (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-122** — Desfazer alterações (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: UC-123
-- [ ] **UC-123** — Refazer alterações (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-123** — Refazer alterações (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-122, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-124** — Histórico de versões (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-124** — Histórico de versões (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: UC-125
-- [ ] **UC-125** — Restaurar versões anteriores (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-125** — Restaurar versões anteriores (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-124, UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-126** — Favoritar textos (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-127** — Arquivar textos (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
+- [x] **UC-127** — Arquivar textos (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-128** — Fixar textos (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
+- [x] **UC-128** — Fixar textos (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-137** — Criar modelos de textos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-137** — Criar modelos de textos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-138** — Criar modelos de estrutura de pastas (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-138** — Criar modelos de estrutura de pastas (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-011, UC-129
   - Desbloqueia: nenhum
 - [x] **UC-139** — Definir metas de escrita (palavras/dia) (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
@@ -310,7 +310,7 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-158** — Responder perguntas citando a fonte (texto/trecho) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-159** — Alternar tema claro/escuro (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-159** — Alternar tema claro/escuro (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-160** — Suporte a leitor de tela (acessibilidade) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)

@@ -1,5 +1,5 @@
 import Dexie, { Table } from 'dexie';
-import { MetaNode, MetaEdge, WritingGoal, WritingLog, WritingStreak, Manuscript, Folder } from '@eldritch/domain';
+import { MetaNode, MetaEdge, WritingGoal, WritingLog, WritingStreak, Manuscript, Folder, InlineComment, SystemActivity } from '@eldritch/domain';
 
 export class EldritchDatabase extends Dexie {
   metaNodes!: Table<MetaNode, string>;
@@ -12,6 +12,8 @@ export class EldritchDatabase extends Dexie {
   manuscriptVersions!: Table<{ id: string; manuscriptId: string; versionNumber: number; title: string; content: string; createdAt: string }, string>;
   pendingSaves!: Table<{ id: string; manuscriptId: string; content: string; timestamp: number }, string>;
   folders!: Table<Folder, string>;
+  comments!: Table<InlineComment, string>;
+  auditLogs!: Table<SystemActivity, string>;
 
   constructor() {
     const isBrowser = typeof window !== 'undefined';
@@ -67,6 +69,47 @@ export class EldritchDatabase extends Dexie {
       manuscriptVersions: 'id, manuscriptId, versionNumber, createdAt',
       pendingSaves: 'id, manuscriptId, timestamp',
       folders: 'id, projectId, parentFolderId'
+    });
+    this.version(7).stores({
+      metaNodes: 'id, type, status, title',
+      metaEdges: 'id, fromId, toId',
+      writingGoals: 'id, type, targetWords, deadline',
+      writingLogs: 'id, date',
+      writingStreak: 'id',
+      keyboardShortcuts: 'command',
+      manuscripts: 'id, status, title, folderId',
+      manuscriptVersions: 'id, manuscriptId, versionNumber, createdAt',
+      pendingSaves: 'id, manuscriptId, timestamp',
+      folders: 'id, projectId, parentFolderId',
+      comments: 'id, manuscriptId, isResolved, createdAt'
+    });
+    this.version(8).stores({
+      metaNodes: 'id, type, status, title',
+      metaEdges: 'id, fromId, toId',
+      writingGoals: 'id, type, targetWords, deadline',
+      writingLogs: 'id, date',
+      writingStreak: 'id',
+      keyboardShortcuts: 'command',
+      manuscripts: 'id, status, title, folderId',
+      manuscriptVersions: 'id, manuscriptId, versionNumber, createdAt',
+      pendingSaves: 'id, manuscriptId, timestamp',
+      folders: 'id, projectId, parentFolderId',
+      comments: 'id, manuscriptId, isResolved, createdAt',
+      auditLogs: 'id, type, timestamp'
+    });
+    this.version(9).stores({
+      metaNodes: 'id, type, status, title',
+      metaEdges: 'id, fromId, toId',
+      writingGoals: 'id, type, targetWords, deadline',
+      writingLogs: 'id, date',
+      writingStreak: 'id',
+      keyboardShortcuts: 'command',
+      manuscripts: 'id, status, title, folderId, category, isArchived',
+      manuscriptVersions: 'id, manuscriptId, versionNumber, createdAt',
+      pendingSaves: 'id, manuscriptId, timestamp',
+      folders: 'id, projectId, parentFolderId',
+      comments: 'id, manuscriptId, isResolved, createdAt',
+      auditLogs: 'id, type, timestamp'
     });
   }
 }

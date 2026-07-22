@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useApp } from '../../context/AppContext';
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { 
     user, 
     projects, 
@@ -27,6 +28,29 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
   const [projectVisibility, setProjectVisibility] = useState<'PRIVADO' | 'COMPARTILHADO'>('PRIVADO');
   const [modalError, setModalError] = useState<string | null>(null);
   const [modalLoading, setModalLoading] = useState(false);
+
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(260);
+  const isResizingSidebar = React.useRef(false);
+
+  const handleSidebarMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    isResizingSidebar.current = true;
+    document.addEventListener('mousemove', handleSidebarMouseMove);
+    document.addEventListener('mouseup', handleSidebarMouseUp);
+  };
+
+  const handleSidebarMouseMove = (e: MouseEvent) => {
+    if (!isResizingSidebar.current) return;
+    const newW = Math.max(180, Math.min(480, e.clientX));
+    setSidebarWidth(newW);
+  };
+
+  const handleSidebarMouseUp = () => {
+    isResizingSidebar.current = false;
+    document.removeEventListener('mousemove', handleSidebarMouseMove);
+    document.removeEventListener('mouseup', handleSidebarMouseUp);
+  };
 
   // Collaboration States
   const [showShareModal, setShowShareModal] = useState(false);
@@ -141,10 +165,19 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // If we are on the auth pages, do not render the dashboard wrapper
-  const isAuthPage = pathname.startsWith('/auth');
+  useEffect(() => {
+    // Flow Validation: If user accesses /gmn or /kanban without an active project, redirect to Google Docs Hub (/)
+    if (!loadingSession && !activeProject && (pathname === '/gmn' || pathname === '/kanban')) {
+      router.push('/');
+    }
+  }, [activeProject, loadingSession, pathname, router]);
 
-  if (isAuthPage) {
+  // If we are on auth pages, home hub, or full-screen editor, do not render the outer dashboard wrapper
+  const isAuthPage = pathname.startsWith('/auth');
+  const isHomePage = pathname === '/' || pathname === '/projects';
+  const isEditorPage = pathname === '/editor';
+
+  if (isAuthPage || isHomePage || isEditorPage) {
     return <>{children}</>;
   }
 
@@ -220,14 +253,32 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="dashboard-layout">
+    <div className={`dashboard-layout ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       {/* Sidebar navigation */}
       {!hideSidebar && (
-        <aside className="dashboard-sidebar">
+        <aside 
+          className={`dashboard-sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`}
+          style={{ width: isSidebarCollapsed ? 64 : sidebarWidth }}
+        >
+          {!isSidebarCollapsed && (
+            <div 
+              className="sidebar-resizer-handle"
+              onMouseDown={handleSidebarMouseDown}
+              title="Clique e arraste para redimensionar o menu lateral"
+            />
+          )}
         <div className="sidebar-brand">
-          <Link href="/gmn" className="brand-logo">
-            Eldritch<span>Lich</span>
+          <Link href="/" className="brand-logo" title="Ir para a Tela Inicial (Google Docs Hub)">
+            {isSidebarCollapsed ? <span>⚡</span> : <>Eldritch<span>Lich</span></>}
           </Link>
+          <button 
+            type="button" 
+            className="btn-collapse-sidebar-toggle"
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            title={isSidebarCollapsed ? "Expandir Menu Lateral" : "Recolher Menu Lateral"}
+          >
+            {isSidebarCollapsed ? '▶' : '◀'}
+          </button>
         </div>
 
         {/* Project Selector */}
@@ -411,9 +462,58 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Main workspace container */}
-      <main className="dashboard-viewport">
-        {children}
-      </main>
+      <div className="workspace-main-wrapper">
+        {/* Universal Top Workspace Header */}
+        <header className="global-workspace-topbar glass">
+          <div className="topbar-left">
+            <Link href="/" className="global-brand-logo" title="Ir para a Tela Inicial (Google Docs Hub)">
+              <span className="brand-icon">📄</span>
+              <span className="brand-title">Eldritch<span>Docs</span></span>
+            </Link>
+
+            {/* Active Module Switcher Tabs */}
+            <nav className="global-nav-tabs">
+              <Link 
+                href="/editor" 
+                className={`global-tab-item ${pathname === '/editor' ? 'active' : ''}`}
+              >
+                📄 Editor Rico
+              </Link>
+              <Link 
+                href="/gmn" 
+                className={`global-tab-item ${pathname === '/gmn' ? 'active' : ''}`}
+              >
+                ⚡ Grafo de Metas
+              </Link>
+              <Link 
+                href="/kanban" 
+                className={`global-tab-item ${pathname === '/kanban' ? 'active' : ''}`}
+              >
+                📊 Quadro Kanban
+              </Link>
+              <Link 
+                href="/profile" 
+                className={`global-tab-item ${pathname === '/profile' ? 'active' : ''}`}
+              >
+                👤 Meu Perfil
+              </Link>
+            </nav>
+          </div>
+
+          <div className="topbar-right">
+            {activeProject && (
+              <span className="global-project-badge" title="Projeto Ativo">
+                📁 {activeProject.name}
+              </span>
+            )}
+            <span className="global-ai-status">🟢 IA Local Pronta</span>
+          </div>
+        </header>
+
+        <main className="dashboard-viewport">
+          {children}
+        </main>
+      </div>
 
       {/* Create Project Modal */}
       {showModal && (
@@ -629,7 +729,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
         }
 
         .dashboard-sidebar {
-          width: 280px;
+          position: relative;
           height: 100vh;
           background: rgba(11, 14, 18, 0.95);
           backdrop-filter: blur(20px);
@@ -640,6 +740,187 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
           padding: 1.5rem;
           flex-shrink: 0;
           z-index: 100;
+          transition: width 0.1s ease, padding 0.2s ease;
+        }
+
+        .sidebar-resizer-handle {
+          position: absolute;
+          top: 0;
+          right: -3px;
+          width: 6px;
+          height: 100%;
+          cursor: col-resize;
+          z-index: 150;
+          transition: background 0.15s ease;
+        }
+
+        .workspace-main-wrapper {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          height: 100vh;
+          overflow: hidden;
+          position: relative;
+        }
+
+        .global-workspace-topbar {
+          height: 48px;
+          min-height: 48px;
+          background: rgba(15, 23, 42, 0.95);
+          backdrop-filter: blur(16px);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 1.25rem;
+          z-index: 90;
+        }
+
+        .topbar-left {
+          display: flex;
+          align-items: center;
+          gap: 1.5rem;
+        }
+
+        .global-brand-logo {
+          display: flex;
+          align-items: center;
+          gap: 0.4rem;
+          text-decoration: none;
+          color: #fff;
+          font-weight: 700;
+          font-size: 0.95rem;
+        }
+
+        .global-brand-logo .brand-icon {
+          font-size: 1.2rem;
+          color: #3b82f6;
+        }
+
+        .global-brand-logo .brand-title span {
+          color: #3b82f6;
+        }
+
+        .global-nav-tabs {
+          display: flex;
+          align-items: center;
+          gap: 0.4rem;
+        }
+
+        .global-tab-item {
+          color: #94a3b8;
+          text-decoration: none;
+          font-size: 0.82rem;
+          font-weight: 500;
+          padding: 0.35rem 0.75rem;
+          border-radius: 6px;
+          transition: all 0.15s ease;
+          display: flex;
+          align-items: center;
+          gap: 0.3rem;
+        }
+
+        .global-tab-item:hover {
+          color: #f1f5f9;
+          background: rgba(255, 255, 255, 0.06);
+        }
+
+        .global-tab-item.active {
+          color: #60a5fa;
+          background: rgba(59, 130, 246, 0.15);
+          border: 1px solid rgba(59, 130, 246, 0.3);
+          font-weight: 600;
+        }
+
+        .topbar-right {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
+        .global-project-badge {
+          font-size: 0.78rem;
+          font-weight: 600;
+          color: #cbd5e1;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          padding: 0.2rem 0.6rem;
+          border-radius: 14px;
+        }
+
+        .global-ai-status {
+          font-size: 0.75rem;
+          color: #10b981;
+          background: rgba(16, 185, 129, 0.1);
+          border: 1px solid rgba(16, 185, 129, 0.2);
+          padding: 0.2rem 0.6rem;
+          border-radius: 14px;
+        }
+
+        /* Collapsible Sidebar Styles */
+        .dashboard-layout.sidebar-collapsed .dashboard-sidebar {
+          width: 64px !important;
+          padding: 1.25rem 0.5rem !important;
+          align-items: center;
+        }
+
+        .dashboard-layout.sidebar-collapsed .dashboard-viewport {
+          flex: 1 !important;
+          width: calc(100vw - 64px) !important;
+        }
+
+        .dashboard-layout.sidebar-collapsed .project-details,
+        .dashboard-layout.sidebar-collapsed .project-label,
+        .dashboard-layout.sidebar-collapsed .project-name,
+        .dashboard-layout.sidebar-collapsed .chevron,
+        .dashboard-layout.sidebar-collapsed .user-info,
+        .dashboard-layout.sidebar-collapsed .nav-link-item span,
+        .dashboard-layout.sidebar-collapsed .btn-share-project-sidebar span,
+        .dashboard-layout.sidebar-collapsed .pending-invites-section {
+          display: none !important;
+        }
+
+        .dashboard-layout.sidebar-collapsed .nav-link-item {
+          justify-content: center !important;
+          padding: 0.75rem !important;
+        }
+
+        .dashboard-layout.sidebar-collapsed .project-trigger {
+          padding: 0.6rem !important;
+          justify-content: center !important;
+        }
+
+        .dashboard-layout.sidebar-collapsed .project-icon {
+          margin-right: 0 !important;
+        }
+
+        .sidebar-brand {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          width: 100%;
+          margin-bottom: 1.5rem;
+        }
+
+        .btn-collapse-sidebar-toggle {
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: #9ca3af;
+          border-radius: 6px;
+          width: 26px;
+          height: 26px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.7rem;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .btn-collapse-sidebar-toggle:hover {
+          background: rgba(20, 184, 166, 0.2);
+          color: #14b8a6;
+          border-color: rgba(20, 184, 166, 0.4);
         }
 
         .dashboard-viewport {

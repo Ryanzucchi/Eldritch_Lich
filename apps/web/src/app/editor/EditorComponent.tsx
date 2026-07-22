@@ -1,7 +1,6 @@
-'use client';
-
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useApp } from '../../context/AppContext';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -18,7 +17,24 @@ import {
   calculateDailyQuota,
   verifyZeroShotAction, 
   cosineSimilarity, 
-  propagateStatus 
+  propagateStatus,
+  computeWordDiff,
+  searchInText,
+  replaceAllInText,
+  replaceMatchInText,
+  exportManuscripts,
+  htmlToMarkdown,
+  markdownToHtml,
+  htmlToPlainText,
+  SearchMatch,
+  DiffResult,
+  ExportFormat,
+  MANUSCRIPT_TEMPLATES,
+  autoGenerateTitle,
+  InlineComment,
+  categorizeText,
+  createAuditLog,
+  SystemActivity
 } from '@eldritch/domain';
 import { computeE5Embedding, extractEntitiesWithNER, ProgressPayload } from '../../services/mms-ai';
 
@@ -81,6 +97,7 @@ const countWords = (text: string): number => {
 };
 
 export default function EditorComponent() {
+  const searchParams = useSearchParams();
   const [nodes, setNodes] = useState<MetaNode[]>([]);
   const [edges, setEdges] = useState<MetaEdge[]>([]);
   const [mmsLogs, setMmsLogs] = useState<MMSLog[]>([]);
@@ -97,7 +114,8 @@ export default function EditorComponent() {
     aiLoadStatus, 
     loadAI: handleLoadAI,
     setHideSidebar,
-    activeProject
+    activeProject,
+    selectProject
   } = useApp();
 
   // Metas de Produtividade State
@@ -147,6 +165,571 @@ export default function EditorComponent() {
   const [selectedVersion, setSelectedVersion] = useState<{ id: string; manuscriptId: string; versionNumber: number; title: string; content: string; createdAt: string } | null>(null);
   const [showVersionPreview, setShowVersionPreview] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Search & Replace state (UC-022, UC-023, UC-024)
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [replaceQuery, setReplaceQuery] = useState('');
+  const [searchCaseSensitive, setSearchCaseSensitive] = useState(false);
+  const [searchWholeWord, setSearchWholeWord] = useState(false);
+  const [searchIsRegex, setSearchIsRegex] = useState(false);
+  const [searchResults, setSearchResults] = useState<SearchMatch[]>([]);
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
+
+  // Version Diff & Labeling state (UC-124, UC-125, UC-195, UC-196, UC-197)
+  const [showDiffModal, setShowDiffModal] = useState(false);
+  const [diffVersion, setDiffVersion] = useState<{ id: string; manuscriptId: string; versionNumber: number; title: string; content: string; createdAt: string } | null>(null);
+  const [diffResult, setDiffResult] = useState<DiffResult | null>(null);
+  const [customVersionTag, setCustomVersionTag] = useState('');
+  const [showCustomTagInput, setShowCustomTagInput] = useState(false);
+
+  // Import & Export state (UC-007, UC-008, UC-163, UC-194)
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportScope, setExportScope] = useState<'current' | 'all'>('current');
+  const [exportFormat, setExportFormat] = useState<ExportFormat>('docx');
+
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importMode, setImportMode] = useState<'new_chapter' | 'overwrite'>('new_chapter');
+
+  // Google Docs / MS Word Styling & Formatting States (UC-063, UC-186, UC-187, UC-243, UC-244)
+  const [fontFamily, setFontFamily] = useState<'georgia' | 'inter' | 'courier' | 'times' | 'arial'>('georgia');
+  const [fontSize, setFontSize] = useState<number>(16);
+  const [textAlign, setTextAlign] = useState<'left' | 'center' | 'right' | 'justify'>('left');
+  const [lineHeight, setLineHeight] = useState<'1.2' | '1.5' | '1.8' | '2.0'>('1.5');
+  const [isReadOnly, setIsReadOnly] = useState(false); // UC-187
+
+  // Hyperlink Modal States (UC-110, UC-111)
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+  const [linkText, setLinkText] = useState('');
+
+  // Footnote / Note Modal States (UC-115, UC-393)
+  const [showNoteModal, setShowNoteModal] = useState(false);
+  const [noteText, setNoteText] = useState('');
+  // Menu bar dropdown active state
+  const [activeMenuDropdown, setActiveMenuDropdown] = useState<'file' | 'edit' | 'view' | 'insert' | 'format' | null>(null);
+
+  // Link insertion handler (UC-110, UC-111)
+  const handleExecuteInsertLink = () => {
+    if (!editor || !linkUrl.trim()) return;
+    const href = linkUrl.startsWith('http') || linkUrl.startsWith('#') ? linkUrl : `https://${linkUrl}`;
+    const text = linkText.trim() || href;
+    const linkHtml = `<a href="${href}" target="_blank" rel="noopener noreferrer" class="manuscript-link">${text}</a>`;
+    editor.commands.insertContent(linkHtml);
+    setShowLinkModal(false);
+    setLinkUrl('');
+    setLinkText('');
+    setSuccess('Link inserido com sucesso!');
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  // Footnote insertion handler (UC-115, UC-393)
+  const handleExecuteInsertNote = () => {
+    if (!editor || !noteText.trim()) return;
+    const noteHtml = `<span className="footnote-box" title="${noteText.replace(/"/g, '&quot;')}">📝 [Nota: ${noteText}]</span> `;
+    editor.commands.insertContent(noteHtml);
+    setShowNoteModal(false);
+    setNoteText('');
+    setSuccess('Nota de rodapé inserida com sucesso!');
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  // Theme state (Google Docs Light / Dark mode - UC-159)
+  const [docsTheme, setDocsTheme] = useState<'light' | 'dark'>('dark');
+
+  // Audit Logs State (UC-061)
+  const [showAuditModal, setShowAuditModal] = useState(false);
+  const [auditLogs, setAuditLogs] = useState<SystemActivity[]>([]);
+
+  // Drawing Canvas State (UC-062)
+  const [showDrawingModal, setShowDrawingModal] = useState(false);
+
+  // Pinned Manuscripts State (UC-128)
+  const [pinnedManuscriptIds, setPinnedManuscriptIds] = useState<string[]>([]);
+
+  // Load audit logs (UC-061)
+  const loadAuditLogs = async () => {
+    const logs = await db.auditLogs.toArray();
+    logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    setAuditLogs(logs);
+  };
+
+  const addAuditLog = async (type: SystemActivity['type'], description: string) => {
+    const newLog = createAuditLog(type, description);
+    await db.auditLogs.put(newLog);
+    await loadAuditLogs();
+  };
+
+  // Custom UI Density & Accent Colors (UC-084, UC-085)
+  const [uiDensity, setUiDensity] = useState<'compact' | 'standard' | 'comfortable'>('standard');
+  const [accentColor, setAccentColor] = useState<'purple' | 'blue' | 'emerald' | 'amber' | 'rose'>('purple');
+
+  // Archive Panel State (UC-127)
+  const [showArchivedPanel, setShowArchivedPanel] = useState(false);
+
+  // Resizable Editor Sidebars State
+  const [leftPanelWidth, setLeftPanelWidth] = useState(300);
+  const isResizingLeft = useRef(false);
+
+  const handleLeftMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    isResizingLeft.current = true;
+    document.addEventListener('mousemove', handleLeftMouseMove);
+    document.addEventListener('mouseup', handleLeftMouseUp);
+  };
+
+  const handleLeftMouseMove = (e: MouseEvent) => {
+    if (!isResizingLeft.current) return;
+    const newWidth = Math.max(180, Math.min(480, e.clientX));
+    setLeftPanelWidth(newWidth);
+  };
+
+  const handleLeftMouseUp = () => {
+    isResizingLeft.current = false;
+    document.removeEventListener('mousemove', handleLeftMouseMove);
+    document.removeEventListener('mouseup', handleLeftMouseUp);
+  };
+
+  const [rightPanelWidth, setRightPanelWidth] = useState(320);
+  const isResizingRight = useRef(false);
+
+  const handleRightMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    isResizingRight.current = true;
+    document.addEventListener('mousemove', handleRightMouseMove);
+    document.addEventListener('mouseup', handleRightMouseUp);
+  };
+
+  const handleRightMouseMove = (e: MouseEvent) => {
+    if (!isResizingRight.current) return;
+    const newWidth = Math.max(220, Math.min(520, window.innerWidth - e.clientX));
+    setRightPanelWidth(newWidth);
+  };
+
+  const handleRightMouseUp = () => {
+    isResizingRight.current = false;
+    document.removeEventListener('mousemove', handleRightMouseMove);
+    document.removeEventListener('mouseup', handleRightMouseUp);
+  };
+
+  useEffect(() => {
+    loadAuditLogs();
+    const storedPins = localStorage.getItem('pinnedManuscripts');
+    if (storedPins) {
+      try { setPinnedManuscriptIds(JSON.parse(storedPins)); } catch (e) {}
+    }
+    const storedDensity = localStorage.getItem('uiDensity') as any;
+    if (storedDensity) setUiDensity(storedDensity);
+    const storedAccent = localStorage.getItem('accentColor') as any;
+    if (storedAccent) setAccentColor(storedAccent);
+  }, []);
+
+  // Archive Manuscript Handler (UC-127)
+  const handleArchiveManuscript = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const manuscript = await db.manuscripts.get(id);
+    if (!manuscript) return;
+    const isArchiving = !manuscript.isArchived;
+    await db.manuscripts.update(id, { isArchived: isArchiving, updatedAt: new Date().toISOString() });
+    await loadManuscripts();
+    addAuditLog('autosave', `Capítulo "${manuscript.title}" ${isArchiving ? 'arquivado' : 'desarquivado'}`);
+    setSuccess(`Capítulo ${isArchiving ? 'arquivado' : 'desarquivado'} com sucesso (UC-127)!`);
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  // Auto Categorize Active Manuscript Handler (UC-042)
+  const handleAutoCategorizeActiveManuscript = async () => {
+    if (!activeManuscript || !editor) return;
+    const result = categorizeText(editor.getHTML());
+    await db.manuscripts.update(activeManuscript.id, {
+      category: result.primaryCategory,
+      tags: result.tags,
+      updatedAt: new Date().toISOString()
+    });
+    await loadManuscripts();
+    setActiveManuscript(prev => prev ? { ...prev, category: result.primaryCategory, tags: result.tags } : null);
+    addAuditLog('autotitle', `Categorização automática aplicada: ${result.primaryCategory}`);
+    setSuccess(`Categorizado como "${result.primaryCategory}" com tags [${result.tags.join(', ')}] (UC-042)!`);
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  // Toggle Pin Manuscript (UC-128)
+  const handleTogglePinManuscript = (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    let updated: string[];
+    if (pinnedManuscriptIds.includes(id)) {
+      updated = pinnedManuscriptIds.filter(item => item !== id);
+      addAuditLog('pin_toggle', `Capítulo desafixado do topo`);
+    } else {
+      updated = [...pinnedManuscriptIds, id];
+      addAuditLog('pin_toggle', `Capítulo fixado no topo do explorer`);
+    }
+    setPinnedManuscriptIds(updated);
+    localStorage.setItem('pinnedManuscripts', JSON.stringify(updated));
+  };
+
+  // Insert Drawing Canvas Image (UC-062)
+  const handleInsertDrawingToEditor = (dataUrl: string) => {
+    if (!editor || !dataUrl) return;
+    const imgHtml = `<img src="${dataUrl}" alt="Desenho/Rascunho" class="manuscript-drawing-img" style="max-width: 100%; border-radius: 8px; margin: 1rem 0;" />`;
+    editor.commands.insertContent(imgHtml);
+    setShowDrawingModal(false);
+    setSuccess('Desenho/Rascunho inserido no manuscrito (UC-062)!');
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  // Inline Comments State (UC-114)
+  const [comments, setComments] = useState<InlineComment[]>([]);
+  const [showCommentModal, setShowCommentModal] = useState(false);
+  const [newCommentText, setNewCommentText] = useState('');
+  const [selectedTextForComment, setSelectedTextForComment] = useState('');
+
+  // Chapter Templates State (UC-137, UC-138)
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+
+  // Load comments for active manuscript (UC-114)
+  const loadComments = async (manuscriptId: string) => {
+    if (!manuscriptId) return;
+    const list = await db.comments.filter(c => c.manuscriptId === manuscriptId).toArray();
+    list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    setComments(list);
+  };
+
+  useEffect(() => {
+    if (activeManuscript) {
+      loadComments(activeManuscript.id);
+    }
+  }, [activeManuscript?.id]);
+
+  // Add Comment (UC-114)
+  const handleOpenAddComment = () => {
+    if (!editor) return;
+    const selection = editor.state.selection;
+    const selected = editor.state.doc.textBetween(selection.from, selection.to, ' ');
+    setSelectedTextForComment(selected || 'Trecho Selecionado');
+    setShowCommentModal(true);
+  };
+
+  const handleSaveComment = async () => {
+    if (!activeManuscript || !newCommentText.trim()) return;
+
+    const userEmail = localStorage.getItem('userEmail') || 'Autor';
+    const newComment: InlineComment = {
+      id: crypto.randomUUID(),
+      manuscriptId: activeManuscript.id,
+      authorName: userEmail.split('@')[0],
+      createdAt: new Date().toISOString(),
+      selectedText: selectedTextForComment,
+      commentText: newCommentText.trim(),
+      isResolved: false,
+      replies: []
+    };
+
+    await db.comments.put(newComment);
+    await loadComments(activeManuscript.id);
+    setShowCommentModal(false);
+    setNewCommentText('');
+    setSuccess('Comentário adicionado na margem do documento!');
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  const handleResolveComment = async (commentId: string) => {
+    await db.comments.update(commentId, { isResolved: true });
+    if (activeManuscript) loadComments(activeManuscript.id);
+  };
+
+  // Duplicate Chapter (UC-006)
+  const handleDuplicateManuscript = async (target: Manuscript) => {
+    const isBrowser = typeof window !== 'undefined';
+    const activeProjectId = isBrowser ? localStorage.getItem('activeProjectId') || 'default' : 'default';
+
+    const duplicateDoc: Manuscript = {
+      id: 'chapter_' + Date.now(),
+      title: `${target.title} (Cópia)`,
+      content: target.content,
+      status: 'RASCUNHO',
+      isLocked: false,
+      projectId: activeProjectId,
+      folderId: target.folderId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    await db.manuscripts.put(duplicateDoc);
+    await loadManuscripts();
+    setActiveManuscript(duplicateDoc);
+    editor?.commands.setContent(duplicateDoc.content);
+    setSuccess(`Capítulo "${target.title}" duplicado com sucesso!`);
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  // Smart Split Chapter at Cursor (UC-009)
+  const handleSplitManuscriptAtCursor = async () => {
+    if (!editor || !activeManuscript) return;
+
+    const html = editor.getHTML();
+    const paragraphs = html.split('</p>');
+    if (paragraphs.length <= 1) {
+      alert('O manuscrito precisa ter pelo menos dois parágrafos para ser dividido.');
+      return;
+    }
+
+    const midIndex = Math.floor(paragraphs.length / 2);
+    const firstHalf = paragraphs.slice(0, midIndex).join('</p>') + '</p>';
+    const secondHalf = paragraphs.slice(midIndex).join('</p>');
+
+    // Update active manuscript with first half
+    const updatedActive = { ...activeManuscript, content: firstHalf, updatedAt: new Date().toISOString() };
+    await db.manuscripts.put(updatedActive);
+    setActiveManuscript(updatedActive);
+    editor.commands.setContent(firstHalf);
+
+    // Create second half manuscript
+    const isBrowser = typeof window !== 'undefined';
+    const activeProjectId = isBrowser ? localStorage.getItem('activeProjectId') || 'default' : 'default';
+    const secondManuscript: Manuscript = {
+      id: 'chapter_' + Date.now(),
+      title: `${activeManuscript.title} - Parte 2`,
+      content: secondHalf,
+      status: 'RASCUNHO',
+      isLocked: false,
+      projectId: activeProjectId,
+      folderId: activeManuscript.folderId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    await db.manuscripts.put(secondManuscript);
+    await loadManuscripts();
+    setSuccess(`Capítulo dividido em duas partes com sucesso (UC-009)!`);
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  // Auto-generate Chapter Title (UC-041)
+  const handleAutoTitleManuscript = async () => {
+    if (!editor || !activeManuscript) return;
+    const contentHtml = editor.getHTML();
+    const suggestedTitle = autoGenerateTitle(contentHtml);
+
+    const updated = { ...activeManuscript, title: suggestedTitle, updatedAt: new Date().toISOString() };
+    await db.manuscripts.put(updated);
+    setActiveManuscript(updated);
+    await loadManuscripts();
+    setSuccess(`Título "${suggestedTitle}" gerado automaticamente (UC-041)!`);
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  // Apply Manuscript Template (UC-137, UC-138)
+  const handleApplyTemplate = async (templateHtml: string, titlePlaceholder: string) => {
+    const isBrowser = typeof window !== 'undefined';
+    const activeProjectId = isBrowser ? localStorage.getItem('activeProjectId') || 'default' : 'default';
+
+    const newTemplateDoc: Manuscript = {
+      id: 'chapter_' + Date.now(),
+      title: titlePlaceholder,
+      content: templateHtml,
+      status: 'RASCUNHO',
+      isLocked: false,
+      projectId: activeProjectId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    await db.manuscripts.put(newTemplateDoc);
+    await loadManuscripts();
+    setActiveManuscript(newTemplateDoc);
+    editor?.commands.setContent(templateHtml);
+    setShowTemplateModal(false);
+    setSuccess(`Novo capítulo criado com o modelo selecionado (UC-137/138)!`);
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  // Search execution handler
+  const handleExecuteSearch = (queryStr: string = searchQuery) => {
+    if (!editor || !queryStr.trim()) {
+      setSearchResults([]);
+      setCurrentMatchIndex(0);
+      return;
+    }
+    const htmlContent = editor.getHTML();
+    const matches = searchInText(htmlContent, queryStr, {
+      caseSensitive: searchCaseSensitive,
+      wholeWord: searchWholeWord,
+      isRegex: searchIsRegex
+    });
+    setSearchResults(matches);
+    setCurrentMatchIndex(0);
+  };
+
+  const handleNextMatch = () => {
+    if (searchResults.length === 0) return;
+    setCurrentMatchIndex((prev) => (prev + 1) % searchResults.length);
+  };
+
+  const handlePrevMatch = () => {
+    if (searchResults.length === 0) return;
+    setCurrentMatchIndex((prev) => (prev - 1 + searchResults.length) % searchResults.length);
+  };
+
+  const handleReplaceSingleMatch = () => {
+    if (!editor || searchResults.length === 0) return;
+    const targetMatch = searchResults[currentMatchIndex];
+    const htmlContent = editor.getHTML();
+    const updatedHtml = replaceMatchInText(htmlContent, targetMatch, replaceQuery);
+    editor.commands.setContent(updatedHtml);
+    if (activeManuscript) {
+      const updated = { ...activeManuscript, content: updatedHtml, updatedAt: new Date().toISOString() };
+      setActiveManuscript(updated);
+      db.manuscripts.put(updated);
+    }
+    handleExecuteSearch();
+  };
+
+  const handleReplaceAllMatches = () => {
+    if (!editor || !searchQuery) return;
+    const htmlContent = editor.getHTML();
+    const { updatedText, replacementCount } = replaceAllInText(htmlContent, searchQuery, replaceQuery, {
+      caseSensitive: searchCaseSensitive,
+      wholeWord: searchWholeWord,
+      isRegex: searchIsRegex
+    });
+    if (replacementCount > 0) {
+      editor.commands.setContent(updatedText);
+      if (activeManuscript) {
+        const updated = { ...activeManuscript, content: updatedText, updatedAt: new Date().toISOString() };
+        setActiveManuscript(updated);
+        db.manuscripts.put(updated);
+      }
+      setSuccess(`${replacementCount} ocorrências substituídas com sucesso.`);
+      setTimeout(() => setSuccess(null), 3000);
+      handleExecuteSearch();
+    }
+  };
+
+  // Open Version Diff Modal
+  const handleCompareVersionDiff = (ver: typeof versions[0]) => {
+    if (!editor) return;
+    const currentHtml = editor.getHTML();
+    const result = computeWordDiff(ver.content, currentHtml);
+    setDiffVersion(ver);
+    setDiffResult(result);
+    setShowDiffModal(true);
+  };
+
+  // Create Custom Labeled Snapshot
+  const handleCreateLabeledSnapshot = async () => {
+    if (!activeManuscript) return;
+    const currentHtml = editor?.getHTML() || '';
+    const label = customVersionTag.trim() || activeManuscript.title;
+    
+    const list = await db.manuscriptVersions
+      .filter(v => v.manuscriptId === activeManuscript.id)
+      .toArray();
+    const nextVerNumber = list.length > 0 ? Math.max(...list.map(v => v.versionNumber)) + 1 : 1;
+
+    const newVersion = {
+      id: crypto.randomUUID(),
+      manuscriptId: activeManuscript.id,
+      versionNumber: nextVerNumber,
+      title: label,
+      content: currentHtml,
+      createdAt: new Date().toISOString()
+    };
+
+    await db.manuscriptVersions.put(newVersion);
+    await loadVersions(activeManuscript.id);
+    setSuccess(`Ponto de restauração "${label}" criado com sucesso!`);
+    setTimeout(() => setSuccess(null), 3000);
+    setCustomVersionTag('');
+    setShowCustomTagInput(false);
+  };
+
+  // Export manuscript handler
+  const handleExecuteExport = () => {
+    const targets = exportScope === 'all' 
+      ? manuscripts.filter(m => !m.inTrash) 
+      : activeManuscript ? [activeManuscript] : [];
+    if (targets.length === 0) return;
+
+    const projName = activeProject?.name || 'Livro';
+    const result = exportManuscripts(targets, exportFormat, projName);
+
+    if (exportFormat === 'pdf') {
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(result.content as string);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => printWindow.print(), 500);
+      }
+    } else {
+      const blob = new Blob([result.content], { type: result.mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = result.filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+    setShowExportModal(false);
+    setSuccess(`Manuscrito exportado como ${exportFormat.toUpperCase()} com sucesso!`);
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  // Import file handler
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const fileName = file.name.replace(/\.[^/.]+$/, '');
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    const reader = new FileReader();
+
+    reader.onload = async (event) => {
+      const text = event.target?.result as string;
+      let html = '';
+
+      if (extension === 'md' || extension === 'markdown') {
+        html = markdownToHtml(text);
+      } else if (extension === 'html' || extension === 'htm' || extension === 'docx') {
+        html = text.includes('<p>') ? text : `<p>${text.replace(/\n/g, '<br>')}</p>`;
+      } else {
+        html = `<p>${text.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p>`;
+      }
+
+      if (importMode === 'overwrite' && activeManuscript) {
+        const updated = { ...activeManuscript, content: html, updatedAt: new Date().toISOString() };
+        setActiveManuscript(updated);
+        await db.manuscripts.put(updated);
+        editor?.commands.setContent(html);
+        setSuccess(`Conteúdo de "${file.name}" importado para o capítulo atual.`);
+      } else {
+        const isBrowser = typeof window !== 'undefined';
+        const activeProjectId = isBrowser ? localStorage.getItem('activeProjectId') || 'default' : 'default';
+        const newDoc: Manuscript = {
+          id: crypto.randomUUID(),
+          title: fileName || 'Capítulo Importado',
+          content: html,
+          status: 'RASCUNHO',
+          isLocked: false,
+          projectId: activeProjectId,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        await db.manuscripts.put(newDoc);
+        await loadManuscripts();
+        setActiveManuscript(newDoc);
+        editor?.commands.setContent(html);
+        setSuccess(`Novo capítulo "${fileName}" criado a partir do arquivo importado.`);
+      }
+      setTimeout(() => setSuccess(null), 3500);
+      setShowImportModal(false);
+    };
+
+    reader.readAsText(file);
+  };
 
   // Keyboard Shortcuts states
   const [shortcuts, setShortcuts] = useState<KeyboardShortcut[]>(DEFAULT_SHORTCUTS);
@@ -412,6 +995,15 @@ export default function EditorComponent() {
 
     if (activeList.length > 0) {
       setManuscripts(savedManuscripts);
+      
+      const targetId = searchParams?.get('chapterId');
+      if (targetId) {
+        const found = activeList.find(m => m.id === targetId);
+        if (found) {
+          setActiveManuscript(found);
+          return;
+        }
+      }
       
       // Select the first active chapter by default if not set or in trash
       if (!activeManuscript || activeManuscript.inTrash) {
@@ -692,6 +1284,27 @@ export default function EditorComponent() {
     }
   };
 
+  // Add new chapter directly (from Menu)
+  const handleCreateNewChapterDirect = async (title?: string) => {
+    const isBrowser = typeof window !== 'undefined';
+    const activeProjectId = isBrowser ? localStorage.getItem('activeProjectId') || 'default' : 'default';
+    const count = manuscripts.filter(m => !m.inTrash).length + 1;
+    const newChapter: Manuscript = {
+      id: 'chapter_' + Date.now(),
+      title: title || `Capítulo ${count}`,
+      content: '<p>Comece a escrever aqui...</p>',
+      status: 'RASCUNHO',
+      isLocked: false,
+      projectId: activeProjectId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    await db.manuscripts.put(newChapter);
+    await loadManuscripts();
+    setActiveManuscript(newChapter);
+    editor?.commands.setContent(newChapter.content);
+  };
+
   // Add new chapter
   const handleAddChapter = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -714,8 +1327,8 @@ export default function EditorComponent() {
   };
 
   // Delete chapter (Move to trash - logical delete)
-  const handleDeleteChapter = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleDeleteChapter = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     
     const activeList = manuscripts.filter(m => !m.inTrash);
     if (activeList.length <= 1) {
@@ -1136,6 +1749,20 @@ export default function EditorComponent() {
 
         <div className="chapter-actions">
           <button 
+            onClick={(e) => handleTogglePinManuscript(chapter.id, e)} 
+            title={pinnedManuscriptIds.includes(chapter.id) ? "Desafixar do Topo" : "Fixar no Topo (UC-128)"}
+            className={`action-btn ${pinnedManuscriptIds.includes(chapter.id) ? 'active-pin' : ''}`}
+          >
+            📌
+          </button>
+          <button 
+            onClick={(e) => handleArchiveManuscript(chapter.id, e)} 
+            title={chapter.isArchived ? "Desarquivar (UC-127)" : "Arquivar (UC-127)"}
+            className="action-btn"
+          >
+            📦
+          </button>
+          <button 
             onClick={(e) => startRenameChapter(chapter, e)} 
             title="Renomear"
             className="action-btn"
@@ -1155,15 +1782,51 @@ export default function EditorComponent() {
     );
   };
 
-  // Save renamed title
+  // Save renamed chapter title
   const handleSaveRename = async (id: string) => {
-    if (!editingChapterTitle.trim()) return;
+    if (!editingChapterTitle.trim()) {
+      setEditingChapterId(null);
+      return;
+    }
+    const newTitle = editingChapterTitle.trim();
     await db.manuscripts.update(id, {
-      title: editingChapterTitle.trim(),
+      title: newTitle,
       updatedAt: new Date().toISOString()
     });
     setEditingChapterId(null);
+    if (activeManuscript?.id === id) {
+      setActiveManuscript(prev => prev ? { ...prev, title: newTitle } : null);
+    }
     await loadManuscripts();
+    setSuccess('Título do capítulo atualizado!');
+    setTimeout(() => setSuccess(null), 2000);
+  };
+
+  // Save renamed project name
+  const [isEditingProjectName, setIsEditingProjectName] = useState(false);
+  const [editingProjectName, setEditingProjectName] = useState('');
+
+  const handleSaveProjectName = async () => {
+    if (!activeProject || !editingProjectName.trim()) {
+      setIsEditingProjectName(false);
+      return;
+    }
+    const newName = editingProjectName.trim();
+    try {
+      const res = await fetch('/api/projects', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId: activeProject.id, name: newName })
+      });
+      if (res.ok) {
+        selectProject({ ...activeProject, name: newName });
+        setSuccess('Nome do projeto atualizado!');
+        setTimeout(() => setSuccess(null), 2000);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    setIsEditingProjectName(false);
   };
 
   // Handle settings goals update
@@ -1331,7 +1994,7 @@ export default function EditorComponent() {
   const graphCoverage = nodes.length > 0 ? Math.round((completedGoals.length / nodes.length) * 100) : 0;
 
   return (
-    <div className={`main-content animate-fade-in ${isFocusMode ? 'focus-mode-active' : ''} ${isLineFocus ? 'line-focus-mode' : ''}`}>
+    <div className={`main-content animate-fade-in density-${uiDensity} accent-${accentColor} ${isFocusMode ? 'focus-mode-active' : ''} ${isLineFocus ? 'line-focus-mode' : ''}`}>
       {/* Celebration overlay */}
       {showCelebration && (
         <div className="celebration-overlay">
@@ -1361,7 +2024,15 @@ export default function EditorComponent() {
       {/* Top Navbar Removida por conta do DashboardLayout */}
         {/* Left Panel - Active Goals & Writing Metrics */}
         {!isFocusMode && isLeftSidebarOpen && (
-          <aside className="editor-side-panel left-panel glass">
+          <aside 
+            className="editor-side-panel left-panel glass"
+            style={{ width: leftPanelWidth, minWidth: leftPanelWidth, maxWidth: leftPanelWidth }}
+          >
+            <div 
+              className="sidebar-resizer-handle right-border"
+              onMouseDown={handleLeftMouseDown}
+              title="Clique e arraste a borda para redimensionar o painel de capítulos"
+            />
             {/* Streak & Configure Card */}
             <div className="streak-stats-card glass">
               <div className="streak-stats-header">
@@ -1379,7 +2050,17 @@ export default function EditorComponent() {
 
             {/* Document Tree / Explorer */}
             <div className="manuscript-explorer-section">
-              <h3 className="explorer-title">Capítulos</h3>
+              <div className="explorer-title-row">
+                <h3 className="explorer-title">Capítulos</h3>
+                <button 
+                  type="button" 
+                  onClick={() => setIsLeftSidebarOpen(false)}
+                  className="btn-collapse-panel-header"
+                  title="Recolher Painel Explorer"
+                >
+                  ◀
+                </button>
+              </div>
               
               <div className="explorer-actions-row">
                 {/* Add Chapter Form */}
@@ -1440,11 +2121,58 @@ export default function EditorComponent() {
                   }
                 }}
               >
+                {/* Render Pinned Manuscripts (UC-128) */}
+                {pinnedManuscriptIds.length > 0 && (
+                  <div className="pinned-manuscripts-group">
+                    <span className="pinned-group-label">📌 Fixados no Topo</span>
+                    {manuscripts
+                      .filter(m => pinnedManuscriptIds.includes(m.id) && !m.inTrash)
+                      .map(m => renderManuscriptNode(m, 0))}
+                    <div className="pinned-group-divider" />
+                  </div>
+                )}
+
                 {/* Render folders at root */}
                 {folders.filter(f => !f.parentFolderId).map(f => renderFolderNode(f, 0))}
                 
                 {/* Render chapters at root */}
-                {manuscripts.filter(m => !m.folderId && !m.inTrash).map(m => renderManuscriptNode(m, 0))}
+                {manuscripts.filter(m => !m.folderId && !m.inTrash && !m.isArchived).map(m => renderManuscriptNode(m, 0))}
+              </div>
+
+              {/* Arquivados Area Trigger & List (UC-127) */}
+              <div className="trash-section-sidebar" style={{ marginTop: '0.5rem' }}>
+                <button 
+                  type="button" 
+                  className={`btn-trash-trigger ${showArchivedPanel ? 'active' : ''}`}
+                  onClick={() => setShowArchivedPanel(!showArchivedPanel)}
+                >
+                  <span>📦 Arquivados ({manuscripts.filter(m => m.isArchived && !m.inTrash).length})</span>
+                </button>
+
+                {showArchivedPanel && (
+                  <div className="trash-items-list animate-fade-in">
+                    {manuscripts.filter(m => m.isArchived && !m.inTrash).length === 0 ? (
+                      <p className="empty-trash-msg">Nenhum texto arquivado</p>
+                    ) : (
+                      <div className="trash-scroller">
+                        {manuscripts.filter(m => m.isArchived && !m.inTrash).map(item => (
+                          <div key={item.id} className="trash-item-card">
+                            <div className="trash-item-info">
+                              <span className="trash-item-title" title={item.title}>{item.title}</span>
+                            </div>
+                            <button 
+                              type="button" 
+                              className="btn-restore-trash"
+                              onClick={(e) => handleArchiveManuscript(item.id, e)}
+                            >
+                              Desarquivar
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Trash Area Trigger & List (UC-157) */}
@@ -1574,35 +2302,324 @@ export default function EditorComponent() {
             </div>
           )}
 
-          {/* Document header controls */}
+          {/* Google Docs & Word Style Menu & Ribbon Header */}
           {!isFocusMode && activeManuscript && (
-            <div className="editor-document-header-controls glass">
-              <div className="document-info">
-                <h3>{activeManuscript.title}</h3>
-                <span className="last-saved">Salvo automaticamente</span>
-              </div>
+            <div className="google-docs-header-ribbon glass">
+              {/* Row 1: Document Title & Main Dropdown Menus */}
+              <div className="docs-top-bar">
+                <div className="docs-brand-doc">
+                  <Link href="/projects" className="docs-home-icon-btn" title="Ir para a Tela Inicial de Projetos (Estilo Google Docs Hub)">
+                    📄
+                  </Link>
+                  <div className="docs-doc-meta">
+                    <div className="docs-doc-title-row">
+                      {isEditingProjectName ? (
+                        <input
+                          type="text"
+                          value={editingProjectName}
+                          onChange={(e) => setEditingProjectName(e.target.value)}
+                          onBlur={handleSaveProjectName}
+                          onKeyDown={(e) => { if (e.key === 'Enter') handleSaveProjectName(); }}
+                          className="docs-doc-title-input mini"
+                          autoFocus
+                        />
+                      ) : (
+                        <span 
+                          className="docs-project-name-badge"
+                          onClick={() => {
+                            setIsEditingProjectName(true);
+                            setEditingProjectName(activeProject?.name || 'Meu Projeto');
+                          }}
+                          title="Clique para renomear o projeto"
+                        >
+                          📁 {activeProject ? activeProject.name : 'Meu Projeto'} ✎
+                        </span>
+                      )}
+                      <span className="docs-title-separator">/</span>
 
-              <div className="document-actions-controls">
-                {/* Status Selector */}
-                <div className="status-selector-group">
-                  <label>Status:</label>
-                  <select 
-                    value={activeManuscript.status} 
-                    onChange={(e) => handleUpdateStatus(e.target.value as any)}
-                  >
-                    <option value="RASCUNHO">Rascunho</option>
-                    <option value="REVISAO">Em Revisão</option>
-                    <option value="FINALIZADO">Finalizado</option>
-                  </select>
+                      {editingChapterId === activeManuscript.id ? (
+                        <input
+                          type="text"
+                          value={editingChapterTitle}
+                          onChange={(e) => setEditingChapterTitle(e.target.value)}
+                          onBlur={() => handleSaveRename(activeManuscript.id)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') handleSaveRename(activeManuscript.id); }}
+                          className="docs-doc-title-input"
+                          autoFocus
+                        />
+                      ) : (
+                        <h2 
+                          className="docs-doc-title" 
+                          onClick={(e) => startRenameChapter(activeManuscript, e)}
+                          title="Clique para renomear este capítulo"
+                        >
+                          {activeManuscript.title} ✎
+                        </h2>
+                      )}
+                      <span className={`status-badge-mini ${activeManuscript.status.toLowerCase()}`}>
+                        {activeManuscript.status}
+                      </span>
+                    </div>
+
+                    {/* Google Docs Style Menu Bar */}
+                    <div className="docs-menu-bar">
+                      <div className="menu-item-group">
+                        <button onClick={() => setActiveMenuDropdown(activeMenuDropdown === 'file' ? null : 'file')} className="menu-btn">Arquivo</button>
+                        {activeMenuDropdown === 'file' && (
+                          <div className="dropdown-menu-list animate-fade-in">
+                            <button onClick={() => { handleCreateNewChapterDirect(); setActiveMenuDropdown(null); }}>📄 Novo Capítulo em Branco</button>
+                            <button onClick={() => { setShowTemplateModal(true); setActiveMenuDropdown(null); }}>📑 Novo a partir de Modelo/Template (UC-137)</button>
+                            <button onClick={() => { handleDuplicateManuscript(activeManuscript); setActiveMenuDropdown(null); }}>📋 Duplicar Capítulo (UC-006)</button>
+                            <button onClick={() => { handleSplitManuscriptAtCursor(); setActiveMenuDropdown(null); }}>✂️ Dividir Capítulo no Cursor (UC-009)</button>
+                            <button onClick={() => { handleAutoTitleManuscript(); setActiveMenuDropdown(null); }}>✨ Gerar Título Automático com IA (UC-041)</button>
+                            <hr />
+                            <button onClick={() => { setShowImportModal(true); setActiveMenuDropdown(null); }}>📥 Importar Arquivo...</button>
+                            <button onClick={() => { setShowExportModal(true); setActiveMenuDropdown(null); }}>📤 Exportar Manuscrito...</button>
+                            <hr />
+                            <button onClick={() => { setShowCustomTagInput(true); setRightTab('versions'); setActiveMenuDropdown(null); }}>🏷️ Criar Snapshot Rotulado</button>
+                            <button onClick={() => { handleDeleteChapter(activeManuscript.id); setActiveMenuDropdown(null); }} className="danger">🗑️ Mover para Lixeira</button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="menu-item-group">
+                        <button onClick={() => setActiveMenuDropdown(activeMenuDropdown === 'edit' ? null : 'edit')} className="menu-btn">Editar</button>
+                        {activeMenuDropdown === 'edit' && (
+                          <div className="dropdown-menu-list animate-fade-in">
+                            <button onClick={() => { editor?.commands.undo(); setActiveMenuDropdown(null); }}>↩️ Desfazer (Ctrl+Z)</button>
+                            <button onClick={() => { editor?.commands.redo(); setActiveMenuDropdown(null); }}>↪️ Refazer (Ctrl+Y)</button>
+                            <hr />
+                            <button onClick={() => { handleOpenAddComment(); setActiveMenuDropdown(null); }}>💬 Adicionar Comentário (UC-114)</button>
+                            <button onClick={() => { setShowSearchModal(true); setActiveMenuDropdown(null); }}>🔍 Buscar e Substituir (Ctrl+F)</button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="menu-item-group">
+                        <button onClick={() => setActiveMenuDropdown(activeMenuDropdown === 'view' ? null : 'view')} className="menu-btn">Exibir</button>
+                        {activeMenuDropdown === 'view' && (
+                          <div className="dropdown-menu-list animate-fade-in">
+                            <button onClick={() => { setDocsTheme(docsTheme === 'dark' ? 'light' : 'dark'); setActiveMenuDropdown(null); }}>
+                              {docsTheme === 'dark' ? '☀️ Alternar para Tema Claro (Google Docs)' : '🌙 Alternar para Tema Escuro (Google Docs)'} (UC-159)
+                            </button>
+                            <button onClick={() => { setIsReadOnly(!isReadOnly); setActiveMenuDropdown(null); }}>
+                              {isReadOnly ? '✏️ Ativar Modo Edição' : '📖 Modo Leitura Apenas (UC-187)'}
+                            </button>
+                            <button onClick={() => { setShowAuditModal(true); setActiveMenuDropdown(null); }}>📋 Histórico de Atividades do Sistema (UC-061)</button>
+                            <button onClick={() => { triggerCommand('toggle_focus'); setActiveMenuDropdown(null); }}>🧘 Modo Foco (Ctrl+Shift+F)</button>
+                            <button onClick={() => { setIsLeftSidebarOpen(!isLeftSidebarOpen); setActiveMenuDropdown(null); }}>📁 Alternar Explorer</button>
+                            <button onClick={() => { setIsRightSidebarOpen(!isRightSidebarOpen); setActiveMenuDropdown(null); }}>📊 Alternar IA / Versões</button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="menu-item-group">
+                        <button onClick={() => setActiveMenuDropdown(activeMenuDropdown === 'insert' ? null : 'insert')} className="menu-btn">Inserir</button>
+                        {activeMenuDropdown === 'insert' && (
+                          <div className="dropdown-menu-list animate-fade-in">
+                            <button onClick={() => { handleOpenAddComment(); setActiveMenuDropdown(null); }}>💬 Comentário na Margem (UC-114)...</button>
+                            <button onClick={() => { setShowDrawingModal(true); setActiveMenuDropdown(null); }}>🎨 Quadro de Desenho / Rascunho (UC-062)...</button>
+                            <button onClick={() => { setShowLinkModal(true); setActiveMenuDropdown(null); }}>🔗 Hyperlink (UC-110, UC-111)...</button>
+                            <button onClick={() => { setShowNoteModal(true); setActiveMenuDropdown(null); }}>📝 Nota de Rodapé (UC-115, UC-393)...</button>
+                            <button onClick={() => { editor?.commands.setHorizontalRule(); setActiveMenuDropdown(null); }}>― Linha Divisória</button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="menu-item-group">
+                        <button onClick={() => setActiveMenuDropdown(activeMenuDropdown === 'format' ? null : 'format')} className="menu-btn">Formatar</button>
+                        {activeMenuDropdown === 'format' && (
+                          <div className="dropdown-menu-list animate-fade-in">
+                            <button onClick={() => { editor?.chain().focus().toggleBold().run(); setActiveMenuDropdown(null); }}><b>B</b> Negrito</button>
+                            <button onClick={() => { editor?.chain().focus().toggleItalic().run(); setActiveMenuDropdown(null); }}><i>I</i> Itálico</button>
+                            <button onClick={() => { editor?.chain().focus().toggleStrike().run(); setActiveMenuDropdown(null); }}><s>S</s> Tachado</button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Edit Lock Button */}
-                <button 
-                  onClick={handleToggleLock}
-                  className={`btn-lock-toggle ${activeManuscript.isLocked ? 'locked' : ''}`}
+                <div className="docs-top-actions">
+                  {!isLeftSidebarOpen && (
+                    <button 
+                      type="button" 
+                      onClick={() => setIsLeftSidebarOpen(true)} 
+                      className="btn-toggle-sidebar-top"
+                      title="Exibir Árvore de Capítulos / Explorer"
+                    >
+                      📁 Explorer
+                    </button>
+                  )}
+
+                  {!isRightSidebarOpen && (
+                    <button 
+                      type="button" 
+                      onClick={() => setIsRightSidebarOpen(true)} 
+                      className="btn-toggle-sidebar-top"
+                      title="Exibir Evidências MMS / Histórico de Versões"
+                    >
+                      📊 IA / Versões
+                    </button>
+                  )}
+
+                  <span className="save-status-text">
+                    {syncStatus === 'syncing' ? '🟡 Salvando...' : syncStatus === 'synced' ? '🟢 Salvo automaticamente' : '🟠 Salvo localmente'}
+                  </span>
+                  <div className="status-select-badge-wrapper">
+                    <select 
+                      value={activeManuscript.status} 
+                      onChange={(e) => handleUpdateStatus(e.target.value as any)}
+                      className="docs-status-select"
+                    >
+                      <option value="RASCUNHO">Rascunho</option>
+                      <option value="REVISAO">Em Revisão</option>
+                      <option value="FINALIZADO">Finalizado</option>
+                    </select>
+                  </div>
+
+                  <button 
+                    onClick={handleToggleLock}
+                    className={`btn-lock-toggle ${activeManuscript.isLocked ? 'locked' : ''}`}
+                  >
+                    {activeManuscript.isLocked ? '🔒 Bloqueado' : '🔓 Desbloqueado'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Row 2: Formatting Toolbar Ribbon (MS Word / Google Docs Toolbar) */}
+              <div className="docs-formatting-ribbon">
+                <button onClick={() => editor?.chain().focus().undo().run()} disabled={!editor?.can().undo()} className="ribbon-btn" title="Desfazer">↩</button>
+                <button onClick={() => editor?.chain().focus().redo().run()} disabled={!editor?.can().redo()} className="ribbon-btn" title="Refazer">↪</button>
+                <button onClick={() => window.print()} className="ribbon-btn" title="Imprimir / Exportar PDF">🖨️</button>
+                <div className="ribbon-divider" />
+
+                {/* Font Family Selector (UC-063, UC-244) */}
+                <select 
+                  value={fontFamily} 
+                  onChange={(e) => setFontFamily(e.target.value as any)}
+                  className="ribbon-select font-family-select"
+                  title="Fonte do Editor (UC-063, UC-244)"
                 >
-                  {activeManuscript.isLocked ? 'Desbloquear Capítulo' : 'Bloquear Capítulo'}
+                  <option value="georgia">Georgia (Serifada)</option>
+                  <option value="inter">Inter (Sans-Serif)</option>
+                  <option value="times">Times New Roman</option>
+                  <option value="courier">Courier New (Mono)</option>
+                  <option value="arial">Arial</option>
+                </select>
+
+                {/* Font Size Selector (UC-243) */}
+                <div className="font-size-control-group">
+                  <button onClick={() => setFontSize(prev => Math.max(10, prev - 1))} className="ribbon-btn font-step">-</button>
+                  <span className="font-size-display">{fontSize}pt</span>
+                  <button onClick={() => setFontSize(prev => Math.min(36, prev + 1))} className="ribbon-btn font-step">+</button>
+                </div>
+
+                <div className="ribbon-divider" />
+
+                {/* Formatting Buttons */}
+                <button 
+                  onClick={() => editor?.chain().focus().toggleBold().run()} 
+                  className={`ribbon-btn ${editor?.isActive('bold') ? 'active' : ''}`}
+                  title="Negrito (Ctrl+B)"
+                >
+                  <b>B</b>
                 </button>
+                <button 
+                  onClick={() => editor?.chain().focus().toggleItalic().run()} 
+                  className={`ribbon-btn ${editor?.isActive('italic') ? 'active' : ''}`}
+                  title="Itálico (Ctrl+I)"
+                >
+                  <i>I</i>
+                </button>
+                <button 
+                  onClick={() => editor?.chain().focus().toggleStrike().run()} 
+                  className={`ribbon-btn ${editor?.isActive('strike') ? 'active' : ''}`}
+                  title="Tachado"
+                >
+                  <s>S</s>
+                </button>
+                <button 
+                  onClick={() => editor?.chain().focus().toggleCode().run()} 
+                  className={`ribbon-btn ${editor?.isActive('code') ? 'active' : ''}`}
+                  title="Código inline"
+                >
+                  <code>&lt;&gt;</code>
+                </button>
+
+                <div className="ribbon-divider" />
+
+                {/* Headings */}
+                <button 
+                  onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()} 
+                  className={`ribbon-btn ${editor?.isActive('heading', { level: 1 }) ? 'active' : ''}`}
+                  title="Título 1"
+                >
+                  H1
+                </button>
+                <button 
+                  onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()} 
+                  className={`ribbon-btn ${editor?.isActive('heading', { level: 2 }) ? 'active' : ''}`}
+                  title="Título 2"
+                >
+                  H2
+                </button>
+                <button 
+                  onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()} 
+                  className={`ribbon-btn ${editor?.isActive('heading', { level: 3 }) ? 'active' : ''}`}
+                  title="Título 3"
+                >
+                  H3
+                </button>
+
+                <div className="ribbon-divider" />
+
+                {/* Alignment */}
+                <button onClick={() => setTextAlign('left')} className={`ribbon-btn ${textAlign === 'left' ? 'active' : ''}`} title="Alinhar à Esquerda">≡</button>
+                <button onClick={() => setTextAlign('center')} className={`ribbon-btn ${textAlign === 'center' ? 'active' : ''}`} title="Centralizar">equiv</button>
+                <button onClick={() => setTextAlign('right')} className={`ribbon-btn ${textAlign === 'right' ? 'active' : ''}`} title="Alinhar à Direita">≡</button>
+                <button onClick={() => setTextAlign('justify')} className={`ribbon-btn ${textAlign === 'justify' ? 'active' : ''}`} title="Justificar">≣</button>
+
+                {/* Line Height Spacing */}
+                <select 
+                  value={lineHeight} 
+                  onChange={(e) => setLineHeight(e.target.value as any)}
+                  className="ribbon-select line-height-select"
+                  title="Espaçamento de Linhas"
+                >
+                  <option value="1.2">1.2 (Simples)</option>
+                  <option value="1.5">1.5 (Médio)</option>
+                  <option value="1.8">1.8 (Largo)</option>
+                  <option value="2.0">2.0 (Duplo)</option>
+                </select>
+
+                <div className="ribbon-divider" />
+
+                {/* Lists */}
+                <button 
+                  onClick={() => editor?.chain().focus().toggleBulletList().run()} 
+                  className={`ribbon-btn ${editor?.isActive('bulletList') ? 'active' : ''}`}
+                  title="Lista com Marcadores"
+                >
+                  • Lista
+                </button>
+                <button 
+                  onClick={() => editor?.chain().focus().toggleOrderedList().run()} 
+                  className={`ribbon-btn ${editor?.isActive('orderedList') ? 'active' : ''}`}
+                  title="Lista Numerada"
+                >
+                  1. Lista
+                </button>
+
+                <div className="ribbon-divider" />
+
+                {/* Quick Insert Tools */}
+                <button onClick={handleOpenAddComment} className="ribbon-btn" title="Adicionar Comentário na Margem (UC-114)">💬</button>
+                <button onClick={() => setShowLinkModal(true)} className="ribbon-btn" title="Inserir Link (UC-110, UC-111)">🔗</button>
+                <button onClick={() => setShowNoteModal(true)} className="ribbon-btn" title="Inserir Nota de Rodapé (UC-115, UC-393)">📝</button>
+                <button onClick={() => setShowSearchModal(true)} className="ribbon-btn" title="Buscar & Substituir (UC-022, UC-024)">🔍</button>
+                <button onClick={() => setShowImportModal(true)} className="ribbon-btn" title="Importar Manuscrito (UC-007)">📥</button>
+                <button onClick={() => setShowExportModal(true)} className="ribbon-btn primary" title="Exportar Manuscrito (UC-008)">📤</button>
               </div>
             </div>
           )}
@@ -1616,40 +2633,136 @@ export default function EditorComponent() {
             </div>
           )}
 
-          {/* TipTap editor canvas */}
-          <div className="tiptap-editor-container glass">
-            {editor && <EditorContent editor={editor} className="tiptap-editor-content" />}
+          {/* Google Docs Style Paper View Area */}
+          <div className={`google-docs-viewport theme-${docsTheme} ${isReadOnly ? 'read-only-mode' : ''}`}>
+            <div className="google-docs-paper-layout-wrapper">
+              {/* Google Docs Horizontal Ruler Bar */}
+              <div className="google-docs-ruler">
+                <div className="ruler-indent-left">▼</div>
+                <div className="ruler-ticks">
+                  <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span>
+                </div>
+                <div className="ruler-indent-right">▼</div>
+              </div>
+
+              <div className="google-docs-paper-and-comments">
+                {/* Paper Sheet Document Canvas */}
+                <div 
+                  className="google-docs-paper-sheet glass-paper"
+                  style={{
+                    fontFamily: fontFamily === 'georgia' ? 'Georgia, serif' :
+                                fontFamily === 'inter' ? 'Inter, sans-serif' :
+                                fontFamily === 'times' ? '"Times New Roman", serif' :
+                                fontFamily === 'courier' ? '"Courier New", monospace' : 'Arial, sans-serif',
+                    fontSize: `${fontSize}px`,
+                    lineHeight: lineHeight,
+                    textAlign: textAlign
+                  }}
+                >
+                  {editor && <EditorContent editor={editor} className="tiptap-editor-content" />}
+                </div>
+
+                {/* Google Docs Right Margin Comments Column (UC-114) */}
+                <div className="google-docs-comments-margin">
+                  <div className="comments-column-header">
+                    <h4>💬 Comentários ({comments.filter(c => !c.isResolved).length})</h4>
+                    <button onClick={handleOpenAddComment} className="btn-add-comment-mini" title="Novo Comentário">+ Criar</button>
+                  </div>
+
+                  {comments.filter(c => !c.isResolved).length === 0 ? (
+                    <div className="no-comments-hint">
+                      <span>Nenhum comentário aberto. Selecione qualquer trecho no texto e clique em 💬 para comentar.</span>
+                    </div>
+                  ) : (
+                    comments.filter(c => !c.isResolved).map(c => (
+                      <div key={c.id} className="google-comment-card animate-fade-in">
+                        <div className="comment-card-header">
+                          <div className="author-info">
+                            <span className="author-avatar">{c.authorName.charAt(0).toUpperCase()}</span>
+                            <span className="author-name">{c.authorName}</span>
+                          </div>
+                          <span className="comment-time">{new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+
+                        {c.selectedText && (
+                          <div className="comment-quote">
+                            "{c.selectedText}"
+                          </div>
+                        )}
+
+                        <div className="comment-body-text">
+                          {c.commentText}
+                        </div>
+
+                        <div className="comment-card-actions">
+                          <button 
+                            type="button" 
+                            onClick={() => handleResolveComment(c.id)}
+                            className="btn-resolve-comment"
+                            title="Marcar comentário como resolvido (UC-114)"
+                          >
+                            ✓ Resolver
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Floating Footer Progress Bar */}
-          <div className="editor-progress-footer glass">
-            <div className="progress-info">
-              <span className="progress-title">
-                {activeGoal?.type === 'PRAZO' ? 'Meta de Prazo' : 'Meta Diária'}: {wordsToday} / {calculatedQuota} palavras hoje
+          {/* Google Docs / Word Style Bottom Status Bar */}
+          <div className="google-docs-status-bar glass">
+            <div className="status-stats-group">
+              <span className="status-stat-item" title="Contador de Palavras (UC-028)">
+                <strong>{countWords(editor?.getText() || '')}</strong> palavras
               </span>
-              <span className="progress-percentage">{progressPercentage}%</span>
+              <span className="status-stat-separator">•</span>
+              <span className="status-stat-item" title="Contador de Caracteres (UC-029)">
+                <strong>{(editor?.getText() || '').length}</strong> caracteres
+              </span>
+              <span className="status-stat-separator">•</span>
+              <span className="status-stat-item" title="Tempo de leitura estimado (UC-186)">
+                ⏱️ ~<strong>{Math.max(1, Math.ceil(countWords(editor?.getText() || '') / 200))}</strong> min de leitura
+              </span>
             </div>
-            <div className="progress-track">
-              <div className={`progress-fill ${progressPercentage >= 100 ? 'completed' : ''}`} style={{ width: `${progressPercentage}%` }}></div>
+
+            <div className="status-progress-group">
+              <span className="progress-mini-label">
+                Meta: {wordsToday} / {calculatedQuota} p/dia ({progressPercentage}%)
+              </span>
+              <div className="progress-mini-bar">
+                <div className="progress-mini-fill" style={{ width: `${progressPercentage}%` }}></div>
+              </div>
             </div>
-            <div className="session-stats">
-              <span>Sessão: {wordsSession} palavras</span>
-              <span className="sync-status-badge">
-                <span className={`status-dot ${syncStatus}`}></span>
-                {syncStatus === 'syncing' ? 'Sincronizando...' : 
-                 syncStatus === 'synced' ? 'Sincronizado com a nuvem' : 
-                 'Salvo localmente (offline)'}
-              </span>
-              <span>
-                Atalhos: Foco {shortcuts.find(s=>s.command==='toggle_focus')?.keyCombo} | Linha {shortcuts.find(s=>s.command==='toggle_line_focus')?.keyCombo}
-              </span>
+
+            <div className="status-modes-group">
+              {isReadOnly && <span className="mode-badge read-only">📖 Leitura Apenas</span>}
+              {activeManuscript?.isLocked && <span className="mode-badge locked">🔒 Bloqueado</span>}
+              <button 
+                type="button" 
+                onClick={() => setIsReadOnly(!isReadOnly)} 
+                className="btn-mode-toggle"
+                title="Alternar entre modo de Edição e Leitura (UC-187)"
+              >
+                {isReadOnly ? '✏️ Modo Edição' : '📖 Modo Leitura'}
+              </button>
             </div>
           </div>
         </main>
 
         {/* Right Panel - MMS Logs & Version History */}
         {!isFocusMode && isRightSidebarOpen && (
-          <aside className="editor-side-panel mms-logs-panel glass">
+          <aside 
+            className="editor-side-panel mms-logs-panel glass"
+            style={{ width: rightPanelWidth, minWidth: rightPanelWidth, maxWidth: rightPanelWidth }}
+          >
+            <div 
+              className="sidebar-resizer-handle left-border"
+              onMouseDown={handleRightMouseDown}
+              title="Clique e arraste a borda para redimensionar o painel de evidências"
+            />
             <div className="panel-tabs">
               <button 
                 type="button" 
@@ -1664,6 +2777,14 @@ export default function EditorComponent() {
                 onClick={() => setRightTab('versions')}
               >
                 Histórico de Versões
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setIsRightSidebarOpen(false)}
+                className="btn-collapse-panel-header"
+                title="Recolher Painel IA / Evidências"
+              >
+                ▶
               </button>
             </div>
 
@@ -1754,45 +2875,94 @@ export default function EditorComponent() {
               <>
                 <p className="panel-subtitle">Pontos de restauração salvos localmente. A restauração criará automaticamente um backup do estado atual.</p>
                 
-                <button 
-                  type="button" 
-                  className="btn-create-snapshot"
-                  onClick={() => {
-                    if (activeManuscript) {
-                      createVersionSnapshot(activeManuscript, editor?.getHTML() || '');
-                    }
-                  }}
-                  disabled={!activeManuscript}
-                >
-                  + Criar Ponto de Restauração
-                </button>
+                <div className="snapshot-actions-bar">
+                  {!showCustomTagInput ? (
+                    <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
+                      <button 
+                        type="button" 
+                        className="btn-create-snapshot"
+                        style={{ flex: 1 }}
+                        onClick={() => {
+                          if (activeManuscript) {
+                            createVersionSnapshot(activeManuscript, editor?.getHTML() || '');
+                          }
+                        }}
+                        disabled={!activeManuscript}
+                      >
+                        + Criar Snapshot Rápido
+                      </button>
+                      <button 
+                        type="button" 
+                        className="btn-create-snapshot secondary"
+                        onClick={() => setShowCustomTagInput(true)}
+                        disabled={!activeManuscript}
+                        title="Criar snapshot com rótulo customizado"
+                      >
+                        🏷️ Rotular
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="custom-snapshot-input-row">
+                      <input 
+                        type="text" 
+                        placeholder="Ex: Draft Roteiro Final, Revisão..." 
+                        value={customVersionTag} 
+                        onChange={(e) => setCustomVersionTag(e.target.value)}
+                        className="custom-tag-input"
+                      />
+                      <button 
+                        type="button" 
+                        onClick={handleCreateLabeledSnapshot}
+                        className="btn-save-tag"
+                      >
+                        Salvar
+                      </button>
+                      <button 
+                        type="button" 
+                        onClick={() => setShowCustomTagInput(false)}
+                        className="btn-cancel-tag"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+                </div>
 
                 <div className="versions-container">
                   {versions.length === 0 ? (
-                    <p className="no-logs">Nenhum ponto de restauração registrado para este capítulo. Digite por 10 minutos ou clique no botão acima para registrar.</p>
+                    <p className="no-logs">Nenhum ponto de restauração registrado para este capítulo. Digite por 10 minutos ou clique nos botões acima para registrar.</p>
                   ) : (
                     versions.map((ver) => {
-                      // Strip html tag excerpt
                       const rawText = ver.content.replace(/<[^>]*>/g, '');
                       const excerpt = rawText.length > 80 ? rawText.substring(0, 80) + '...' : rawText || '(Capítulo Vazio)';
 
                       return (
                         <div key={ver.id} className="version-card glass">
                           <div className="version-card-header">
-                            <span className="version-number">Versão #{ver.versionNumber}</span>
+                            <span className="version-number">#{ver.versionNumber} {ver.title !== activeManuscript?.title ? `(${ver.title})` : ''}</span>
                             <span className="version-time">{new Date(ver.createdAt).toLocaleTimeString()} - {new Date(ver.createdAt).toLocaleDateString()}</span>
                           </div>
                           <p className="version-excerpt">"{excerpt}"</p>
-                          <button 
-                            type="button" 
-                            className="btn-view-version"
-                            onClick={() => {
-                              setSelectedVersion(ver);
-                              setShowVersionPreview(true);
-                            }}
-                          >
-                            Visualizar & Restaurar
-                          </button>
+                          <div className="version-card-actions">
+                            <button 
+                              type="button" 
+                              className="btn-view-version"
+                              onClick={() => {
+                                setSelectedVersion(ver);
+                                setShowVersionPreview(true);
+                              }}
+                            >
+                              Visualizar
+                            </button>
+                            <button 
+                              type="button" 
+                              className="btn-diff-version"
+                              onClick={() => handleCompareVersionDiff(ver)}
+                              title="Comparar alterações em relação ao texto atual (UC-196)"
+                            >
+                              📊 Ver Diff
+                            </button>
+                          </div>
                         </div>
                       );
                     })
@@ -1908,6 +3078,56 @@ export default function EditorComponent() {
                   </div>
                 </div>
 
+                <div className="form-group" style={{ marginTop: '1.2rem', paddingTop: '1rem', borderTop: '1px solid var(--border-light)' }}>
+                  <label>Densidade da Interface (UC-084)</label>
+                  <div className="off-days-checkboxes">
+                    {[
+                      { id: 'compact', name: 'Compacta' },
+                      { id: 'standard', name: 'Padrão' },
+                      { id: 'comfortable', name: 'Confortável' }
+                    ].map(d => (
+                      <label key={d.id} className="off-day-label">
+                        <input 
+                          type="radio" 
+                          name="uiDensity"
+                          checked={uiDensity === d.id} 
+                          onChange={() => {
+                            setUiDensity(d.id as any);
+                            localStorage.setItem('uiDensity', d.id);
+                          }}
+                        />
+                        <span>{d.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="form-group" style={{ marginTop: '1rem' }}>
+                  <label>Cor de Destaque / Tema (UC-085)</label>
+                  <div className="off-days-checkboxes">
+                    {[
+                      { id: 'purple', name: '🟣 Roxo Eldritch' },
+                      { id: 'blue', name: '🔵 Azul Mágico' },
+                      { id: 'emerald', name: '🟢 Esmeralda' },
+                      { id: 'amber', name: '🟡 Âmbar' },
+                      { id: 'rose', name: '🔴 Rosa / Rubro' }
+                    ].map(c => (
+                      <label key={c.id} className="off-day-label">
+                        <input 
+                          type="radio" 
+                          name="accentColor"
+                          checked={accentColor === c.id} 
+                          onChange={() => {
+                            setAccentColor(c.id as any);
+                            localStorage.setItem('accentColor', c.id);
+                          }}
+                        />
+                        <span>{c.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="form-actions">
                   <button type="button" onClick={() => setIsSettingsOpen(false)} className="btn-cancel">
                     Cancelar
@@ -1953,9 +3173,2080 @@ export default function EditorComponent() {
         </div>
       )}
 
+      {/* Search & Replace Floating Widget (UC-022, UC-023, UC-024) */}
+      {showSearchModal && (
+        <div className="search-replace-widget glass animate-fade-in">
+          <div className="search-widget-header">
+            <h4>🔍 Buscar & Substituir</h4>
+            <button onClick={() => setShowSearchModal(false)} className="btn-close-widget">✕</button>
+          </div>
+
+          <div className="search-widget-inputs">
+            <div className="search-input-group">
+              <input 
+                type="text" 
+                placeholder="Buscar palavra, frase ou contexto..." 
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  handleExecuteSearch(e.target.value);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleNextMatch();
+                }}
+                className="search-input"
+                autoFocus
+              />
+              <span className="match-count-badge">
+                {searchResults.length > 0 ? `${currentMatchIndex + 1}/${searchResults.length}` : '0 resultados'}
+              </span>
+            </div>
+
+            <div className="search-input-group">
+              <input 
+                type="text" 
+                placeholder="Substituir por..." 
+                value={replaceQuery}
+                onChange={(e) => setReplaceQuery(e.target.value)}
+                className="search-input"
+              />
+            </div>
+          </div>
+
+          <div className="search-widget-options">
+            <label className="search-option-check">
+              <input 
+                type="checkbox" 
+                checked={searchCaseSensitive} 
+                onChange={(e) => {
+                  setSearchCaseSensitive(e.target.checked);
+                  handleExecuteSearch();
+                }} 
+              />
+              <span>Maiúsculas/Minúsculas</span>
+            </label>
+            <label className="search-option-check">
+              <input 
+                type="checkbox" 
+                checked={searchWholeWord} 
+                onChange={(e) => {
+                  setSearchWholeWord(e.target.checked);
+                  handleExecuteSearch();
+                }} 
+              />
+              <span>Palavra Inteira</span>
+            </label>
+            <label className="search-option-check">
+              <input 
+                type="checkbox" 
+                checked={searchIsRegex} 
+                onChange={(e) => {
+                  setSearchIsRegex(e.target.checked);
+                  handleExecuteSearch();
+                }} 
+              />
+              <span>Regex / Contexto</span>
+            </label>
+          </div>
+
+          <div className="search-widget-actions">
+            <button onClick={handlePrevMatch} disabled={searchResults.length === 0} className="btn-search-nav">
+              ▲ Anterior
+            </button>
+            <button onClick={handleNextMatch} disabled={searchResults.length === 0} className="btn-search-nav">
+              ▼ Próximo
+            </button>
+            <button onClick={handleReplaceSingleMatch} disabled={searchResults.length === 0} className="btn-search-replace">
+              Substituir
+            </button>
+            <button onClick={handleReplaceAllMatches} disabled={searchResults.length === 0} className="btn-search-replace primary">
+              Substituir Tudo
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Version Diff Viewer Modal (UC-196) */}
+      {showDiffModal && diffVersion && diffResult && (
+        <div className="version-modal-overlay animate-fade-in">
+          <div className="diff-modal-card glass">
+            <div className="diff-modal-header">
+              <div>
+                <h3>📊 Comparação de Diferenças (Diff)</h3>
+                <p className="diff-subtitle">
+                  Comparando <strong>Versão #{diffVersion.versionNumber} ({diffVersion.title})</strong> com o <strong>Manuscrito Atual</strong>
+                </p>
+              </div>
+              <button onClick={() => setShowDiffModal(false)} className="btn-modal-close">✕</button>
+            </div>
+
+            <div className="diff-summary-badges">
+              <span className="diff-badge added">+{diffResult.addedWords} palavras adicionadas</span>
+              <span className="diff-badge removed">-{diffResult.removedWords} palavras removidas</span>
+              <span className="diff-badge unchanged">{diffResult.unchangedWords} palavras inalteradas</span>
+            </div>
+
+            <div className="diff-content-container">
+              {diffResult.chunks.map((chunk, idx) => {
+                if (chunk.type === 'added') {
+                  return <mark key={idx} className="diff-added-chunk">{chunk.text}</mark>;
+                }
+                if (chunk.type === 'removed') {
+                  return <del key={idx} className="diff-removed-chunk">{chunk.text}</del>;
+                }
+                return <span key={idx} className="diff-unchanged-chunk">{chunk.text}</span>;
+              })}
+            </div>
+
+            <div className="diff-modal-actions">
+              <button 
+                type="button" 
+                className="btn-modal-restore"
+                onClick={() => {
+                  handleRestoreVersion(diffVersion);
+                  setShowDiffModal(false);
+                }}
+              >
+                Restaurar Esta Versão
+              </button>
+              <button 
+                type="button" 
+                className="btn-modal-close"
+                onClick={() => setShowDiffModal(false)}
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Export Modal (UC-008, UC-163) */}
+      {showExportModal && (
+        <div className="version-modal-overlay animate-fade-in">
+          <div className="export-modal-card glass">
+            <div className="export-modal-header">
+              <h3>📤 Exportar Manuscrito</h3>
+              <p className="export-subtitle">Selecione os parâmetros e o formato desejado para exportação.</p>
+            </div>
+
+            <div className="export-form-body">
+              <div className="form-group">
+                <label>Escopo de Exportação:</label>
+                <select value={exportScope} onChange={(e) => setExportScope(e.target.value as any)}>
+                  <option value="current">Apenas Capítulo Ativo ({activeManuscript?.title || 'Selecione um capítulo'})</option>
+                  <option value="all">Livro Inteiro ({manuscripts.filter(m => !m.inTrash).length} capítulos)</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Formato de Arquivo:</label>
+                <div className="export-format-grid">
+                  {[
+                    { id: 'docx', label: 'Word (.docx)', desc: 'Documento editável com estilos literários' },
+                    { id: 'pdf', label: 'PDF Impressão (.pdf)', desc: 'Folha A4 formatada pronta para publicação' },
+                    { id: 'epub', label: 'E-book ePub (.epub)', desc: 'Formatado com estrutura de capítulos e navegação' },
+                    { id: 'md', label: 'Markdown (.md)', desc: 'Texto limpo com marcações de formatação' },
+                    { id: 'txt', label: 'Texto Puro (.txt)', desc: 'Sem formatação, compatível com qualquer leitor' },
+                    { id: 'html', label: 'Página Web (.html)', desc: 'Documento completo HTML com CSS responsivo' },
+                  ].map((fmt) => (
+                    <div 
+                      key={fmt.id} 
+                      className={`format-card ${exportFormat === fmt.id ? 'active' : ''}`}
+                      onClick={() => setExportFormat(fmt.id as ExportFormat)}
+                    >
+                      <strong>{fmt.label}</strong>
+                      <span>{fmt.desc}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="export-modal-actions">
+              <button 
+                type="button" 
+                className="btn-modal-restore"
+                onClick={handleExecuteExport}
+              >
+                Gerar Download
+              </button>
+              <button 
+                type="button" 
+                className="btn-modal-close"
+                onClick={() => setShowExportModal(false)}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Import Modal (UC-007, UC-194) */}
+      {showImportModal && (
+        <div className="version-modal-overlay animate-fade-in">
+          <div className="import-modal-card glass">
+            <div className="import-modal-header">
+              <h3>📥 Importar Arquivo de Manuscrito</h3>
+              <p className="import-subtitle">Suporta arquivos .txt, .md, .docx, .html e .json.</p>
+            </div>
+
+            <div className="import-form-body">
+              <div className="form-group">
+                <label>Modo de Importação:</label>
+                <select value={importMode} onChange={(e) => setImportMode(e.target.value as any)}>
+                  <option value="new_chapter">Criar como Novo Capítulo no Explorer</option>
+                  <option value="overwrite" disabled={!activeManuscript}>Substituir conteúdo do Capítulo Ativo ({activeManuscript?.title || 'Nenhum ativo'})</option>
+                </select>
+              </div>
+
+              <div className="file-dropzone">
+                <input 
+                  type="file" 
+                  accept=".txt,.md,.markdown,.docx,.html,.htm,.json" 
+                  onChange={handleImportFile}
+                  className="file-input-hidden"
+                  id="import-file-input"
+                />
+                <label htmlFor="import-file-input" className="file-dropzone-label">
+                  <span className="dropzone-icon">📁</span>
+                  <strong>Clique aqui para selecionar o arquivo</strong>
+                  <span>.TXT, .MD, .DOCX, .HTML</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="import-modal-actions">
+              <button 
+                type="button" 
+                className="btn-modal-close"
+                onClick={() => setShowImportModal(false)}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hyperlink Insertion Modal (UC-110, UC-111) */}
+      {showLinkModal && (
+        <div className="version-modal-overlay animate-fade-in">
+          <div className="import-modal-card glass">
+            <div className="import-modal-header">
+              <h3>🔗 Inserir Hyperlink</h3>
+              <p className="import-subtitle">Insira um link da web ou referência interna no texto.</p>
+            </div>
+            <div className="import-form-body">
+              <div className="form-group">
+                <label>Texto do Link:</label>
+                <input 
+                  type="text" 
+                  placeholder="Ex: Capítulo 2, Referência Wikipédia..." 
+                  value={linkText} 
+                  onChange={(e) => setLinkText(e.target.value)}
+                  className="search-input"
+                  autoFocus
+                />
+              </div>
+              <div className="form-group">
+                <label>URL / Destino (ex: https://...):</label>
+                <input 
+                  type="text" 
+                  placeholder="https://exemplo.com" 
+                  value={linkUrl} 
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                  className="search-input"
+                />
+              </div>
+            </div>
+            <div className="import-modal-actions">
+              <button type="button" className="btn-modal-restore" onClick={handleExecuteInsertLink}>
+                Inserir Link
+              </button>
+              <button type="button" className="btn-modal-close" onClick={() => setShowLinkModal(false)}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Footnote / Note Insertion Modal (UC-115, UC-393) */}
+      {showNoteModal && (
+        <div className="version-modal-overlay animate-fade-in">
+          <div className="import-modal-card glass">
+            <div className="import-modal-header">
+              <h3>📝 Inserir Nota de Rodapé</h3>
+              <p className="import-subtitle">Adicione uma nota explicativa ou anotação ao manuscrito.</p>
+            </div>
+            <div className="import-form-body">
+              <div className="form-group">
+                <label>Conteúdo da Nota:</label>
+                <textarea 
+                  rows={4}
+                  placeholder="Digite sua anotação ou nota de rodapé..." 
+                  value={noteText} 
+                  onChange={(e) => setNoteText(e.target.value)}
+                  className="search-input"
+                  style={{ width: '100%', resize: 'vertical' }}
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div className="import-modal-actions">
+              <button type="button" className="btn-modal-restore" onClick={handleExecuteInsertNote}>
+                Inserir Nota
+              </button>
+              <button type="button" className="btn-modal-close" onClick={() => setShowNoteModal(false)}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Inline Comment Modal (UC-114) */}
+      {showCommentModal && (
+        <div className="version-modal-overlay animate-fade-in">
+          <div className="import-modal-card glass">
+            <div className="import-modal-header">
+              <h3>💬 Adicionar Comentário na Margem</h3>
+              <p className="import-subtitle">O comentário ficará fixado na margem direita do Google Docs.</p>
+            </div>
+            <div className="import-form-body">
+              {selectedTextForComment && (
+                <div className="selected-quote-preview">
+                  <strong>Trecho Selecionado:</strong> "{selectedTextForComment}"
+                </div>
+              )}
+              <div className="form-group">
+                <label>Seu Comentário / Observação:</label>
+                <textarea 
+                  rows={3}
+                  placeholder="Escreva seu comentário para esta passagem..." 
+                  value={newCommentText} 
+                  onChange={(e) => setNewCommentText(e.target.value)}
+                  className="search-input"
+                  style={{ width: '100%', resize: 'vertical' }}
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div className="import-modal-actions">
+              <button type="button" className="btn-modal-restore" onClick={handleSaveComment}>
+                Salvar Comentário
+              </button>
+              <button type="button" className="btn-modal-close" onClick={() => setShowCommentModal(false)}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manuscript Templates Modal (UC-137, UC-138) */}
+      {showTemplateModal && (
+        <div className="version-modal-overlay animate-fade-in">
+          <div className="import-modal-card glass template-modal-wide">
+            <div className="import-modal-header">
+              <h3>📑 Criar Capítulo a partir de Modelo/Template</h3>
+              <p className="import-subtitle">Escolha uma estrutura pré-definida para acelerar sua escrita literária.</p>
+            </div>
+            <div className="templates-grid">
+              {MANUSCRIPT_TEMPLATES.map(tmpl => (
+                <div key={tmpl.id} className="template-card glass">
+                  <div className="template-card-header">
+                    <h4>{tmpl.name}</h4>
+                    <span className="template-category-badge">{tmpl.category}</span>
+                  </div>
+                  <p className="template-desc">{tmpl.description}</p>
+                  <button 
+                    type="button" 
+                    onClick={() => handleApplyTemplate(tmpl.contentHtml, tmpl.titlePlaceholder)}
+                    className="btn-use-template"
+                  >
+                    Usar este Modelo
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="import-modal-actions">
+              <button type="button" className="btn-modal-close" onClick={() => setShowTemplateModal(false)}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Drawing Canvas Modal (UC-062) */}
+      {showDrawingModal && (
+        <div className="version-modal-overlay animate-fade-in">
+          <div className="import-modal-card glass drawing-modal-card">
+            <div className="import-modal-header">
+              <h3>🎨 Quadro de Desenho & Rascunho Visual</h3>
+              <p className="import-subtitle">Desenhe mapas, esquemas ou diagramas à mão livre para inserir no texto.</p>
+            </div>
+            
+            <div className="drawing-canvas-container">
+              <canvas 
+                id="drawing-canvas" 
+                width={600} 
+                height={350} 
+                className="drawing-canvas-element"
+                onMouseDown={(e) => {
+                  const canvas = e.currentTarget;
+                  const ctx = canvas.getContext('2d');
+                  if (!ctx) return;
+                  ctx.beginPath();
+                  const rect = canvas.getBoundingClientRect();
+                  ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+                  (canvas as any).isDrawing = true;
+                }}
+                onMouseMove={(e) => {
+                  const canvas = e.currentTarget;
+                  if (!(canvas as any).isDrawing) return;
+                  const ctx = canvas.getContext('2d');
+                  if (!ctx) return;
+                  const rect = canvas.getBoundingClientRect();
+                  ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+                  ctx.strokeStyle = (canvas as any).drawColor || '#ffffff';
+                  ctx.lineWidth = (canvas as any).drawWidth || 3;
+                  ctx.lineCap = 'round';
+                  ctx.stroke();
+                }}
+                onMouseUp={(e) => {
+                  (e.currentTarget as any).isDrawing = false;
+                }}
+              />
+              
+              <div className="drawing-toolbar">
+                <button type="button" onClick={() => {
+                  const canvas = document.getElementById('drawing-canvas') as HTMLCanvasElement;
+                  if (canvas) (canvas as any).drawColor = '#ffffff';
+                }} className="color-dot white" title="Branco" />
+                <button type="button" onClick={() => {
+                  const canvas = document.getElementById('drawing-canvas') as HTMLCanvasElement;
+                  if (canvas) (canvas as any).drawColor = '#3b82f6';
+                }} className="color-dot blue" title="Azul" />
+                <button type="button" onClick={() => {
+                  const canvas = document.getElementById('drawing-canvas') as HTMLCanvasElement;
+                  if (canvas) (canvas as any).drawColor = '#ef4444';
+                }} className="color-dot red" title="Vermelho" />
+                <button type="button" onClick={() => {
+                  const canvas = document.getElementById('drawing-canvas') as HTMLCanvasElement;
+                  if (canvas) (canvas as any).drawColor = '#22c55e';
+                }} className="color-dot green" title="Verde" />
+                <button type="button" onClick={() => {
+                  const canvas = document.getElementById('drawing-canvas') as HTMLCanvasElement;
+                  if (canvas) (canvas as any).drawColor = '#c084fc';
+                }} className="color-dot purple" title="Roxo" />
+                <button type="button" onClick={() => {
+                  const canvas = document.getElementById('drawing-canvas') as HTMLCanvasElement;
+                  if (canvas) (canvas as any).drawColor = '#fde047';
+                }} className="color-dot yellow" title="Amarelo" />
+                
+                <button type="button" onClick={() => {
+                  const canvas = document.getElementById('drawing-canvas') as HTMLCanvasElement;
+                  const ctx = canvas?.getContext('2d');
+                  if (canvas && ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }} className="btn-clear-canvas">Limpar Canvas</button>
+              </div>
+            </div>
+
+            <div className="import-modal-actions">
+              <button 
+                type="button" 
+                className="btn-modal-restore" 
+                onClick={() => {
+                  const canvas = document.getElementById('drawing-canvas') as HTMLCanvasElement;
+                  if (canvas) handleInsertDrawingToEditor(canvas.toDataURL());
+                }}
+              >
+                Inserir no Manuscrito
+              </button>
+              <button type="button" className="btn-modal-close" onClick={() => setShowDrawingModal(false)}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Audit Log Modal (UC-061) */}
+      {showAuditModal && (
+        <div className="version-modal-overlay animate-fade-in">
+          <div className="import-modal-card glass audit-modal-card">
+            <div className="import-modal-header">
+              <h3>📋 Registros de Ações Automáticas do Sistema</h3>
+              <p className="import-subtitle">Histórico de auto-salvamentos, backups, títulos e sincronizações executadas pelo sistema.</p>
+            </div>
+            
+            <div className="audit-logs-list">
+              {auditLogs.length === 0 ? (
+                <p className="empty-audit-msg">Nenhuma ação automática registrada ainda.</p>
+              ) : (
+                auditLogs.map(log => (
+                  <div key={log.id} className="audit-log-item">
+                    <div className="audit-item-meta">
+                      <span className={`audit-badge ${log.type}`}>{log.type}</span>
+                      <span className="audit-time">{new Date(log.timestamp).toLocaleString()}</span>
+                    </div>
+                    <p className="audit-desc">{log.description}</p>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="import-modal-actions">
+              <button type="button" className="btn-modal-close" onClick={() => setShowAuditModal(false)}>
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style jsx global>{`
+        /* Main App Shell Layout (Fixes Left Panel Cutoff & Scrolling) */
+        .main-content {
+          display: flex !important;
+          width: 100vw !important;
+          max-width: 100vw !important;
+          height: 100vh !important;
+          overflow: hidden !important;
+          background-color: var(--bg-space);
+          position: relative;
+          box-sizing: border-box !important;
+        }
+
+        .editor-workspace {
+          flex: 1 1 0% !important;
+          min-width: 0 !important;
+          width: 0 !important;
+          display: flex !important;
+          flex-direction: column !important;
+          height: 100vh !important;
+          overflow: hidden !important;
+          position: relative;
+        }
+
+        .google-docs-viewport {
+          flex: 1 1 0% !important;
+          min-width: 0 !important;
+          overflow-y: auto !important;
+          overflow-x: auto !important;
+          background: #0f172a;
+          padding: 2rem 1rem;
+          display: flex;
+          justify-content: center;
+          align-items: flex-start;
+          scroll-behavior: smooth;
+          box-sizing: border-box !important;
+        }
+
+        /* Interface Density System (UC-084) */
+        .main-content.density-compact .editor-side-panel {
+          padding: 0.75rem 0.5rem !important;
+        }
+
+        .main-content.density-compact .docs-top-bar {
+          padding: 0.35rem 0.8rem !important;
+        }
+
+        .main-content.density-comfortable .editor-side-panel {
+          padding: 1.75rem 1.5rem !important;
+        }
+
+        .main-content.density-comfortable .google-docs-viewport {
+          padding: 3rem 2rem !important;
+        }
+
+        /* Accent Color Themes System (UC-085) */
+        .main-content.accent-blue {
+          --brand-primary: #3b82f6;
+          --brand-glow: rgba(59, 130, 246, 0.4);
+        }
+
+        .main-content.accent-emerald {
+          --brand-primary: #10b981;
+          --brand-glow: rgba(16, 185, 129, 0.4);
+        }
+
+        .main-content.accent-amber {
+          --brand-primary: #f59e0b;
+          --brand-glow: rgba(245, 158, 11, 0.4);
+        }
+
+        .main-content.accent-rose {
+          --brand-primary: #f43f5e;
+          --brand-glow: rgba(244, 63, 94, 0.4);
+        }
+
+        .editor-side-panel {
+          position: relative;
+          height: 100vh !important;
+          overflow-y: auto !important;
+          flex-shrink: 0 !important;
+          box-sizing: border-box !important;
+          display: flex !important;
+          flex-direction: column !important;
+          z-index: 20;
+          padding: 1.25rem 1rem;
+        }
+
+        .editor-side-panel.left-panel {
+          border-right: 1px solid var(--border-light);
+          border-left: none;
+        }
+
+        .editor-side-panel.mms-logs-panel {
+          border-left: 1px solid var(--border-light);
+          border-right: none;
+          padding: 1.25rem 1rem !important;
+          box-sizing: border-box !important;
+          word-break: break-word !important;
+          overflow-wrap: break-word !important;
+        }
+
+        .sidebar-resizer-handle {
+          position: absolute;
+          top: 0;
+          width: 6px;
+          height: 100%;
+          cursor: col-resize;
+          z-index: 150;
+          transition: background 0.15s ease;
+        }
+
+        .sidebar-resizer-handle.right-border {
+          right: -3px;
+        }
+
+        .sidebar-resizer-handle.left-border {
+          left: -3px;
+        }
+
+        .sidebar-resizer-handle:hover,
+        .sidebar-resizer-handle:active {
+          background: #14b8a6;
+          box-shadow: 0 0 10px rgba(20, 184, 166, 0.7);
+        }
+
+        @media (max-width: 1536px) {
+          .editor-side-panel.mms-logs-panel {
+            position: fixed !important;
+            right: 0 !important;
+            top: 0 !important;
+            height: 100vh !important;
+            z-index: 100 !important;
+            box-shadow: -4px 0 25px rgba(0, 0, 0, 0.5) !important;
+            background: rgba(15, 23, 42, 0.96) !important;
+            backdrop-filter: blur(20px) !important;
+          }
+        }
+
+        .docs-home-icon-btn {
+          font-size: 1.5rem;
+          color: #3b82f6;
+          text-decoration: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 36px;
+          height: 36px;
+          border-radius: 8px;
+          background: rgba(59, 130, 246, 0.1);
+          border: 1px solid rgba(59, 130, 246, 0.2);
+          transition: all 0.2s ease;
+        }
+
+        .docs-home-icon-btn:hover {
+          background: rgba(59, 130, 246, 0.25);
+          transform: scale(1.05);
+        }
+
+        .docs-project-name-badge {
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: var(--text-secondary);
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid var(--border-light);
+          padding: 0.15rem 0.45rem;
+          border-radius: 4px;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.25rem;
+        }
+
+        .docs-project-name-badge:hover {
+          color: #14b8a6;
+          background: rgba(20, 184, 166, 0.12);
+          border-color: rgba(20, 184, 166, 0.3);
+        }
+
+        .docs-title-separator {
+          color: var(--text-muted);
+          font-weight: 300;
+          margin: 0 0.25rem;
+        }
+
+        .docs-doc-title-input.mini {
+          font-size: 0.85rem;
+          padding: 0.15rem 0.4rem;
+          width: 140px;
+        }
+
+        .explorer-title-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          width: 100%;
+          margin-bottom: 0.6rem;
+        }
+
+        .btn-collapse-panel-header {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid var(--border-light);
+          color: var(--text-secondary);
+          border-radius: 4px;
+          padding: 0.2rem 0.45rem;
+          font-size: 0.7rem;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .btn-collapse-panel-header:hover {
+          background: rgba(20, 184, 166, 0.2);
+          color: #14b8a6;
+          border-color: rgba(20, 184, 166, 0.4);
+        }
+
+        .btn-toggle-sidebar-top {
+          background: rgba(20, 184, 166, 0.12);
+          border: 1px solid rgba(20, 184, 166, 0.3);
+          color: #14b8a6;
+          border-radius: 4px;
+          padding: 0.25rem 0.55rem;
+          font-size: 0.72rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          margin-right: 0.35rem;
+        }
+
+        .btn-toggle-sidebar-top:hover {
+          background: rgba(20, 184, 166, 0.25);
+          box-shadow: 0 0 10px rgba(20, 184, 166, 0.2);
+        }
+
+        .top-nav-shortcuts {
+          display: flex;
+          align-items: center;
+          gap: 0.35rem;
+          margin-right: 0.5rem;
+        }
+
+        .btn-top-shortcut {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid var(--border-light);
+          border-radius: 4px;
+          padding: 0.25rem 0.5rem;
+          font-size: 0.72rem;
+          color: var(--text-secondary);
+          text-decoration: none;
+          transition: all 0.15s ease;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.25rem;
+        }
+
+        .btn-top-shortcut:hover {
+          background: rgba(20, 184, 166, 0.15);
+          color: #14b8a6;
+          border-color: rgba(20, 184, 166, 0.3);
+        }
+
+        .mms-logs-panel p,
+        .mms-logs-panel span,
+        .mms-logs-panel div,
+        .mms-logs-panel button,
+        .mms-logs-panel h4,
+        .no-logs,
+        .panel-subtitle {
+          max-width: 100% !important;
+          box-sizing: border-box !important;
+          word-break: break-word !important;
+          overflow-wrap: break-word !important;
+          white-space: normal !important;
+        }
+
+        .google-docs-header-ribbon {
+          flex-shrink: 0;
+        }
+
+        .google-docs-status-bar {
+          flex-shrink: 0;
+        }
+
+        .google-docs-viewport.theme-light {
+          background: #f8f9fa !important;
+          color: #202124 !important;
+        }
+
+        .google-docs-paper-sheet {
+          width: 100%;
+          max-width: 816px;
+          min-height: 1056px;
+          background: rgba(30, 41, 59, 0.95);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 4px;
+          padding: 3.5rem 4rem;
+          box-shadow: 0 4px 25px rgba(0, 0, 0, 0.35);
+          color: #f8fafc;
+          transition: all 0.2s ease;
+        }
+
+        .google-docs-viewport.theme-light .google-docs-paper-sheet {
+          background: #ffffff !important;
+          color: #202124 !important;
+          box-shadow: 0 1px 3px 1px rgba(60, 64, 67, 0.15), 0 1px 2px 0 rgba(60, 64, 67, 0.3) !important;
+          border: 1px solid #dadce0 !important;
+        }
+
+        .google-docs-paper-sheet .tiptap-editor-content .ProseMirror {
+          min-height: 850px;
+          outline: none;
+          line-height: 1.6;
+          word-wrap: break-word;
+        }
+
+        .google-docs-viewport.theme-light .tiptap-editor-content .ProseMirror {
+          color: #202124 !important;
+        }
+
+        /* Google Docs & MS Word Header Ribbon */
+        .google-docs-header-ribbon {
+          display: flex;
+          flex-direction: column;
+          border-bottom: 1px solid var(--border-light);
+          background: rgba(15, 23, 42, 0.85);
+          backdrop-filter: blur(12px);
+        }
+
+        .docs-top-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0.6rem 1.2rem;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .docs-brand-doc {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
+        .docs-doc-icon {
+          font-size: 1.5rem;
+        }
+
+        .docs-doc-meta {
+          display: flex;
+          flex-direction: column;
+          gap: 0.15rem;
+        }
+
+        .docs-doc-title-row {
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+        }
+
+        .docs-doc-title {
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: var(--text-primary);
+          margin: 0;
+          cursor: pointer;
+          border-radius: 4px;
+          padding: 0.1rem 0.3rem;
+          transition: background 0.15s ease;
+        }
+
+        .docs-doc-title:hover {
+          background: rgba(255, 255, 255, 0.1);
+        }
+
+        .docs-doc-title-input {
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: var(--text-primary);
+          background: rgba(0, 0, 0, 0.4);
+          border: 1px solid rgba(147, 51, 234, 0.5);
+          border-radius: 4px;
+          padding: 0.1rem 0.4rem;
+        }
+
+        .status-badge-mini {
+          font-size: 0.65rem;
+          padding: 0.1rem 0.4rem;
+          border-radius: 4px;
+          text-transform: uppercase;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+        }
+
+        .status-badge-mini.rascunho {
+          background: rgba(234, 179, 8, 0.15);
+          color: #fde047;
+          border: 1px solid rgba(234, 179, 8, 0.3);
+        }
+
+        .status-badge-mini.revisao {
+          background: rgba(59, 130, 246, 0.15);
+          color: #93c5fd;
+          border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .status-badge-mini.finalizado {
+          background: rgba(34, 197, 94, 0.15);
+          color: #86efac;
+          border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        /* Menu Bar */
+        .docs-menu-bar {
+          display: flex;
+          gap: 0.25rem;
+        }
+
+        .menu-item-group {
+          position: relative;
+        }
+
+        .menu-btn {
+          background: transparent;
+          border: none;
+          color: var(--text-muted);
+          font-size: 0.8rem;
+          padding: 0.2rem 0.5rem;
+          border-radius: 4px;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .menu-btn:hover {
+          background: rgba(255, 255, 255, 0.1);
+          color: var(--text-primary);
+        }
+
+        .dropdown-menu-list {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          z-index: 100;
+          min-width: 210px;
+          background: rgba(15, 23, 42, 0.96);
+          border: 1px solid rgba(147, 51, 234, 0.3);
+          border-radius: 8px;
+          padding: 0.4rem;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+          display: flex;
+          flex-direction: column;
+          gap: 0.2rem;
+        }
+
+        .dropdown-menu-list button {
+          width: 100%;
+          text-align: left;
+          background: transparent;
+          border: none;
+          color: var(--text-primary);
+          font-size: 0.8rem;
+          padding: 0.4rem 0.6rem;
+          border-radius: 4px;
+          cursor: pointer;
+          transition: background 0.15s ease;
+        }
+
+        .dropdown-menu-list button:hover {
+          background: rgba(147, 51, 234, 0.25);
+          color: #e9d5ff;
+        }
+
+        .dropdown-menu-list button.danger:hover {
+          background: rgba(239, 68, 68, 0.25);
+          color: #fca5a5;
+        }
+
+        .dropdown-menu-list hr {
+          border: none;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          margin: 0.2rem 0;
+        }
+
+        .docs-top-actions {
+          display: flex;
+          align-items: center;
+          gap: 0.8rem;
+        }
+
+        .save-status-text {
+          font-size: 0.75rem;
+          color: var(--text-muted);
+        }
+
+        .docs-status-select {
+          background: rgba(0, 0, 0, 0.3);
+          border: 1px solid var(--border-light);
+          color: var(--text-primary);
+          border-radius: 6px;
+          padding: 0.3rem 0.6rem;
+          font-size: 0.78rem;
+        }
+
+        /* Formatting Ribbon Toolbar */
+        .docs-formatting-ribbon {
+          display: flex;
+          align-items: center;
+          gap: 0.35rem;
+          padding: 0.4rem 1.2rem;
+          background: rgba(0, 0, 0, 0.25);
+          overflow-x: auto;
+          flex-wrap: nowrap;
+        }
+
+        .ribbon-btn {
+          min-width: 32px;
+          height: 32px;
+          padding: 0 0.5rem;
+          border-radius: 6px;
+          border: 1px solid transparent;
+          background: transparent;
+          color: var(--text-muted);
+          font-size: 0.85rem;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.15s ease;
+          white-space: nowrap;
+        }
+
+        .ribbon-btn:hover {
+          background: rgba(255, 255, 255, 0.1);
+          color: var(--text-primary);
+        }
+
+        .ribbon-btn.active {
+          background: rgba(147, 51, 234, 0.25);
+          border-color: rgba(147, 51, 234, 0.5);
+          color: #c084fc;
+        }
+
+        .ribbon-btn.primary {
+          background: rgba(147, 51, 234, 0.3);
+          border-color: rgba(147, 51, 234, 0.5);
+          color: #e9d5ff;
+        }
+
+        .ribbon-select {
+          height: 32px;
+          background: rgba(0, 0, 0, 0.3);
+          border: 1px solid var(--border-light);
+          color: var(--text-primary);
+          border-radius: 6px;
+          padding: 0 0.5rem;
+          font-size: 0.78rem;
+        }
+
+        .font-family-select {
+          min-width: 140px;
+        }
+
+        .line-height-select {
+          min-width: 110px;
+        }
+
+        .font-size-control-group {
+          display: flex;
+          align-items: center;
+          background: rgba(0, 0, 0, 0.3);
+          border: 1px solid var(--border-light);
+          border-radius: 6px;
+          padding: 0 0.2rem;
+          height: 32px;
+        }
+
+        .font-step {
+          width: 24px;
+          height: 24px;
+          padding: 0;
+          font-weight: 700;
+        }
+
+        .font-size-display {
+          font-size: 0.78rem;
+          color: var(--text-primary);
+          padding: 0 0.4rem;
+          font-weight: 600;
+        }
+
+        .ribbon-divider {
+          width: 1px;
+          height: 20px;
+          background: rgba(255, 255, 255, 0.12);
+          margin: 0 0.2rem;
+        }
+
+        /* Pinned Manuscripts Group (UC-128) */
+        .pinned-manuscripts-group {
+          margin-bottom: 0.75rem;
+        }
+
+        .pinned-group-label {
+          font-size: 0.65rem;
+          font-weight: 700;
+          color: #fde047;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          display: block;
+          margin-bottom: 0.35rem;
+        }
+
+        .pinned-group-divider {
+          height: 1px;
+          background: rgba(255, 255, 255, 0.08);
+          margin: 0.5rem 0;
+        }
+
+        .action-btn.active-pin {
+          color: #fde047;
+          opacity: 1;
+        }
+
+        /* Drawing Canvas CSS (UC-062) */
+        .drawing-modal-card {
+          max-width: 660px !important;
+        }
+
+        .drawing-canvas-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.75rem;
+          margin: 1rem 0;
+        }
+
+        .drawing-canvas-element {
+          background: #1e293b;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 8px;
+          cursor: crosshair;
+          box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+        }
+
+        .drawing-toolbar {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .color-dot {
+          width: 22px;
+          height: 22px;
+          border-radius: 50%;
+          border: 2px solid rgba(255, 255, 255, 0.2);
+          cursor: pointer;
+          transition: transform 0.15s ease;
+        }
+
+        .color-dot:hover {
+          transform: scale(1.2);
+        }
+
+        .color-dot.white { background: #ffffff; }
+        .color-dot.blue { background: #3b82f6; }
+        .color-dot.red { background: #ef4444; }
+        .color-dot.green { background: #22c55e; }
+        .color-dot.purple { background: #c084fc; }
+        .color-dot.yellow { background: #fde047; }
+
+        .btn-clear-canvas {
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid var(--border-light);
+          color: var(--text-primary);
+          border-radius: 4px;
+          padding: 0.2rem 0.5rem;
+          font-size: 0.72rem;
+          cursor: pointer;
+        }
+
+        /* Audit Log Modal CSS (UC-061) */
+        .audit-modal-card {
+          max-width: 600px !important;
+        }
+
+        .audit-logs-list {
+          max-height: 380px;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          margin: 1rem 0;
+        }
+
+        .audit-log-item {
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid var(--border-light);
+          border-radius: 6px;
+          padding: 0.6rem;
+        }
+
+        .audit-item-meta {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 0.2rem;
+        }
+
+        .audit-badge {
+          font-size: 0.65rem;
+          padding: 0.1rem 0.35rem;
+          border-radius: 4px;
+          font-weight: 700;
+          text-transform: uppercase;
+          background: rgba(59, 130, 246, 0.2);
+          color: #93c5fd;
+        }
+
+        .audit-time {
+          font-size: 0.68rem;
+          color: var(--text-muted);
+        }
+
+        .audit-desc {
+          font-size: 0.78rem;
+          color: var(--text-primary);
+          margin: 0;
+        }
+
+        /* Google Docs Theme System (UC-159) */
+        .google-docs-viewport.theme-light {
+          background: #f8f9fa;
+          color: #202124;
+        }
+
+        .google-docs-viewport.theme-light .google-docs-paper-sheet {
+          background: #ffffff;
+          color: #202124;
+          box-shadow: 0 1px 3px 1px rgba(60, 64, 67, 0.15), 0 1px 2px 0 rgba(60, 64, 67, 0.3);
+          border: 1px solid #dadce0;
+        }
+
+        .google-docs-viewport.theme-light .tiptap-editor-content {
+          color: #202124;
+        }
+
+        /* Google Docs Layout Wrapper & Ruler */
+        .google-docs-paper-layout-wrapper {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          width: 100%;
+          max-width: 1180px;
+        }
+
+        .google-docs-ruler {
+          width: 100%;
+          max-width: 816px;
+          height: 20px;
+          background: rgba(255, 255, 255, 0.08);
+          border-radius: 4px;
+          margin-bottom: 0.5rem;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 1rem;
+          font-size: 0.65rem;
+          color: var(--text-muted);
+          user-select: none;
+        }
+
+        .ruler-ticks {
+          display: flex;
+          gap: 2.5rem;
+          font-weight: 600;
+        }
+
+        .ruler-indent-left, .ruler-indent-right {
+          color: #4285f4;
+          font-size: 0.6rem;
+          cursor: col-resize;
+        }
+
+        .google-docs-paper-and-comments {
+          display: flex;
+          gap: 1.5rem;
+          width: 100%;
+          justify-content: center;
+          align-items: flex-start;
+        }
+
+        /* Google Docs Right Margin Comments Column (UC-114) */
+        .google-docs-comments-margin {
+          width: 280px;
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+          position: sticky;
+          top: 1rem;
+        }
+
+        .comments-column-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0.4rem 0.6rem;
+          background: rgba(15, 23, 42, 0.6);
+          border: 1px solid var(--border-light);
+          border-radius: 6px;
+        }
+
+        .comments-column-header h4 {
+          margin: 0;
+          font-size: 0.82rem;
+          color: var(--text-primary);
+        }
+
+        .btn-add-comment-mini {
+          background: #1a73e8;
+          color: #ffffff;
+          border: none;
+          border-radius: 4px;
+          padding: 0.2rem 0.5rem;
+          font-size: 0.72rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.15s ease;
+        }
+
+        .btn-add-comment-mini:hover {
+          background: #1557b0;
+        }
+
+        .no-comments-hint {
+          padding: 0.8rem;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px dashed var(--border-light);
+          border-radius: 6px;
+          font-size: 0.75rem;
+          color: var(--text-muted);
+          line-height: 1.4;
+        }
+
+        .google-comment-card {
+          background: rgba(30, 41, 59, 0.95);
+          border: 1px solid rgba(147, 51, 234, 0.4);
+          border-radius: 8px;
+          padding: 0.75rem;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+          display: flex;
+          flex-direction: column;
+          gap: 0.4rem;
+        }
+
+        .comment-card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .author-info {
+          display: flex;
+          align-items: center;
+          gap: 0.4rem;
+        }
+
+        .author-avatar {
+          width: 22px;
+          height: 22px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #4285f4, #9333ea);
+          color: #ffffff;
+          font-size: 0.7rem;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .author-name {
+          font-size: 0.78rem;
+          font-weight: 600;
+          color: var(--text-primary);
+        }
+
+        .comment-time {
+          font-size: 0.65rem;
+          color: var(--text-muted);
+        }
+
+        .comment-quote {
+          font-size: 0.72rem;
+          color: #fde047;
+          background: rgba(234, 179, 8, 0.15);
+          border-left: 2px solid #facc15;
+          padding: 0.25rem 0.4rem;
+          border-radius: 2px;
+          font-style: italic;
+        }
+
+        .comment-body-text {
+          font-size: 0.8rem;
+          color: var(--text-primary);
+          line-height: 1.4;
+        }
+
+        .comment-card-actions {
+          display: flex;
+          justify-content: flex-end;
+          margin-top: 0.2rem;
+        }
+
+        .btn-resolve-comment {
+          background: rgba(34, 197, 94, 0.15);
+          color: #86efac;
+          border: 1px solid rgba(34, 197, 94, 0.3);
+          border-radius: 4px;
+          padding: 0.2rem 0.5rem;
+          font-size: 0.7rem;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .btn-resolve-comment:hover {
+          background: rgba(34, 197, 94, 0.3);
+        }
+
+        /* Chapter Templates Modal CSS (UC-137, UC-138) */
+        .template-modal-wide {
+          max-width: 780px !important;
+        }
+
+        .templates-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+          gap: 1rem;
+          margin-top: 1rem;
+        }
+
+        .template-card {
+          padding: 1rem;
+          border-radius: 8px;
+          border: 1px solid var(--border-light);
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          background: rgba(255, 255, 255, 0.04);
+        }
+
+        .template-card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .template-card-header h4 {
+          margin: 0;
+          font-size: 0.95rem;
+          color: var(--text-primary);
+        }
+
+        .template-category-badge {
+          font-size: 0.65rem;
+          padding: 0.1rem 0.4rem;
+          border-radius: 4px;
+          background: rgba(147, 51, 234, 0.2);
+          color: #c084fc;
+          text-transform: uppercase;
+          font-weight: 700;
+        }
+
+        .template-desc {
+          font-size: 0.78rem;
+          color: var(--text-muted);
+          margin: 0;
+          line-height: 1.4;
+        }
+
+        .btn-use-template {
+          background: linear-gradient(135deg, #1a73e8, #9333ea);
+          color: #ffffff;
+          border: none;
+          border-radius: 6px;
+          padding: 0.4rem 0.75rem;
+          font-size: 0.78rem;
+          font-weight: 600;
+          cursor: pointer;
+          margin-top: 0.5rem;
+          transition: transform 0.15s ease;
+        }
+
+        .btn-use-template:hover {
+          transform: translateY(-1px);
+        }
+
+        .selected-quote-preview {
+          background: rgba(234, 179, 8, 0.12);
+          border: 1px solid rgba(234, 179, 8, 0.3);
+          border-radius: 6px;
+          padding: 0.5rem 0.75rem;
+          font-size: 0.78rem;
+          color: #fde047;
+          margin-bottom: 0.75rem;
+        }
+
+        /* Google Docs Paper View Area */
+        .google-docs-viewport {
+          flex: 1;
+          overflow-y: auto;
+          background: #0f172a;
+          padding: 2.5rem 1rem;
+          display: flex;
+          justify-content: center;
+        }
+
+        .google-docs-viewport.read-only-mode {
+          background: #020617;
+        }
+
+        .google-docs-paper-sheet {
+          width: 100%;
+          max-width: 816px;
+          min-height: 1056px;
+          background: rgba(30, 41, 59, 0.95);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 12px;
+          padding: 3.5rem 4rem;
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.2);
+          color: #f8fafc;
+          transition: all 0.2s ease;
+        }
+
+        .google-docs-paper-sheet .tiptap-editor-content {
+          min-height: 900px;
+          outline: none;
+        }
+
+        /* Links & Footnotes inside paper */
+        .manuscript-link {
+          color: #60a5fa;
+          text-decoration: underline;
+        }
+
+        .footnote-box {
+          font-size: 0.8em;
+          color: #c084fc;
+          background: rgba(147, 51, 234, 0.15);
+          padding: 0.1rem 0.35rem;
+          border-radius: 4px;
+          border: 1px solid rgba(147, 51, 234, 0.3);
+          cursor: help;
+        }
+
+        /* Google Docs Bottom Status Bar */
+        .google-docs-status-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0.5rem 1.2rem;
+          background: rgba(15, 23, 42, 0.9);
+          border-top: 1px solid var(--border-light);
+          font-size: 0.78rem;
+          color: var(--text-muted);
+        }
+
+        .status-stats-group {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .status-stat-item strong {
+          color: var(--text-primary);
+        }
+
+        .status-stat-separator {
+          color: rgba(255, 255, 255, 0.2);
+        }
+
+        .status-progress-group {
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+        }
+
+        .progress-mini-label {
+          font-size: 0.72rem;
+        }
+
+        .progress-mini-bar {
+          width: 120px;
+          height: 6px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 3px;
+          overflow: hidden;
+        }
+
+        .progress-mini-fill {
+          height: 100%;
+          background: linear-gradient(90deg, #9333ea, #3b82f6);
+          border-radius: 3px;
+          transition: width 0.3s ease;
+        }
+
+        .status-modes-group {
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+        }
+
+        .mode-badge {
+          font-size: 0.7rem;
+          padding: 0.15rem 0.5rem;
+          border-radius: 4px;
+          font-weight: 600;
+        }
+
+        .mode-badge.read-only {
+          background: rgba(59, 130, 246, 0.2);
+          color: #60a5fa;
+          border: 1px solid rgba(59, 130, 246, 0.4);
+        }
+
+        .mode-badge.locked {
+          background: rgba(239, 68, 68, 0.2);
+          color: #f87171;
+          border: 1px solid rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-mode-toggle {
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid var(--border-light);
+          color: var(--text-primary);
+          border-radius: 4px;
+          padding: 0.2rem 0.5rem;
+          font-size: 0.72rem;
+          cursor: pointer;
+          transition: background 0.15s ease;
+        }
+
+        .btn-mode-toggle:hover {
+          background: rgba(255, 255, 255, 0.12);
+        }
+
+        /* Action Toolbar Buttons */
+        .btn-action-tool {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.35rem;
+          padding: 0.4rem 0.75rem;
+          border-radius: 6px;
+          border: 1px solid var(--border-light);
+          background: rgba(255, 255, 255, 0.05);
+          color: var(--text-primary);
+          font-size: 0.8rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .btn-action-tool:hover {
+          background: rgba(255, 255, 255, 0.12);
+          border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-action-tool.active {
+          background: rgba(147, 51, 234, 0.2);
+          border-color: rgba(147, 51, 234, 0.5);
+          color: #c084fc;
+        }
+
+        .btn-action-tool.primary {
+          background: linear-gradient(135deg, rgba(147, 51, 234, 0.3), rgba(79, 70, 229, 0.3));
+          border-color: rgba(147, 51, 234, 0.4);
+          color: #e9d5ff;
+        }
+
+        .btn-action-tool.primary:hover {
+          background: linear-gradient(135deg, rgba(147, 51, 234, 0.45), rgba(79, 70, 229, 0.45));
+          border-color: rgba(147, 51, 234, 0.6);
+        }
+
+        /* Search & Replace Widget */
+        .search-replace-widget {
+          position: fixed;
+          top: 80px;
+          right: 340px;
+          z-index: 1000;
+          width: 380px;
+          padding: 1rem;
+          border-radius: 12px;
+          background: rgba(15, 23, 42, 0.95);
+          backdrop-filter: blur(16px);
+          border: 1px solid rgba(147, 51, 234, 0.3);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+
+        .search-widget-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .search-widget-header h4 {
+          margin: 0;
+          font-size: 0.95rem;
+          font-weight: 600;
+          color: var(--text-primary);
+        }
+
+        .btn-close-widget {
+          background: transparent;
+          border: none;
+          color: var(--text-muted);
+          cursor: pointer;
+          font-size: 1rem;
+          padding: 0.2rem 0.4rem;
+        }
+
+        .search-widget-inputs {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .search-input-group {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+
+        .search-input {
+          width: 100%;
+          padding: 0.5rem 0.75rem;
+          padding-right: 4.5rem;
+          border-radius: 6px;
+          border: 1px solid var(--border-light);
+          background: rgba(0, 0, 0, 0.3);
+          color: var(--text-primary);
+          font-size: 0.85rem;
+        }
+
+        .search-input:focus {
+          outline: none;
+          border-color: rgba(147, 51, 234, 0.6);
+        }
+
+        .match-count-badge {
+          position: absolute;
+          right: 0.5rem;
+          font-size: 0.7rem;
+          color: #a855f7;
+          background: rgba(168, 85, 247, 0.15);
+          padding: 0.15rem 0.4rem;
+          border-radius: 4px;
+        }
+
+        .search-widget-options {
+          display: flex;
+          gap: 0.75rem;
+          flex-wrap: wrap;
+        }
+
+        .search-option-check {
+          display: flex;
+          align-items: center;
+          gap: 0.3rem;
+          font-size: 0.75rem;
+          color: var(--text-muted);
+          cursor: pointer;
+        }
+
+        .search-widget-actions {
+          display: flex;
+          gap: 0.4rem;
+          margin-top: 0.2rem;
+        }
+
+        .btn-search-nav, .btn-search-replace {
+          padding: 0.35rem 0.6rem;
+          border-radius: 6px;
+          border: 1px solid var(--border-light);
+          background: rgba(255, 255, 255, 0.06);
+          color: var(--text-primary);
+          font-size: 0.75rem;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .btn-search-replace.primary {
+          background: rgba(147, 51, 234, 0.25);
+          border-color: rgba(147, 51, 234, 0.5);
+          color: #e9d5ff;
+        }
+
+        /* Diff Comparison Modal */
+        .diff-modal-card {
+          width: 90%;
+          max-width: 850px;
+          max-height: 85vh;
+          background: rgba(15, 23, 42, 0.96);
+          border: 1px solid rgba(147, 51, 234, 0.3);
+          border-radius: 16px;
+          padding: 1.5rem;
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+        }
+
+        .diff-modal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          padding-bottom: 0.8rem;
+        }
+
+        .diff-subtitle {
+          font-size: 0.8rem;
+          color: var(--text-muted);
+          margin-top: 0.25rem;
+        }
+
+        .diff-summary-badges {
+          display: flex;
+          gap: 0.6rem;
+        }
+
+        .diff-badge {
+          font-size: 0.75rem;
+          padding: 0.25rem 0.6rem;
+          border-radius: 6px;
+          font-weight: 600;
+        }
+
+        .diff-badge.added {
+          background: rgba(34, 197, 94, 0.2);
+          color: #4ade80;
+          border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .diff-badge.removed {
+          background: rgba(239, 68, 68, 0.2);
+          color: #f87171;
+          border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .diff-badge.unchanged {
+          background: rgba(148, 163, 184, 0.15);
+          color: #cbd5e1;
+        }
+
+        .diff-content-container {
+          flex: 1;
+          overflow-y: auto;
+          background: rgba(0, 0, 0, 0.3);
+          border: 1px solid var(--border-light);
+          border-radius: 8px;
+          padding: 1.2rem;
+          font-family: Georgia, serif;
+          font-size: 0.95rem;
+          line-height: 1.7;
+          color: var(--text-primary);
+          white-space: pre-wrap;
+          max-height: 50vh;
+        }
+
+        .diff-added-chunk {
+          background: rgba(34, 197, 94, 0.25);
+          color: #86efac;
+          padding: 0.1rem 0.2rem;
+          border-radius: 3px;
+          text-decoration: none;
+        }
+
+        .diff-removed-chunk {
+          background: rgba(239, 68, 68, 0.25);
+          color: #fca5a5;
+          padding: 0.1rem 0.2rem;
+          border-radius: 3px;
+          text-decoration: line-through;
+        }
+
+        .diff-unchanged-chunk {
+          color: #cbd5e1;
+        }
+
+        /* Export & Import Modals */
+        .export-modal-card, .import-modal-card {
+          width: 90%;
+          max-width: 620px;
+          background: rgba(15, 23, 42, 0.96);
+          border: 1px solid rgba(147, 51, 234, 0.3);
+          border-radius: 16px;
+          padding: 1.5rem;
+          display: flex;
+          flex-direction: column;
+          gap: 1.2rem;
+        }
+
+        .export-format-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0.75rem;
+          margin-top: 0.5rem;
+        }
+
+        .format-card {
+          padding: 0.8rem;
+          border-radius: 8px;
+          border: 1px solid var(--border-light);
+          background: rgba(255, 255, 255, 0.03);
+          cursor: pointer;
+          display: flex;
+          flex-direction: column;
+          gap: 0.2rem;
+          transition: all 0.15s ease;
+        }
+
+        .format-card:hover {
+          background: rgba(255, 255, 255, 0.07);
+          border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .format-card.active {
+          border-color: rgba(147, 51, 234, 0.6);
+          background: rgba(147, 51, 234, 0.15);
+        }
+
+        .format-card strong {
+          font-size: 0.85rem;
+          color: var(--text-primary);
+        }
+
+        .format-card span {
+          font-size: 0.72rem;
+          color: var(--text-muted);
+        }
+
+        .file-dropzone {
+          margin-top: 0.5rem;
+          border: 2px dashed rgba(147, 51, 234, 0.4);
+          border-radius: 12px;
+          padding: 2rem;
+          text-align: center;
+          background: rgba(147, 51, 234, 0.05);
+          transition: all 0.2s ease;
+        }
+
+        .file-dropzone:hover {
+          background: rgba(147, 51, 234, 0.1);
+          border-color: rgba(147, 51, 234, 0.7);
+        }
+
+        .file-input-hidden {
+          display: none;
+        }
+
+        .file-dropzone-label {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.4rem;
+          cursor: pointer;
+        }
+
+        .dropzone-icon {
+          font-size: 2.2rem;
+        }
+
+        /* Snapshot and Version Actions */
+        .snapshot-actions-bar {
+          margin-bottom: 0.8rem;
+        }
+
+        .custom-snapshot-input-row {
+          display: flex;
+          gap: 0.35rem;
+          width: 100%;
+        }
+
+        .custom-tag-input {
+          flex: 1;
+          padding: 0.35rem 0.5rem;
+          font-size: 0.78rem;
+          border-radius: 6px;
+          border: 1px solid var(--border-light);
+          background: rgba(0, 0, 0, 0.3);
+          color: var(--text-primary);
+        }
+
+        .btn-save-tag, .btn-cancel-tag {
+          padding: 0.35rem 0.6rem;
+          font-size: 0.75rem;
+          border-radius: 6px;
+          border: none;
+          cursor: pointer;
+        }
+
+        .btn-save-tag {
+          background: #9333ea;
+          color: #fff;
+        }
+
+        .btn-cancel-tag {
+          background: rgba(255, 255, 255, 0.1);
+          color: var(--text-muted);
+        }
+
+        .version-card-actions {
+          display: flex;
+          gap: 0.5rem;
+          margin-top: 0.5rem;
+        }
+
+        .btn-diff-version {
+          padding: 0.3rem 0.6rem;
+          font-size: 0.72rem;
+          border-radius: 4px;
+          border: 1px solid rgba(147, 51, 234, 0.3);
+          background: rgba(147, 51, 234, 0.12);
+          color: #c084fc;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .btn-diff-version:hover {
+          background: rgba(147, 51, 234, 0.25);
+        }
+
         .editor-side-panel {
           width: 300px;
+          border-right: 1px solid var(--border-light);
           border-right: 1px solid var(--border-light);
           display: flex;
           flex-direction: column;
