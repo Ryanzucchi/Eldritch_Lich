@@ -297,8 +297,8 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
   }, [user, loadingSession, pathname, router]);
 
   useEffect(() => {
-    // Flow Validation: If user accesses /gmn, /kanban, /editor or /stats without an active project, redirect to Google Docs Hub (/)
-    if (!loadingSession && !activeProject && (pathname === '/gmn' || pathname === '/kanban' || pathname === '/editor' || pathname === '/stats')) {
+    // Flow Validation: If user accesses /gmn, /kanban, /editor, /stats or /wiki without an active project, redirect to Google Docs Hub (/)
+    if (!loadingSession && !activeProject && (pathname === '/gmn' || pathname === '/kanban' || pathname === '/editor' || pathname === '/stats' || pathname === '/wiki')) {
       router.push('/');
     }
   }, [activeProject, loadingSession, pathname, router]);
@@ -569,6 +569,14 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
             </svg>
             <span>Estatísticas</span>
           </Link>
+
+          <Link href="/wiki" className={`nav-link-item ${pathname === '/wiki' ? 'active' : ''}`}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            </svg>
+            <span>Wiki do Universo</span>
+          </Link>
         </nav>
 
         {/* User profile footer (Clickable as a link to Profile) */}
@@ -611,6 +619,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
               {pathname === '/gmn' && <strong>⚡ Grafo de Metas Causal</strong>}
               {pathname === '/kanban' && <strong>📊 Quadro Kanban</strong>}
               {pathname === '/stats' && <strong>📈 Estatísticas & Métricas</strong>}
+              {pathname === '/wiki' && <strong>📖 Wiki & Universo</strong>}
               {pathname === '/profile' && <strong>👤 Configurações do Perfil</strong>}
             </div>
           </div>

@@ -12,6 +12,18 @@ export interface Reminder {
   createdAt: string;
 }
 
+export interface WikiEntity {
+  id: string;
+  projectId: string;
+  name: string;
+  type: 'Personagem' | 'Local' | 'Item' | 'Organizacao';
+  description: string;
+  content: string;
+  isConfidential: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export class EldritchDatabase extends Dexie {
   metaNodes!: Table<MetaNode, string>;
   metaEdges!: Table<MetaEdge, string>;
@@ -26,6 +38,7 @@ export class EldritchDatabase extends Dexie {
   comments!: Table<InlineComment, string>;
   auditLogs!: Table<SystemActivity, string>;
   reminders!: Table<Reminder, string>;
+  wikiEntities!: Table<WikiEntity, string>;
 
   constructor() {
     const isBrowser = typeof window !== 'undefined';
@@ -137,6 +150,22 @@ export class EldritchDatabase extends Dexie {
       comments: 'id, manuscriptId, isResolved, createdAt',
       auditLogs: 'id, type, timestamp',
       reminders: 'id, projectId, alertTime, isRead'
+    });
+    this.version(11).stores({
+      metaNodes: 'id, type, status, title',
+      metaEdges: 'id, fromId, toId',
+      writingGoals: 'id, type, targetWords, deadline',
+      writingLogs: 'id, date',
+      writingStreak: 'id',
+      keyboardShortcuts: 'command',
+      manuscripts: 'id, status, title, folderId, category, isArchived',
+      manuscriptVersions: 'id, manuscriptId, versionNumber, createdAt',
+      pendingSaves: 'id, manuscriptId, timestamp',
+      folders: 'id, projectId, parentFolderId',
+      comments: 'id, manuscriptId, isResolved, createdAt',
+      auditLogs: 'id, type, timestamp',
+      reminders: 'id, projectId, alertTime, isRead',
+      wikiEntities: 'id, projectId, name, type, isConfidential'
     });
   }
 }
