@@ -272,7 +272,7 @@ export default function EditorComponent() {
   const [isLineFocus, setIsLineFocus] = useState(false);
   
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [settingsTab, setSettingsTab] = useState<'goals' | 'shortcuts'>('goals');
+  const [settingsTab, setSettingsTab] = useState<'goals' | 'shortcuts' | 'reading'>('goals');
   const [newGoalWords, setNewGoalWords] = useState(500);
   const [newGoalType, setNewGoalType] = useState<'DIARIA' | 'PRAZO'>('DIARIA');
   const [newGoalDeadline, setNewGoalDeadline] = useState('');
@@ -336,6 +336,14 @@ export default function EditorComponent() {
   const [textAlign, setTextAlign] = useState<'left' | 'center' | 'right' | 'justify'>('left');
   const [lineHeight, setLineHeight] = useState<'1.2' | '1.5' | '1.8' | '2.0'>('1.5');
   const [isReadOnly, setIsReadOnly] = useState(false); // UC-187
+  const [readingWpm, setReadingWpm] = useState<number>(200); // UC-186
+  const [isFullscreen, setIsFullscreen] = useState(false); // UC-164
+  
+  // DOCX Export Settings (UC-163)
+  const [docxFont, setDocxFont] = useState<'Calibri' | 'Times New Roman' | 'Arial'>('Calibri');
+  const [docxSpacing, setDocxSpacing] = useState<'1.0' | '1.15' | '1.5' | '2.0'>('1.5');
+  const [docxIndent, setDocxIndent] = useState<'none' | '1.25cm' | '1.5cm'>('1.25cm');
+  const [docxExportComments, setDocxExportComments] = useState(false);
 
   // Hyperlink Modal States (UC-110, UC-111)
   const [showLinkModal, setShowLinkModal] = useState(false);
@@ -1283,6 +1291,113 @@ export default function EditorComponent() {
     if (targets.length === 0) return;
 
     const projName = activeProject?.name || 'Livro';
+
+    if (exportFormat === 'docx') {
+      const sanitizeTitle = projName.toLowerCase().replace(/[^a-z0-9_-]/gi, '_');
+      
+      const fontFamilyValue = docxFont === 'Calibri' 
+        ? '"Calibri", "Arial", sans-serif'
+        : docxFont === 'Times New Roman'
+        ? '"Times New Roman", Times, serif'
+        : '"Arial", sans-serif';
+        
+      let docxBody = '';
+      
+      const buildDocx = async () => {
+        for (const m of targets) {
+          let chapterHtml = m.content;
+          if (docxExportComments) {
+            const mComments = await db.comments.filter(c => c.manuscriptId === m.id && !c.isResolved).toArray();
+            mComments.forEach((comm, idx) => {
+              const anchorId = `_anchor_${m.id}_${idx}`;
+              if (comm.selectedText && chapterHtml.includes(comm.selectedText)) {
+                const startAnchor = `<span style="mso-special-character:comment-start" id="${anchorId}"></span>`;
+                const endAnchor = `<span style="mso-special-character:comment-end" id="${anchorId}"></span>`;
+                chapterHtml = chapterHtml.replace(
+                  comm.selectedText,
+                  `${startAnchor}${comm.selectedText}${endAnchor}`
+                );
+              }
+            });
+            
+            let commentsHtml = `<div style="mso-element:comment-list">`;
+            mComments.forEach((comm, idx) => {
+              const anchorId = `_anchor_${m.id}_${idx}`;
+              commentsHtml += `
+                <div style="mso-element:comment" id="${anchorId}">
+                  <span style="mso-comment-author:Escritor"></span>
+                  <p class="MsoCommentText">${comm.commentText}</p>
+                </div>`;
+            });
+            commentsHtml += `</div>`;
+            chapterHtml += commentsHtml;
+          }
+
+          docxBody += `<div class="chapter-container"><h1>${m.title}</h1>${chapterHtml}</div>`;
+        }
+
+        const docxHtml = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+  <meta charset="utf-8">
+  <title>${projName}</title>
+  <!--[if gte mso 9]>
+  <xml>
+    <w:WordDocument>
+      <w:View>Print</w:View>
+      <w:Zoom>100</w:Zoom>
+    </w:WordDocument>
+  </xml>
+  <![endif]-->
+  <style>
+    body { 
+      font-family: ${fontFamilyValue}; 
+      font-size: 12pt; 
+      line-height: ${docxSpacing}; 
+      margin: 1in;
+    }
+    h1 { 
+      font-size: 18pt; 
+      font-weight: bold; 
+      color: #1e293b; 
+      page-break-before: always; 
+      margin-top: 24pt;
+      margin-bottom: 12pt;
+    }
+    p { 
+      margin-bottom: 6pt; 
+      text-indent: ${docxIndent === 'none' ? '0' : docxIndent};
+      text-align: justify;
+    }
+    .MsoCommentText {
+      font-size: 10pt;
+      line-height: 1.15;
+    }
+  </style>
+</head>
+<body>
+  ${docxBody}
+</body>
+</html>`;
+
+        const blob = new Blob([docxHtml], { type: 'application/msword' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${sanitizeTitle}.docx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        setShowExportModal(false);
+        setSuccess(`Manuscrito exportado como DOCX com sucesso!`);
+        setTimeout(() => setSuccess(null), 3000);
+      };
+      
+      buildDocx();
+      return;
+    }
+
     const result = exportManuscripts(targets, exportFormat, projName);
 
     if (exportFormat === 'pdf') {
@@ -1309,57 +1424,223 @@ export default function EditorComponent() {
     setTimeout(() => setSuccess(null), 3000);
   };
 
+  const handleToggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      const container = document.querySelector('.main-content');
+      if (container) {
+        container.requestFullscreen().catch((err) => {
+          console.error('Erro ao ativar tela cheia:', err);
+        });
+      }
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
+  // DOCX Binary ZIP extractor helper (UC-194)
+  const extractDocumentXmlFromZip = async (arrayBuffer: ArrayBuffer): Promise<string> => {
+    const view = new DataView(arrayBuffer);
+    const bytes = new Uint8Array(arrayBuffer);
+    let offset = 0;
+    
+    while (offset < arrayBuffer.byteLength - 30) {
+      const signature = view.getUint32(offset, true);
+      if (signature === 0x04034b50) { // Local file header
+        const compression = view.getUint16(offset + 8, true);
+        const compressedSize = view.getUint32(offset + 18, true);
+        const fileNameLength = view.getUint16(offset + 26, true);
+        const extraFieldLength = view.getUint16(offset + 28, true);
+        
+        const fileNameBytes = bytes.subarray(offset + 30, offset + 30 + fileNameLength);
+        const fileName = new TextDecoder('utf-8').decode(fileNameBytes);
+        
+        const fileDataOffset = offset + 30 + fileNameLength + extraFieldLength;
+        
+        if (fileName === 'word/document.xml') {
+          const compressedData = bytes.subarray(fileDataOffset, fileDataOffset + compressedSize);
+          
+          if (compression === 8) { // Deflated
+            const ds = new DecompressionStream('deflate-raw');
+            const writer = ds.writable.getWriter();
+            writer.write(compressedData);
+            writer.close();
+            
+            const response = new Response(ds.readable);
+            const decompressedBuffer = await response.arrayBuffer();
+            return new TextDecoder('utf-8').decode(decompressedBuffer);
+          } else if (compression === 0) { // Stored (Uncompressed)
+            return new TextDecoder('utf-8').decode(compressedData);
+          } else {
+            throw new Error('Formato de compressão ZIP não suportado: ' + compression);
+          }
+        }
+        offset = fileDataOffset + compressedSize;
+      } else if (signature === 0x02014b50 || signature === 0x06054b50) {
+        break;
+      } else {
+        offset++;
+      }
+    }
+    throw new Error('O arquivo "word/document.xml" não foi encontrado no DOCX.');
+  };
+
+  // DOCX XML elements parser to clean HTML (UC-194)
+  const parseDocxXmlToHtml = (xmlText: string): string => {
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlText, 'application/xml');
+    
+    let paragraphs = xmlDoc.getElementsByTagName('w:p');
+    if (paragraphs.length === 0) {
+      paragraphs = xmlDoc.getElementsByTagName('p');
+    }
+    
+    let html = '';
+    
+    for (let i = 0; i < paragraphs.length; i++) {
+      const pEl = paragraphs[i];
+      let tag = 'p';
+      
+      let pPr = pEl.getElementsByTagName('w:pPr')[0];
+      if (!pPr) pPr = pEl.getElementsByTagName('pPr')[0];
+      
+      if (pPr) {
+        let pStyle = pPr.getElementsByTagName('w:pStyle')[0];
+        if (!pStyle) pStyle = pPr.getElementsByTagName('pStyle')[0];
+        if (pStyle) {
+          const styleVal = pStyle.getAttribute('w:val') || pStyle.getAttribute('val');
+          if (styleVal && styleVal.toLowerCase().includes('heading')) {
+            const match = styleVal.match(/\d+/);
+            const num = match ? match[0] : '1';
+            tag = `h${num}`;
+          }
+        }
+      }
+      
+      let pContent = '';
+      const childNodes = Array.from(pEl.childNodes);
+      
+      childNodes.forEach((child: any) => {
+        if (child.nodeName === 'w:r' || child.nodeName === 'r') {
+          let rPr = child.getElementsByTagName('w:rPr')[0];
+          if (!rPr) rPr = child.getElementsByTagName('rPr')[0];
+          
+          let runText = '';
+          
+          Array.from(child.childNodes).forEach((rChild: any) => {
+            if (rChild.nodeName === 'w:t' || rChild.nodeName === 't') {
+              runText += rChild.textContent || '';
+            } else if (rChild.nodeName === 'w:br' || rChild.nodeName === 'br') {
+              runText += '<br/>';
+            }
+          });
+          
+          if (rPr && runText) {
+            let isBold = rPr.getElementsByTagName('w:b').length > 0 || rPr.getElementsByTagName('b').length > 0;
+            let isItalic = rPr.getElementsByTagName('w:i').length > 0 || rPr.getElementsByTagName('i').length > 0;
+            let isUnderline = rPr.getElementsByTagName('w:u').length > 0 || rPr.getElementsByTagName('u').length > 0;
+            
+            if (isBold) runText = `<strong>${runText}</strong>`;
+            if (isItalic) runText = `<em>${runText}</em>`;
+            if (isUnderline) runText = `<u>${runText}</u>`;
+          }
+          pContent += runText;
+        }
+      });
+      
+      if (pContent.trim() || tag.startsWith('h')) {
+        html += `<${tag}>${pContent}</${tag}>`;
+      }
+    }
+    
+    return html || '<p><br></p>';
+  };
+
+  const finalizeImport = async (fileName: string, html: string, fullFileName: string) => {
+    if (importMode === 'overwrite' && activeManuscript) {
+      const updated = { ...activeManuscript, content: html, updatedAt: new Date().toISOString() };
+      setActiveManuscript(updated);
+      await db.manuscripts.put(updated);
+      editor?.commands.setContent(html);
+      setSuccess(`Conteúdo de "${fullFileName}" importado para o capítulo atual.`);
+    } else {
+      const isBrowser = typeof window !== 'undefined';
+      const activeProjectId = isBrowser ? localStorage.getItem('activeProjectId') || 'default' : 'default';
+      const newDoc: Manuscript = {
+        id: crypto.randomUUID(),
+        title: fileName || 'Capítulo Importado',
+        content: html,
+        status: 'RASCUNHO',
+        isLocked: false,
+        projectId: activeProjectId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      await db.manuscripts.put(newDoc);
+      await loadManuscripts();
+      setActiveManuscript(newDoc);
+      editor?.commands.setContent(html);
+      setSuccess(`Novo capítulo "${fileName}" criado a partir do arquivo importado.`);
+    }
+    setTimeout(() => setSuccess(null), 3500);
+    setShowImportModal(false);
+  };
+
   // Import file handler
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const fileName = file.name.replace(/\.[^/.]+$/, '');
     const extension = file.name.split('.').pop()?.toLowerCase();
-    const reader = new FileReader();
+    
+    if (extension === 'doc') {
+      alert('Arquivos do formato antigo .doc não são suportados. Por favor, salve o arquivo como .docx no Word antes de importar.');
+      e.target.value = '';
+      return;
+    }
 
-    reader.onload = async (event) => {
-      const text = event.target?.result as string;
-      let html = '';
+    const fileName = file.name.replace(/\.[^/.]+$/, '');
+    
+    if (extension === 'docx') {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const arrayBuffer = event.target?.result as ArrayBuffer;
+          const bytes = new Uint8Array(arrayBuffer);
+          
+          if (bytes[0] === 0x50 && bytes[1] === 0x4B && bytes[2] === 0x03 && bytes[3] === 0x04) {
+            const xmlText = await extractDocumentXmlFromZip(arrayBuffer);
+            const html = parseDocxXmlToHtml(xmlText);
+            await finalizeImport(fileName, html, file.name);
+          } else {
+            const textDecoder = new TextDecoder('utf-8');
+            const text = textDecoder.decode(arrayBuffer);
+            const html = text.includes('<p>') ? text : `<p>${text.replace(/\n/g, '<br>')}</p>`;
+            await finalizeImport(fileName, html, file.name);
+          }
+        } catch (err: any) {
+          console.error(err);
+          alert('Erro ao importar arquivo Word (.docx): ' + err.message);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    } else {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const text = event.target?.result as string;
+        let html = '';
 
-      if (extension === 'md' || extension === 'markdown') {
-        html = markdownToHtml(text);
-      } else if (extension === 'html' || extension === 'htm' || extension === 'docx') {
-        html = text.includes('<p>') ? text : `<p>${text.replace(/\n/g, '<br>')}</p>`;
-      } else {
-        html = `<p>${text.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p>`;
-      }
+        if (extension === 'md' || extension === 'markdown') {
+          html = markdownToHtml(text);
+        } else if (extension === 'html' || extension === 'htm') {
+          html = text.includes('<p>') ? text : `<p>${text.replace(/\n/g, '<br>')}</p>`;
+        } else {
+          html = `<p>${text.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p>`;
+        }
 
-      if (importMode === 'overwrite' && activeManuscript) {
-        const updated = { ...activeManuscript, content: html, updatedAt: new Date().toISOString() };
-        setActiveManuscript(updated);
-        await db.manuscripts.put(updated);
-        editor?.commands.setContent(html);
-        setSuccess(`Conteúdo de "${file.name}" importado para o capítulo atual.`);
-      } else {
-        const isBrowser = typeof window !== 'undefined';
-        const activeProjectId = isBrowser ? localStorage.getItem('activeProjectId') || 'default' : 'default';
-        const newDoc: Manuscript = {
-          id: crypto.randomUUID(),
-          title: fileName || 'Capítulo Importado',
-          content: html,
-          status: 'RASCUNHO',
-          isLocked: false,
-          projectId: activeProjectId,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
-        await db.manuscripts.put(newDoc);
-        await loadManuscripts();
-        setActiveManuscript(newDoc);
-        editor?.commands.setContent(html);
-        setSuccess(`Novo capítulo "${fileName}" criado a partir do arquivo importado.`);
-      }
-      setTimeout(() => setSuccess(null), 3500);
-      setShowImportModal(false);
-    };
-
-    reader.readAsText(file);
+        await finalizeImport(fileName, html, file.name);
+      };
+      reader.readAsText(file);
+    }
   };
 
   // UC-092 — Padronizar nomes automaticamente
@@ -2031,6 +2312,44 @@ export default function EditorComponent() {
     }
   });
 
+  const isParentFolderArchived = (() => {
+    if (!activeManuscript?.folderId) return false;
+    const parentFolder = folders.find(f => f.id === activeManuscript.folderId);
+    return !!(parentFolder as any)?.isArchived;
+  })();
+
+  const isEditorLocked = !!(activeManuscript?.isLocked || activeManuscript?.isArchived || isParentFolderArchived);
+
+  // Sync editor editability (UC-187 / lock status)
+  useEffect(() => {
+    if (editor) {
+      editor.setEditable(!(isReadOnly || isEditorLocked));
+    }
+  }, [isReadOnly, isEditorLocked, editor]);
+
+  // Sync fullscreen change state (UC-164)
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  // Accessibility keyboard shortcut Alt+Shift+E to focus the editor (UC-160)
+  useEffect(() => {
+    const handleAccessibilityKeys = (e: KeyboardEvent) => {
+      if (e.altKey && e.shiftKey && e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        editor?.commands.focus();
+        setSuccess('Foco direcionado ao editor principal.');
+        setTimeout(() => setSuccess(null), 2000);
+      }
+    };
+    window.addEventListener('keydown', handleAccessibilityKeys);
+    return () => window.removeEventListener('keydown', handleAccessibilityKeys);
+  }, [editor]);
+
   // Switch Active Manuscript and set editable state
   useEffect(() => {
     if (editor && activeManuscript) {
@@ -2386,8 +2705,8 @@ export default function EditorComponent() {
   // Drag and Drop tree rendering logic (UC-010 / UC-011)
   const renderFolderNode = (folder: Folder, depth = 0) => {
     const isExpanded = !!expandedFolders[folder.id];
-    const subfolders = folders.filter(f => f.parentFolderId === folder.id);
-    const folderChapters = manuscripts.filter(m => m.folderId === folder.id && !m.inTrash);
+    const subfolders = folders.filter(f => f.parentFolderId === folder.id && !(f as any).inTrash && !(f as any).isArchived);
+    const folderChapters = manuscripts.filter(m => m.folderId === folder.id && !m.inTrash && !m.isArchived);
     
     let hoverTimer: NodeJS.Timeout;
 
@@ -2446,6 +2765,16 @@ export default function EditorComponent() {
           onDragLeave={onDragLeave}
           onDrop={onDrop}
           onClick={() => toggleFolder(folder.id)}
+          role="button"
+          aria-expanded={isExpanded}
+          aria-label={`Pasta ${folder.name}, ${isExpanded ? 'expandida' : 'recolhida'}. Contém ${folderChapters.length} capítulos.`}
+          tabIndex={0}
+          onKeyDown={e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              toggleFolder(folder.id);
+            }
+          }}
         >
           <div className="folder-title">
             <span className="folder-icon">
@@ -2459,13 +2788,59 @@ export default function EditorComponent() {
                 isExpanded ? '📂' : '📁'
               )}
             </span>
-            <span className="folder-name-text">{folder.name}</span>
+            {editingFolderId === folder.id ? (
+              <input
+                type="text"
+                value={editingFolderTitle}
+                onChange={e => setEditingFolderTitle(e.target.value)}
+                onBlur={() => handleSaveRenameFolder(folder.id)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') handleSaveRenameFolder(folder.id);
+                  if (e.key === 'Escape') setEditingFolderId(null);
+                }}
+                autoFocus
+                className="folder-rename-input"
+                onClick={e => e.stopPropagation()}
+                aria-label="Digitar novo nome da pasta"
+              />
+            ) : (
+              <span className="folder-name-text">
+                {(folder as any).isPinned ? '📌 ' : ''}
+                {(folder as any).isFavorite ? '⭐ ' : ''}
+                {folder.name}
+              </span>
+            )}
           </div>
           <div className="folder-actions" onClick={e => e.stopPropagation()}>
+            <button 
+              onClick={(e) => handleToggleFavoriteFolder(folder, e)}
+              title={(folder as any).isFavorite ? "Remover dos Favoritos" : "Favoritar Pasta (UC-154)"}
+              className={`action-btn ${(folder as any).isFavorite ? 'active' : ''}`}
+              aria-label={`Favoritar pasta ${folder.name}`}
+            >
+              ⭐
+            </button>
+            <button 
+              onClick={(e) => handleTogglePinFolder(folder, e)}
+              title={(folder as any).isPinned ? "Desafixar" : "Fixar Pasta no Topo (UC-155)"}
+              className={`action-btn ${(folder as any).isPinned ? 'active' : ''}`}
+              aria-label={`Fixar pasta ${folder.name}`}
+            >
+              📌
+            </button>
+            <button 
+              onClick={(e) => startRenameFolder(folder, e)}
+              title="Renomear Pasta"
+              className="action-btn"
+              aria-label={`Renomear pasta ${folder.name}`}
+            >
+              ✏️
+            </button>
             <button 
               onClick={() => setIconTarget({ id: folder.id, type: 'folder', currentIcon: (folder as any).icon })}
               title="Mudar Ícone da Pasta (UC-086)"
               className="action-btn"
+              aria-label={`Mudar ícone da pasta ${folder.name}`}
             >
               🎨
             </button>
@@ -2473,37 +2848,25 @@ export default function EditorComponent() {
               onClick={() => setShowAddFolderInput(prev => ({ ...prev, [folder.id]: !prev[folder.id] }))}
               title="Nova subpasta"
               className="action-btn"
+              aria-label={`Adicionar subpasta em ${folder.name}`}
             >
               +📁
             </button>
             <button 
-              onClick={async () => {
-                if (confirm(`Deseja excluir a pasta "${folder.name}"? Os capítulos dentro dela serão movidos para a raiz.`)) {
-                  await db.folders.delete(folder.id);
-                  try {
-                    await fetch(`/api/folders/${folder.id}`, { method: 'DELETE' });
-                  } catch (err) {}
-                  
-                  // Desalojar capítulos locais
-                  const childChapters = manuscripts.filter(m => m.folderId === folder.id);
-                  await Promise.all(childChapters.map(async ch => {
-                    await db.manuscripts.update(ch.id, { folderId: undefined });
-                  }));
-                  
-                  // Desalojar subpastas locais
-                  const childFolders = folders.filter(f => f.parentFolderId === folder.id);
-                  await Promise.all(childFolders.map(async f => {
-                    await db.folders.update(f.id, { parentFolderId: undefined });
-                  }));
-                  
-                  await loadFolders();
-                  await loadManuscripts();
-                }
-              }}
-              title="Excluir Pasta"
-              className="action-btn delete"
+              onClick={(e) => handleToggleArchiveFolder(folder, e)}
+              title="Arquivar Pasta (UC-156)"
+              className="action-btn"
+              aria-label={`Arquivar pasta ${folder.name}`}
             >
-              ×
+              📦
+            </button>
+            <button 
+              onClick={(e) => handleToggleTrashFolder(folder, true, e)}
+              title="Mover para Lixeira (UC-157)"
+              className="action-btn delete"
+              aria-label={`Mover pasta ${folder.name} para a lixeira`}
+            >
+              🗑️
             </button>
           </div>
         </div>
@@ -2526,6 +2889,7 @@ export default function EditorComponent() {
               onBlur={() => setShowAddFolderInput(prev => ({ ...prev, [folder.id]: false }))}
               autoFocus
               className="rename-input"
+              aria-label="Nome da nova subpasta"
             />
           </div>
         )}
@@ -2533,7 +2897,7 @@ export default function EditorComponent() {
         {isExpanded && (
           <div className="folder-children">
             {/* Subfolders */}
-            {subfolders.map(sub => renderFolderNode(sub, depth + 1))}
+            {subfolders.sort((a: any, b: any) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0) || a.name.localeCompare(b.name)).map(sub => renderFolderNode(sub, depth + 1))}
             
             {/* Chapters */}
             {folderChapters.map(chapter => renderManuscriptNode(chapter, depth + 1))}
@@ -3061,7 +3425,7 @@ export default function EditorComponent() {
                     )}
 
                     {/* Render folders at root */}
-                    {folders.filter(f => !f.parentFolderId).map(f => renderFolderNode(f, 0))}
+                    {folders.filter(f => !f.parentFolderId && !(f as any).inTrash && !(f as any).isArchived).sort((a: any, b: any) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0) || a.name.localeCompare(b.name)).map(f => renderFolderNode(f, 0))}
                     
                     {/* Render chapters at root */}
                     {manuscripts.filter(m => !m.folderId && !m.inTrash && !m.isArchived).map(m => renderManuscriptNode(m, 0))}
@@ -3778,7 +4142,7 @@ export default function EditorComponent() {
               </span>
               <span className="status-stat-separator">•</span>
               <span className="status-stat-item" title="Tempo de leitura estimado (UC-186)">
-                ⏱️ ~<strong>{Math.max(1, Math.ceil(countWords(editor?.getText() || '') / 200))}</strong> min de leitura
+                ⏱️ ~<strong>{Math.max(1, Math.ceil(countWords(editor?.getText() || '') / readingWpm))}</strong> min de leitura
               </span>
             </div>
 
@@ -3801,6 +4165,16 @@ export default function EditorComponent() {
                 title="Alternar entre modo de Edição e Leitura (UC-187)"
               >
                 {isReadOnly ? '✏️ Modo Edição' : '📖 Modo Leitura'}
+              </button>
+              <button 
+                type="button" 
+                onClick={handleToggleFullscreen} 
+                className="btn-mode-toggle"
+                title={isFullscreen ? "Sair da Tela Cheia (Esc)" : "Visualizar Modo Tela Cheia (UC-164)"}
+                style={{ marginLeft: '0.4rem' }}
+                aria-label={isFullscreen ? "Sair da tela cheia" : "Entrar em modo tela cheia"}
+              >
+                {isFullscreen ? '☒ Sair Foco' : '🖥️ Tela Cheia'}
               </button>
             </div>
           </div>
@@ -4155,6 +4529,13 @@ export default function EditorComponent() {
               >
                 Atalhos de Teclado
               </button>
+              <button 
+                type="button"
+                className={`settings-tab-btn ${settingsTab === 'reading' ? 'active' : ''}`}
+                onClick={() => setSettingsTab('reading')}
+              >
+                Leitura
+              </button>
             </div>
 
             {settingsTab === 'goals' ? (
@@ -4264,7 +4645,7 @@ export default function EditorComponent() {
                   </button>
                 </div>
               </form>
-            ) : (
+            ) : settingsTab === 'shortcuts' ? (
               <div className="shortcuts-settings-panel">
                 <p className="shortcuts-info">Clique no atalho para editar e pressione a nova combinação de teclas desejada.</p>
                 <div className="shortcuts-list">
@@ -4292,6 +4673,36 @@ export default function EditorComponent() {
                   </button>
                   <button onClick={() => setIsSettingsOpen(false)} className="btn-save">
                     Fechar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="shortcuts-settings-panel">
+                <p className="shortcuts-info">Configure suas preferências de exibição e velocidade do leitor de tela/estimativas.</p>
+                <div className="settings-form">
+                  <div className="form-group" style={{ marginBottom: '1rem' }}>
+                    <label>Velocidade de Leitura (WPM - Palavras por Minuto)</label>
+                    <input 
+                      type="number" 
+                      value={readingWpm} 
+                      onChange={(e) => setReadingWpm(Math.max(10, parseInt(e.target.value) || 200))}
+                      style={{ width: '100%' }}
+                    />
+                    <p className="form-help-text" style={{ fontSize: '0.75rem', opacity: 0.6, marginTop: '0.2rem' }}>A velocidade média de um leitor adulto padrão é de 200 WPM.</p>
+                  </div>
+                  <div className="form-group" style={{ marginBottom: '1rem' }}>
+                    <label>Esquema de Cores de Leitura</label>
+                    <select value={docsTheme} onChange={(e) => setDocsTheme(e.target.value as any)} style={{ width: '100%' }}>
+                      <option value="light">☀️ Tema Claro (Google Docs)</option>
+                      <option value="dark">🌙 Tema Escuro (Google Docs)</option>
+                      <option value="sepia">🎴 Tema Sépia (Conforto Visual)</option>
+                      <option value="gray">🔘 Tema Cinza (Contraste Suave)</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="form-actions">
+                  <button onClick={() => setIsSettingsOpen(false)} className="btn-save" style={{ width: '100%' }}>
+                    Fechar e Salvar
                   </button>
                 </div>
               </div>
@@ -4511,6 +4922,52 @@ export default function EditorComponent() {
                   ))}
                 </div>
               </div>
+
+              {exportFormat === 'docx' && (
+                <div className="docx-options-group glass" style={{ marginTop: '1rem', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.1)' }}>
+                  <h4 style={{ marginBottom: '0.75rem', fontSize: '0.9rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.25rem' }}>⚙️ Configurações do Documento Word</h4>
+                  
+                  <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+                    <label style={{ fontSize: '0.8rem' }}>Fonte Padrão:</label>
+                    <select value={docxFont} onChange={(e: any) => setDocxFont(e.target.value)}>
+                      <option value="Calibri">Calibri (Moderna)</option>
+                      <option value="Times New Roman">Times New Roman (Clássica)</option>
+                      <option value="Arial">Arial (Limpa)</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+                    <label style={{ fontSize: '0.8rem' }}>Espaçamento entre Linhas:</label>
+                    <select value={docxSpacing} onChange={(e: any) => setDocxSpacing(e.target.value)}>
+                      <option value="1.0">1.0 (Simples)</option>
+                      <option value="1.15">1.15 (Padrão)</option>
+                      <option value="1.5">1.5 (Agradável)</option>
+                      <option value="2.0">2.0 (Duplo)</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+                    <label style={{ fontSize: '0.8rem' }}>Recuo de Parágrafo:</label>
+                    <select value={docxIndent} onChange={(e: any) => setDocxIndent(e.target.value)}>
+                      <option value="none">Nenhum</option>
+                      <option value="1.25cm">1.25 cm (Padrão ABNT)</option>
+                      <option value="1.5cm">1.5 cm</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
+                    <input 
+                      type="checkbox" 
+                      id="export-comments-chk"
+                      checked={docxExportComments} 
+                      onChange={(e) => setDocxExportComments(e.target.checked)} 
+                    />
+                    <label htmlFor="export-comments-chk" style={{ margin: 0, fontSize: '0.8rem', cursor: 'pointer' }}>
+                      Exportar comentários como Notas de Revisão
+                    </label>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="export-modal-actions">
@@ -8970,6 +9427,109 @@ export default function EditorComponent() {
         @keyframes wave {
           0%, 60%, 100% { transform: translateY(0); }
           30% { transform: translateY(-4px); }
+        }
+
+        /* Sepia & Gray Reading Themes (UC-187) */
+        .google-docs-viewport.theme-sepia {
+          background: #f4ecd8;
+          color: #5b4636;
+        }
+        .google-docs-viewport.theme-sepia .google-docs-paper-sheet {
+          background: #fdf6e3;
+          color: #5b4636;
+          box-shadow: 0 4px 20px rgba(91, 70, 54, 0.08);
+          border: 1px solid #e4d7ba;
+        }
+        .google-docs-viewport.theme-sepia .tiptap-editor-content {
+          color: #5b4636;
+        }
+        .google-docs-viewport.theme-sepia .google-docs-ruler {
+          border-bottom-color: #e4d7ba;
+          color: #8b7461;
+        }
+
+        .google-docs-viewport.theme-gray {
+          background: #374151;
+          color: #f3f4f6;
+        }
+        .google-docs-viewport.theme-gray .google-docs-paper-sheet {
+          background: #1f2937;
+          color: #f9fafb;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+          border: 1px solid #4b5563;
+        }
+        .google-docs-viewport.theme-gray .tiptap-editor-content {
+          color: #f9fafb;
+        }
+        .google-docs-viewport.theme-gray .google-docs-ruler {
+          border-bottom-color: #4b5563;
+          color: #9ca3af;
+        }
+
+        .main-content.theme-sepia {
+          background: #f4ecd8;
+          color: #5b4636;
+        }
+        .main-content.theme-sepia .google-docs-header-ribbon,
+        .main-content.theme-sepia .docs-formatting-ribbon,
+        .main-content.theme-sepia .google-docs-status-bar {
+          background: #ebdcb9;
+          border-color: #e4d7ba;
+          color: #5b4636;
+        }
+        .main-content.theme-sepia .ribbon-btn,
+        .main-content.theme-sepia .menu-btn {
+          color: #5b4636;
+        }
+        .main-content.theme-sepia .ribbon-btn:hover,
+        .main-content.theme-sepia .menu-btn:hover {
+          background: #dfcea2;
+        }
+
+        .main-content.theme-gray {
+          background: #1f2937;
+          color: #f3f4f6;
+        }
+        .main-content.theme-gray .google-docs-header-ribbon,
+        .main-content.theme-gray .docs-formatting-ribbon,
+        .main-content.theme-gray .google-docs-status-bar {
+          background: #374151;
+          border-color: #4b5563;
+          color: #f3f4f6;
+        }
+        .main-content.theme-gray .ribbon-btn,
+        .main-content.theme-gray .menu-btn {
+          color: #f3f4f6;
+        }
+        .main-content.theme-gray .ribbon-btn:hover,
+        .main-content.theme-gray .menu-btn:hover {
+          background: #4b5563;
+        }
+
+        /* Read Only / Modo Leitura Layout Tweaks (UC-187) */
+        .google-docs-viewport.read-only-mode .google-docs-paper-sheet {
+          max-width: 900px !important;
+          padding: 4.5rem 6rem !important;
+          font-family: Georgia, serif !important;
+          line-height: 1.8 !important;
+          box-shadow: none !important;
+          border-color: transparent !important;
+          background: transparent !important;
+        }
+        .google-docs-viewport.read-only-mode .google-docs-ruler {
+          display: none !important;
+        }
+
+        /* Folder Inline Rename Input Styling */
+        .folder-rename-input {
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid var(--accent);
+          color: var(--fg);
+          font-size: 0.85rem;
+          padding: 0.1rem 0.3rem;
+          border-radius: 4px;
+          outline: none;
+          width: 140px;
         }
       `}</style>
     </div>
