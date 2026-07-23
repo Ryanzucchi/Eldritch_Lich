@@ -327,7 +327,12 @@ export default function EditorComponent() {
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [noteText, setNoteText] = useState('');
   // Menu bar dropdown active state
-  const [activeMenuDropdown, setActiveMenuDropdown] = useState<'file' | 'edit' | 'view' | 'insert' | 'format' | null>(null);
+  const [activeMenuDropdown, setActiveMenuDropdown] = useState<'file' | 'edit' | 'view' | 'insert' | 'format' | 'tools' | null>(null);
+
+  // Name Standardization states (UC-092)
+  const [showStandardizeModal, setShowStandardizeModal] = useState(false);
+  const [standardizeSuggestions, setStandardizeSuggestions] = useState<any[]>([]);
+  const [standardizingStatus, setStandardizingStatus] = useState<string | null>(null);
 
   // Tags & Categories States (UC-013, UC-014)
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
@@ -1037,6 +1042,186 @@ export default function EditorComponent() {
     };
 
     reader.readAsText(file);
+  };
+
+  // UC-092 — Padronizar nomes automaticamente
+  const getLevenshteinDistance = (a: string, b: string): number => {
+    const matrix: number[][] = [];
+    for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        if (b.charAt(i - 1) === a.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1
+          );
+        }
+      }
+    }
+    return matrix[b.length][a.length];
+  };
+
+  const handleOpenStandardizeNames = async () => {
+    if (!editor || !activeManuscript || !activeProject) {
+      alert('Selecione um projeto e um manuscrito com texto para executar a padronização.');
+      return;
+    }
+    
+    setStandardizingStatus('Escaneando texto em busca de variações...');
+    setShowStandardizeModal(true);
+
+    try {
+      const textContent = editor.getText();
+      
+      // Load current project wiki entities to match names
+      let dbEntities = await db.wikiEntities.where('projectId').equals(activeProject.id).toArray();
+      if (dbEntities.length === 0) {
+        // Fallback mock seeds if database is unseeded
+        const mockSeeds = ['Kael', 'Elara', 'Lorde Varis', 'Castelo Sombrio', 'Floresta dos Sussurros', 'Medalhão Antigo', 'Espada do Eclipse'];
+        dbEntities = mockSeeds.map(name => ({ name } as any));
+      }
+
+      const suggestionsMap = new Map<string, { official: string; count: number }>();
+      const words = textContent.match(/[\wÀ-ÿ]+/g) || [];
+
+      dbEntities.forEach(ent => {
+        const official = ent.name;
+        const officialLower = official.toLowerCase();
+        const officialNormalized = official.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+        words.forEach(w => {
+          if (w === official) return; // Matches exactly, skip
+
+          const wLower = w.toLowerCase();
+          const wNormalized = w.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+          let isMatch = false;
+
+          // Case mismatch
+          if (wLower === officialLower) {
+            isMatch = true;
+          }
+          // Accent mismatch
+          else if (wNormalized === officialNormalized) {
+            isMatch = true;
+          }
+          // Levenshtein mismatch for longer words
+          else if (official.length > 3 && w.length > 3) {
+            const dist = getLevenshteinDistance(wLower, officialLower);
+            if (dist > 0 && dist <= 2) {
+              isMatch = true;
+            }
+          }
+
+          if (isMatch) {
+            const key = `${official}||${w}`;
+            if (suggestionsMap.has(key)) {
+              suggestionsMap.get(key)!.count += 1;
+            } else {
+              suggestionsMap.set(key, { official, count: 1 });
+            }
+          }
+        });
+      });
+
+      const list: any[] = [];
+      const commonWords = ['para', 'pela', 'como', 'mais', 'pelo', 'esta', 'este', 'uma', 'uns', 'dele', 'dela', 'eles', 'elas'];
+      
+      suggestionsMap.forEach((val, key) => {
+        const [officialName, variantName] = key.split('||');
+        if (commonWords.includes(variantName.toLowerCase())) return;
+        if (variantName.length < 3) return;
+
+        list.push({
+          entityId: officialName.toLowerCase(),
+          officialName,
+          variantName,
+          occurrencesCount: val.count,
+          selected: true
+        });
+      });
+
+      setStandardizeSuggestions(list);
+      setStandardizingStatus(null);
+    } catch (e) {
+      console.error(e);
+      setStandardizingStatus(null);
+      alert('Erro ao escanear nomes.');
+    }
+  };
+
+  const handleApplyStandardization = async () => {
+    if (!editor || !activeManuscript) return;
+    const selected = standardizeSuggestions.filter(s => s.selected);
+    if (selected.length === 0) {
+      alert('Selecione pelo menos uma substituição para aplicar.');
+      return;
+    }
+
+    setStandardizingStatus('Aplicando substituições de forma transacional...');
+
+    // Walk HTML nodes to replace variantName with officialName in text nodes only
+    const replaceInTextNodes = (html: string, search: string, replace: string): string => {
+      if (typeof window === 'undefined') return html;
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+
+      const walk = (node: Node) => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          // Check parents to avoid rewriting inside anchors <a> or code block formats
+          let parent = node.parentNode;
+          let shouldSkip = false;
+          while (parent) {
+            if (parent.nodeName === 'A' || parent.nodeName === 'CODE' || parent.nodeName === 'PRE') {
+              shouldSkip = true;
+              break;
+            }
+            parent = parent.parentNode;
+          }
+
+          if (!shouldSkip && node.nodeValue) {
+            const escapedSearch = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+            const regex = new RegExp(`\\b${escapedSearch}\\b`, 'g');
+            node.nodeValue = node.nodeValue.replace(regex, replace);
+          }
+        } else {
+          node.childNodes.forEach(walk);
+        }
+      };
+
+      doc.body.childNodes.forEach(walk);
+      return doc.body.innerHTML;
+    };
+
+    try {
+      // Stage content replacement
+      let finalHtml = editor.getHTML();
+      selected.forEach(s => {
+        finalHtml = replaceInTextNodes(finalHtml, s.variantName, s.officialName);
+      });
+
+      // Dexie Transaction to guarantee safe DB persistence
+      await db.transaction('rw', db.manuscripts, async () => {
+        await db.manuscripts.update(activeManuscript.id, {
+          content: finalHtml,
+          updatedAt: new Date().toISOString()
+        });
+      });
+
+      editor.commands.setContent(finalHtml);
+      setSuccess('Nomes dos personagens padronizados com sucesso no manuscrito!');
+      setTimeout(() => setSuccess(null), 3000);
+      setShowStandardizeModal(false);
+      setStandardizingStatus(null);
+    } catch (e) {
+      console.error(e);
+      setStandardizingStatus(null);
+      alert('Erro transacional ao salvar substituições no banco.');
+    }
   };
 
   // Keyboard Shortcuts states
@@ -2873,6 +3058,15 @@ export default function EditorComponent() {
                           </div>
                         )}
                       </div>
+
+                      <div className="menu-item-group">
+                        <button onClick={() => setActiveMenuDropdown(activeMenuDropdown === 'tools' ? null : 'tools')} className="menu-btn">Ferramentas</button>
+                        {activeMenuDropdown === 'tools' && (
+                          <div className="dropdown-menu-list animate-fade-in">
+                            <button onClick={() => { handleOpenStandardizeNames(); setActiveMenuDropdown(null); }}>✨ Padronizar Nomes de Personagens (UC-092)</button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -4301,6 +4495,98 @@ export default function EditorComponent() {
               )}
               <button type="button" className="btn-modal-close" onClick={() => setIconTarget(null)}>
                 Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Name Standardization Modal (UC-092) */}
+      {showStandardizeModal && (
+        <div className="version-modal-overlay animate-fade-in" onClick={() => { if (!standardizingStatus) setShowStandardizeModal(false); }}>
+          <div className="import-modal-card glass" style={{ maxWidth: '560px' }} onClick={e => e.stopPropagation()}>
+            <div className="import-modal-header">
+              <h3>✨ Padronizar Nomes de Personagens</h3>
+              <p className="import-subtitle">Normalizar grafias e variantes de nomes para bater com as fichas oficiais de entidades.</p>
+            </div>
+
+            <div className="modal-body-scrollable" style={{ maxHeight: '380px', overflowY: 'auto', padding: '0.5rem 0' }}>
+              {standardizingStatus ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', gap: '1rem', color: '#14b8a6', fontWeight: 600 }}>
+                  <span className="loading-spinner" style={{ fontSize: '2rem' }}>⚙️</span>
+                  <span>{standardizingStatus}</span>
+                </div>
+              ) : standardizeSuggestions.length === 0 ? (
+                <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  <span style={{ fontSize: '2rem', display: 'block', marginBottom: '0.75rem' }}>✓</span>
+                  <strong>Nenhuma variação ou grafia incorreta detectada!</strong>
+                  <p style={{ fontSize: '0.8rem', marginTop: '0.5rem', margin: 0 }}>Todos os nomes correspondem perfeitamente às fichas do lore.</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>
+                    Variantes encontradas no texto (desmarque as que não deseja corrigir):
+                  </span>
+                  
+                  {standardizeSuggestions.map((s, idx) => (
+                    <div 
+                      key={idx} 
+                      className="standardize-item-row"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '0.75rem',
+                        background: 'rgba(255,255,255,0.02)',
+                        border: '1px solid var(--border-light)',
+                        borderRadius: '8px',
+                        gap: '1rem'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <input 
+                          type="checkbox"
+                          checked={s.selected}
+                          onChange={(e) => {
+                            const updated = [...standardizeSuggestions];
+                            updated[idx].selected = e.target.checked;
+                            setStandardizeSuggestions(updated);
+                          }}
+                          style={{ cursor: 'pointer' }}
+                        />
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <span style={{ fontSize: '0.85rem', color: '#fff' }}>
+                            Substituir <span style={{ color: '#ef4444', textDecoration: 'line-through', fontWeight: 600 }}>"{s.variantName}"</span> por <span style={{ color: '#14b8a6', fontWeight: 650 }}>"{s.officialName}"</span>
+                          </span>
+                          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                            Encontrado {s.occurrencesCount} {s.occurrencesCount === 1 ? 'vez' : 'vezes'} no capítulo
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="import-modal-actions" style={{ marginTop: '1.25rem' }}>
+              {!standardizingStatus && standardizeSuggestions.length > 0 && (
+                <button 
+                  type="button" 
+                  onClick={handleApplyStandardization} 
+                  className="btn-modal-restore" 
+                  style={{ background: '#14b8a6', color: '#fff', border: 'none' }}
+                >
+                  Aplicar Padronização
+                </button>
+              )}
+              <button 
+                type="button" 
+                className="btn-modal-close" 
+                onClick={() => setShowStandardizeModal(false)}
+                disabled={!!standardizingStatus}
+              >
+                {standardizeSuggestions.length === 0 ? 'Fechar' : 'Cancelar'}
               </button>
             </div>
           </div>
