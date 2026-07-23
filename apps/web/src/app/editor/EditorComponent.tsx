@@ -345,6 +345,25 @@ export default function EditorComponent() {
   const [docxIndent, setDocxIndent] = useState<'none' | '1.25cm' | '1.5cm'>('1.25cm');
   const [docxExportComments, setDocxExportComments] = useState(false);
 
+  // Version control & collaborator filter states (UC-195, UC-196, UC-198, UC-199, UC-200)
+  const [diffViewMode, setDiffViewMode] = useState<'side-by-side' | 'inline'>('side-by-side');
+  const [collaboratorFilter, setCollaboratorFilter] = useState<string | null>(null);
+  const [activeCollaboratorHighlight, setActiveCollaboratorHighlight] = useState<string | null>(null);
+  const [showBranchModal, setShowBranchModal] = useState(false);
+  const [branchName, setBranchName] = useState('');
+  const [branchTargetChapter, setBranchTargetChapter] = useState<Manuscript | null>(null);
+  const [showMergeConflictModal, setShowMergeConflictModal] = useState(false);
+  const [mergeConflictData, setMergeConflictData] = useState<{
+    branch: Manuscript;
+    parent: Manuscript;
+    parentContent: string;
+    branchContent: string;
+    conflicts: { id: string; mainText: string; branchText: string; selected: 'main' | 'branch' | null }[];
+  } | null>(null);
+
+  const leftScrollRef = useRef<HTMLDivElement>(null);
+  const rightScrollRef = useRef<HTMLDivElement>(null);
+
   // Hyperlink Modal States (UC-110, UC-111)
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
@@ -1245,6 +1264,15 @@ export default function EditorComponent() {
     }
   };
 
+  const handleScrollSync = (e: React.UIEvent<HTMLDivElement>, targetRef: React.RefObject<HTMLDivElement>) => {
+    const source = e.currentTarget;
+    if (targetRef.current) {
+      if (targetRef.current.scrollTop !== source.scrollTop) {
+        targetRef.current.scrollTop = source.scrollTop;
+      }
+    }
+  };
+
   // Open Version Diff Modal
   const handleCompareVersionDiff = (ver: typeof versions[0]) => {
     if (!editor) return;
@@ -1837,11 +1865,21 @@ export default function EditorComponent() {
     setVersions(list);
   };
 
-  const createVersionSnapshot = async (manuscript: Manuscript, currentContent: string) => {
+  const MOCK_COLLABORATORS = [
+    { id: 'você', name: 'Você', avatar: '✍️', color: '#8b5cf6' },
+    { id: 'morgana', name: 'Morgana (Editora)', avatar: '🧙‍♀️', color: '#ec4899' },
+    { id: 'lucas', name: 'Lucas (Revisor)', avatar: '🧑‍💻', color: '#10b981' },
+    { id: 'clarice', name: 'Clarice (Co-autora)', avatar: '👩‍🎨', color: '#f59e0b' }
+  ];
+
+  const createVersionSnapshot = async (manuscript: Manuscript, currentContent: string, authorId?: string) => {
     const list = await db.manuscriptVersions
       .filter(v => v.manuscriptId === manuscript.id)
       .toArray();
     const nextVerNumber = list.length > 0 ? Math.max(...list.map(v => v.versionNumber)) + 1 : 1;
+
+    // If first version, author is user ('você'). Otherwise assign randomly to simulate contributions
+    const author = authorId || (nextVerNumber === 1 ? 'você' : MOCK_COLLABORATORS[Math.floor(Math.random() * MOCK_COLLABORATORS.length)].id);
 
     const newVersion = {
       id: crypto.randomUUID(),
@@ -1849,10 +1887,11 @@ export default function EditorComponent() {
       versionNumber: nextVerNumber,
       title: manuscript.title,
       content: currentContent,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      author: author
     };
 
-    await db.manuscriptVersions.put(newVersion);
+    await db.manuscriptVersions.put(newVersion as any);
     await loadVersions(manuscript.id);
   };
 
@@ -1879,6 +1918,186 @@ export default function EditorComponent() {
     syncToServer(updated);
 
     setTimeout(() => setSuccess(null), 3000);
+  };
+
+  // Branch & Merge Helpers (UC-198, UC-199, UC-200)
+  const handleCreateBranch = async (title: string, parentChapter: Manuscript) => {
+    if (!title.trim() || !parentChapter) return;
+    
+    const isBrowser = typeof window !== 'undefined';
+    const activeProjectId = isBrowser ? localStorage.getItem('activeProjectId') || 'default' : 'default';
+    
+    const baseContent = parentChapter.content;
+    
+    const branchDoc: Manuscript = {
+      id: 'branch_' + crypto.randomUUID(),
+      title: title.trim(),
+      content: baseContent,
+      status: 'RASCUNHO',
+      isLocked: false,
+      projectId: activeProjectId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      folderId: parentChapter.folderId,
+      isBranch: true,
+      parentBranchId: parentChapter.id,
+      branchBaseContent: baseContent,
+      branchBaseTimestamp: new Date().toISOString()
+    } as any;
+    
+    await db.manuscripts.put(branchDoc);
+    await loadManuscripts();
+    setActiveManuscript(branchDoc);
+    editor?.commands.setContent(baseContent);
+    
+    setSuccess(`Branch de testes "${title}" criado com sucesso (UC-198)!`);
+    setTimeout(() => setSuccess(null), 3000);
+    setShowBranchModal(false);
+    setBranchName('');
+  };
+
+  const handleMergeBranch = async (branch: Manuscript) => {
+    if (!branch || !(branch as any).isBranch) return;
+    const parentId = (branch as any).parentBranchId;
+    const parent = manuscripts.find(m => m.id === parentId);
+    if (!parent) {
+      alert('Capítulo principal original não encontrado.');
+      return;
+    }
+    
+    const currentMainContent = parent.content;
+    const branchBaseContent = (branch as any).branchBaseContent || '';
+    
+    if (currentMainContent !== branchBaseContent) {
+      // Conflict detected!
+      const mainParagraphs = currentMainContent.split(/<\/p>/).map(p => p.replace(/<p>/, '').trim()).filter(Boolean);
+      const branchParagraphs = branch.content.split(/<\/p>/).map(p => p.replace(/<p>/, '').trim()).filter(Boolean);
+      
+      const conflicts: { id: string; mainText: string; branchText: string; selected: 'main' | 'branch' | null }[] = [];
+      const maxLen = Math.max(mainParagraphs.length, branchParagraphs.length);
+      
+      for (let i = 0; i < maxLen; i++) {
+        const mText = mainParagraphs[i] || '';
+        const bText = branchParagraphs[i] || '';
+        if (mText !== bText) {
+          conflicts.push({
+            id: `conflict_${i}_${Date.now()}`,
+            mainText: mText,
+            branchText: bText,
+            selected: null
+          });
+        }
+      }
+      
+      if (conflicts.length > 0) {
+        setMergeConflictData({
+          branch,
+          parent,
+          parentContent: currentMainContent,
+          branchContent: branch.content,
+          conflicts
+        });
+        setShowMergeConflictModal(true);
+        return;
+      }
+    }
+    
+    // No conflicts - merge directly
+    await createVersionSnapshot(parent, parent.content, 'você');
+    
+    const updatedParent = {
+      ...parent,
+      content: branch.content,
+      updatedAt: new Date().toISOString()
+    };
+    
+    await db.manuscripts.put(updatedParent);
+    await db.manuscripts.delete(branch.id);
+    
+    await loadManuscripts();
+    setActiveManuscript(updatedParent);
+    editor?.commands.setContent(updatedParent.content);
+    
+    setSuccess(`Branch mesclado de volta ao capítulo "${parent.title}" com sucesso (UC-199)!`);
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  const handleResolveConflictAndMerge = async () => {
+    if (!mergeConflictData) return;
+    const { branch, parent, conflicts } = mergeConflictData;
+    
+    const unresolved = conflicts.some(c => c.selected === null);
+    if (unresolved) {
+      alert('Por favor, resolva todos os conflitos antes de prosseguir.');
+      return;
+    }
+    
+    const mainParagraphs = mergeConflictData.parentContent.split(/<\/p>/).map(p => p.replace(/<p>/, '').trim()).filter(Boolean);
+    const branchParagraphs = mergeConflictData.branchContent.split(/<\/p>/).map(p => p.replace(/<p>/, '').trim()).filter(Boolean);
+    
+    let resolvedHtml = '';
+    const maxLen = Math.max(mainParagraphs.length, branchParagraphs.length);
+    let conflictIdx = 0;
+    
+    for (let i = 0; i < maxLen; i++) {
+      const mText = mainParagraphs[i] || '';
+      const bText = branchParagraphs[i] || '';
+      if (mText !== bText) {
+        const conf = conflicts[conflictIdx++];
+        if (conf.selected === 'main') {
+          resolvedHtml += `<p>${conf.mainText}</p>`;
+        } else {
+          resolvedHtml += `<p>${conf.branchText}</p>`;
+        }
+      } else if (mText) {
+        resolvedHtml += `<p>${mText}</p>`;
+      }
+    }
+    
+    await createVersionSnapshot(parent, parent.content, 'você');
+    const updatedParent = {
+      ...parent,
+      content: resolvedHtml,
+      updatedAt: new Date().toISOString()
+    };
+    
+    await db.manuscripts.put(updatedParent);
+    await db.manuscripts.delete(branch.id);
+    
+    await loadManuscripts();
+    setActiveManuscript(updatedParent);
+    editor?.commands.setContent(resolvedHtml);
+    
+    setSuccess(`Conflitos resolvidos e branch mesclado com sucesso no capítulo "${parent.title}" (UC-200)!`);
+    setTimeout(() => setSuccess(null), 3000);
+    setShowMergeConflictModal(false);
+    setMergeConflictData(null);
+  };
+
+  const getCollaboratorHighlightHtml = (collaboratorId: string): string => {
+    if (!activeManuscript) return '';
+    const msVersions = [...versions].reverse(); // oldest to newest
+    if (msVersions.length === 0) return activeManuscript.content;
+    
+    const collabVerIdx = msVersions.findIndex(v => (v as any).author === collaboratorId);
+    if (collabVerIdx === -1) return activeManuscript.content;
+    
+    const collabVer = msVersions[collabVerIdx];
+    const baseContent = collabVerIdx > 0 ? msVersions[collabVerIdx - 1].content : '';
+    
+    const diff = computeWordDiff(baseContent, collabVer.content);
+    const collab = MOCK_COLLABORATORS.find(c => c.id === collaboratorId) || MOCK_COLLABORATORS[0];
+    
+    let html = '';
+    diff.chunks.forEach(chunk => {
+      if (chunk.type === 'added') {
+        html += `<span class="collab-highlight" style="background-color: ${collab.color}25; border-bottom: 2px dashed ${collab.color}; padding: 0 2px; border-radius: 2px;" title="Adicionado por ${collab.name}">${chunk.text}</span>`;
+      } else if (chunk.type === 'unchanged') {
+        html += chunk.text;
+      }
+    });
+    
+    return html || '<p><br></p>';
   };
 
   const handleSelectChapter = async (chapter: Manuscript) => {
@@ -2318,7 +2537,7 @@ export default function EditorComponent() {
     return !!(parentFolder as any)?.isArchived;
   })();
 
-  const isEditorLocked = !!(activeManuscript?.isLocked || activeManuscript?.isArchived || isParentFolderArchived);
+  const isEditorLocked = !!(activeManuscript?.isLocked || activeManuscript?.isArchived || isParentFolderArchived || activeCollaboratorHighlight);
 
   // Sync editor editability (UC-187 / lock status)
   useEffect(() => {
@@ -2706,7 +2925,7 @@ export default function EditorComponent() {
   const renderFolderNode = (folder: Folder, depth = 0) => {
     const isExpanded = !!expandedFolders[folder.id];
     const subfolders = folders.filter(f => f.parentFolderId === folder.id && !(f as any).inTrash && !(f as any).isArchived);
-    const folderChapters = manuscripts.filter(m => m.folderId === folder.id && !m.inTrash && !m.isArchived);
+    const folderChapters = manuscripts.filter(m => m.folderId === folder.id && !m.inTrash && !m.isArchived && !(m as any).isBranch);
     
     let hoverTimer: NodeJS.Timeout;
 
@@ -2913,99 +3132,137 @@ export default function EditorComponent() {
       e.dataTransfer.setData('drag-id', chapter.id);
     };
 
+    const chapterBranches = manuscripts.filter(m => (m as any).parentBranchId === chapter.id && !m.inTrash);
+
     return (
-      <div 
-        key={chapter.id} 
-        draggable="true"
-        onDragStart={onDragStart}
-        onClick={() => handleSelectChapter(chapter)}
-        className={`chapter-list-item ${activeManuscript?.id === chapter.id ? 'active' : ''}`}
-        style={{ marginLeft: `${depth * 0.25}rem` }}
-      >
-        {editingChapterId === chapter.id ? (
-          <input 
-            type="text"
-            value={editingChapterTitle}
-            onChange={(e) => setEditingChapterTitle(e.target.value)}
-            onBlur={() => handleSaveRename(chapter.id)}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleSaveRename(chapter.id); }}
-            onClick={(e) => e.stopPropagation()}
-            autoFocus
-            className="rename-input"
-          />
-        ) : (
-          <div className="chapter-item-details">
-            <span className="chapter-title-text">
-              {(chapter as any).icon ? (
-                (chapter as any).icon.startsWith('<svg') ? (
-                  <span className="custom-svg-icon-wrapper" dangerouslySetInnerHTML={{ __html: (chapter as any).icon }} />
+      <div key={chapter.id} className="chapter-node-wrapper">
+        <div 
+          draggable="true"
+          onDragStart={onDragStart}
+          onClick={() => handleSelectChapter(chapter)}
+          className={`chapter-list-item ${activeManuscript?.id === chapter.id ? 'active' : ''} ${(chapter as any).isBranch ? 'is-branch-node' : ''}`}
+          style={{ marginLeft: `${depth * 0.25}rem` }}
+        >
+          {editingChapterId === chapter.id ? (
+            <input 
+              type="text"
+              value={editingChapterTitle}
+              onChange={(e) => setEditingChapterTitle(e.target.value)}
+              onBlur={() => handleSaveRename(chapter.id)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleSaveRename(chapter.id); }}
+              onClick={(e) => e.stopPropagation()}
+              autoFocus
+              className="rename-input"
+            />
+          ) : (
+            <div className="chapter-item-details">
+              <span className="chapter-title-text">
+                {(chapter as any).isBranch ? (
+                  <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>⌥ </span>
+                ) : (chapter as any).icon ? (
+                  (chapter as any).icon.startsWith('<svg') ? (
+                    <span className="custom-svg-icon-wrapper" dangerouslySetInnerHTML={{ __html: (chapter as any).icon }} />
+                  ) : (
+                    <span>{(chapter as any).icon}</span>
+                  )
                 ) : (
-                  <span>{(chapter as any).icon}</span>
-                )
-              ) : (
-                '📄'
-              )}
-              {' '}{chapter.title}
-            </span>
-            <div className="chapter-badges">
-              <span className={`status-badge-tag ${chapter.status.toLowerCase()}`}>
-                {chapter.status === 'RASCUNHO' ? 'R' : chapter.status === 'REVISAO' ? 'Rev' : '✓'}
+                  '📄'
+                )}
+                {' '}{chapter.title}
               </span>
+              <div className="chapter-badges">
+                <span className={`status-badge-tag ${chapter.status.toLowerCase()}`}>
+                  {chapter.status === 'RASCUNHO' ? 'R' : chapter.status === 'REVISAO' ? 'Rev' : '✓'}
+                </span>
+              </div>
             </div>
+          )}
+
+          <div className="chapter-actions" onClick={e => e.stopPropagation()}>
+            {!(chapter as any).isBranch ? (
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setBranchTargetChapter(chapter);
+                  setBranchName(`${chapter.title} - Final Alternativo`);
+                  setShowBranchModal(true);
+                }}
+                title="Criar Branch de Testes (UC-198)"
+                className="action-btn"
+                aria-label={`Criar ramificação a partir de ${chapter.title}`}
+              >
+                ⌥
+              </button>
+            ) : (
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleMergeBranch(chapter);
+                }}
+                title="Mesclar Branch no Principal (UC-199)"
+                className="action-btn active"
+                style={{ color: 'var(--accent)' }}
+                aria-label={`Mesclar ramificação ${chapter.title} no texto principal`}
+              >
+                📥
+              </button>
+            )}
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setIconTarget({ id: chapter.id, type: 'manuscript', currentIcon: (chapter as any).icon });
+              }} 
+              title="Mudar Ícone do Capítulo (UC-086)"
+              className="action-btn"
+            >
+              🎨
+            </button>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                handleToggleFavorite(chapter);
+              }} 
+              title={(chapter as any).isFavorite ? "Remover dos Favoritos (UC-126)" : "Adicionar aos Favoritos (UC-126)"}
+              className={`action-btn ${(chapter as any).isFavorite ? 'active-star' : ''}`}
+            >
+              ★
+            </button>
+            <button 
+              onClick={(e) => handleTogglePinManuscript(chapter.id, e)} 
+              title={pinnedManuscriptIds.includes(chapter.id) ? "Desafixar do Topo" : "Fixar no Topo (UC-128)"}
+              className={`action-btn ${pinnedManuscriptIds.includes(chapter.id) ? 'active-pin' : ''}`}
+            >
+              📌
+            </button>
+            <button 
+              onClick={(e) => handleArchiveManuscript(chapter.id, e)} 
+              title={chapter.isArchived ? "Desarquivar (UC-127)" : "Arquivar (UC-127)"}
+              className="action-btn"
+            >
+              📦
+            </button>
+            <button 
+              onClick={(e) => startRenameChapter(chapter, e)} 
+              title="Renomear"
+              className="action-btn"
+            >
+              ✎
+            </button>
+            <button 
+              onClick={(e) => handleDeleteChapter(chapter.id, e)} 
+              title="Excluir"
+              disabled={manuscripts.filter(m => !m.inTrash).length <= 1}
+              className="action-btn delete"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+        {chapterBranches.length > 0 && (
+          <div className="chapter-branches-list" style={{ paddingLeft: '1rem', borderLeft: '1px dashed rgba(255,255,255,0.05)', marginLeft: '0.5rem' }}>
+            {chapterBranches.map(branch => renderManuscriptNode(branch, depth + 1))}
           </div>
         )}
-
-        <div className="chapter-actions">
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              setIconTarget({ id: chapter.id, type: 'manuscript', currentIcon: (chapter as any).icon });
-            }} 
-            title="Mudar Ícone do Capítulo (UC-086)"
-            className="action-btn"
-          >
-            🎨
-          </button>
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              handleToggleFavorite(chapter);
-            }} 
-            title={(chapter as any).isFavorite ? "Remover dos Favoritos (UC-126)" : "Adicionar aos Favoritos (UC-126)"}
-            className={`action-btn ${(chapter as any).isFavorite ? 'active-star' : ''}`}
-          >
-            ★
-          </button>
-          <button 
-            onClick={(e) => handleTogglePinManuscript(chapter.id, e)} 
-            title={pinnedManuscriptIds.includes(chapter.id) ? "Desafixar do Topo" : "Fixar no Topo (UC-128)"}
-            className={`action-btn ${pinnedManuscriptIds.includes(chapter.id) ? 'active-pin' : ''}`}
-          >
-            📌
-          </button>
-          <button 
-            onClick={(e) => handleArchiveManuscript(chapter.id, e)} 
-            title={chapter.isArchived ? "Desarquivar (UC-127)" : "Arquivar (UC-127)"}
-            className="action-btn"
-          >
-            📦
-          </button>
-          <button 
-            onClick={(e) => startRenameChapter(chapter, e)} 
-            title="Renomear"
-            className="action-btn"
-          >
-            ✎
-          </button>
-          <button 
-            onClick={(e) => handleDeleteChapter(chapter.id, e)} 
-            title="Excluir"
-            disabled={manuscripts.filter(m => !m.inTrash).length <= 1}
-            className="action-btn delete"
-          >
-            ×
-          </button>
-        </div>
       </div>
     );
   };
@@ -3428,7 +3685,7 @@ export default function EditorComponent() {
                     {folders.filter(f => !f.parentFolderId && !(f as any).inTrash && !(f as any).isArchived).sort((a: any, b: any) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0) || a.name.localeCompare(b.name)).map(f => renderFolderNode(f, 0))}
                     
                     {/* Render chapters at root */}
-                    {manuscripts.filter(m => !m.folderId && !m.inTrash && !m.isArchived).map(m => renderManuscriptNode(m, 0))}
+                    {manuscripts.filter(m => !m.folderId && !m.inTrash && !m.isArchived && !(m as any).isBranch).map(m => renderManuscriptNode(m, 0))}
                   </>
                 )}
               </div>
@@ -4077,7 +4334,21 @@ export default function EditorComponent() {
                     textAlign: textAlign
                   }}
                 >
-                  {editor && <EditorContent editor={editor} className="tiptap-editor-content" />}
+                  {activeCollaboratorHighlight && (
+                    <div className="collab-highlight-banner" style={{ background: '#7c3aed', color: 'white', padding: '0.5rem 1rem', borderRadius: '4px', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
+                      <span>👁️ Visualizando contribuições de <strong>{MOCK_COLLABORATORS.find(c => c.id === activeCollaboratorHighlight)?.name}</strong>. Editor travado para edição.</span>
+                      <button onClick={() => setActiveCollaboratorHighlight(null)} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', fontWeight: 'bold' }}>✕ Fechar</button>
+                    </div>
+                  )}
+                  {activeCollaboratorHighlight ? (
+                    <div 
+                      className="tiptap-editor-content collab-highlight-view" 
+                      dangerouslySetInnerHTML={{ __html: getCollaboratorHighlightHtml(activeCollaboratorHighlight) }}
+                      style={{ padding: '0', minHeight: '300px' }}
+                    />
+                  ) : (
+                    editor && <EditorContent editor={editor} className="tiptap-editor-content" />
+                  )}
                 </div>
 
                 {/* Google Docs Right Margin Comments Column (UC-114) */}
@@ -4429,13 +4700,58 @@ export default function EditorComponent() {
                   )}
                 </div>
 
+                {/* Collaborator Filter Row (UC-195) */}
+                <div className="collab-filter-row glass" style={{ padding: '0.5rem', marginBottom: '0.75rem', borderRadius: '6px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                  <span style={{ fontSize: '0.75rem', opacity: 0.7, display: 'block', marginBottom: '0.4rem' }}>👥 Filtrar por Colaborador:</span>
+                  <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
+                    <button 
+                      type="button" 
+                      onClick={() => setCollaboratorFilter(null)}
+                      style={{
+                        padding: '2px 8px',
+                        fontSize: '0.75rem',
+                        borderRadius: '12px',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        background: collaboratorFilter === null ? 'var(--accent)' : 'transparent',
+                        color: collaboratorFilter === null ? 'white' : 'var(--fg)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Todos
+                    </button>
+                    {MOCK_COLLABORATORS.map(collab => (
+                      <button 
+                        key={collab.id}
+                        type="button" 
+                        onClick={() => setCollaboratorFilter(collab.id)}
+                        style={{
+                          padding: '2px 8px',
+                          fontSize: '0.75rem',
+                          borderRadius: '12px',
+                          border: `1px solid ${collab.color}55`,
+                          background: collaboratorFilter === collab.id ? collab.color : 'transparent',
+                          color: collaboratorFilter === collab.id ? 'white' : 'var(--fg)',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.2rem'
+                        }}
+                      >
+                        <span>{collab.avatar}</span>
+                        <span>{collab.name.split(' ')[0]}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="versions-container">
-                  {versions.length === 0 ? (
-                    <p className="no-logs">Nenhum ponto de restauração registrado para este capítulo. Digite por 10 minutos ou clique nos botões acima para registrar.</p>
+                  {versions.filter(v => !collaboratorFilter || (v as any).author === collaboratorFilter).length === 0 ? (
+                    <p className="no-logs">Nenhum ponto de restauração registrado para o filtro selecionado.</p>
                   ) : (
-                    versions.map((ver) => {
+                    versions.filter(v => !collaboratorFilter || (v as any).author === collaboratorFilter).map((ver) => {
                       const rawText = ver.content.replace(/<[^>]*>/g, '');
                       const excerpt = rawText.length > 80 ? rawText.substring(0, 80) + '...' : rawText || '(Capítulo Vazio)';
+                      const authorObj = MOCK_COLLABORATORS.find(c => c.id === (ver as any).author) || MOCK_COLLABORATORS[0];
 
                       return (
                         <div key={ver.id} className="version-card glass">
@@ -4443,6 +4759,39 @@ export default function EditorComponent() {
                             <span className="version-number">#{ver.versionNumber} {ver.title !== activeManuscript?.title ? `(${ver.title})` : ''}</span>
                             <span className="version-time">{new Date(ver.createdAt).toLocaleTimeString()} - {new Date(ver.createdAt).toLocaleDateString()}</span>
                           </div>
+                          
+                          {/* Collaborator Badge & Color Highlight trigger (UC-195) */}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0.3rem 0 0.5rem 0' }}>
+                            <span className="version-author" style={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.2rem', color: authorObj.color }}>
+                              <span>{authorObj.avatar}</span>
+                              <strong>{authorObj.name}</strong>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (activeCollaboratorHighlight === authorObj.id) {
+                                  setActiveCollaboratorHighlight(null);
+                                } else {
+                                  setActiveCollaboratorHighlight(authorObj.id);
+                                  setSuccess(`Realçando inserções de ${authorObj.name} no editor principal.`);
+                                  setTimeout(() => setSuccess(null), 2500);
+                                }
+                              }}
+                              style={{
+                                padding: '1px 6px',
+                                fontSize: '0.65rem',
+                                borderRadius: '4px',
+                                background: activeCollaboratorHighlight === authorObj.id ? authorObj.color : 'rgba(255,255,255,0.05)',
+                                color: activeCollaboratorHighlight === authorObj.id ? 'white' : 'var(--fg)',
+                                border: 'none',
+                                cursor: 'pointer'
+                              }}
+                              title="Realçar no editor as palavras inseridas por este autor (UC-195)"
+                            >
+                              {activeCollaboratorHighlight === authorObj.id ? '✨ Realçado' : '🔎 Realçar'}
+                            </button>
+                          </div>
+
                           <p className="version-excerpt">"{excerpt}"</p>
                           <div className="version-card-actions">
                             <button 
@@ -4830,7 +5179,7 @@ export default function EditorComponent() {
       {/* Version Diff Viewer Modal (UC-196) */}
       {showDiffModal && diffVersion && diffResult && (
         <div className="version-modal-overlay animate-fade-in">
-          <div className="diff-modal-card glass">
+          <div className="diff-modal-card glass" style={{ maxWidth: '950px', width: '90%' }}>
             <div className="diff-modal-header">
               <div>
                 <h3>📊 Comparação de Diferenças (Diff)</h3>
@@ -4841,23 +5190,109 @@ export default function EditorComponent() {
               <button onClick={() => setShowDiffModal(false)} className="btn-modal-close">✕</button>
             </div>
 
-            <div className="diff-summary-badges">
-              <span className="diff-badge added">+{diffResult.addedWords} palavras adicionadas</span>
-              <span className="diff-badge removed">-{diffResult.removedWords} palavras removidas</span>
-              <span className="diff-badge unchanged">{diffResult.unchangedWords} palavras inalteradas</span>
+            <div className="diff-summary-badges" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <span className="diff-badge added">+{diffResult.addedWords} palavras adicionadas</span>
+                <span className="diff-badge removed">-{diffResult.removedWords} palavras removidas</span>
+                <span className="diff-badge unchanged">{diffResult.unchangedWords} palavras inalteradas</span>
+              </div>
+              <div className="diff-mode-selectors" style={{ display: 'flex', gap: '0.2rem', padding: '2px', background: 'rgba(255,255,255,0.05)', borderRadius: '6px' }}>
+                <button 
+                  type="button"
+                  onClick={() => setDiffViewMode('side-by-side')}
+                  className={`btn-diff-mode ${diffViewMode === 'side-by-side' ? 'active' : ''}`}
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '0.75rem',
+                    borderRadius: '4px',
+                    border: 'none',
+                    background: diffViewMode === 'side-by-side' ? 'var(--accent)' : 'transparent',
+                    color: 'white',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Lado a Lado
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setDiffViewMode('inline')}
+                  className={`btn-diff-mode ${diffViewMode === 'inline' ? 'active' : ''}`}
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '0.75rem',
+                    borderRadius: '4px',
+                    border: 'none',
+                    background: diffViewMode === 'inline' ? 'var(--accent)' : 'transparent',
+                    color: 'white',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Corrida (Inline)
+                </button>
+              </div>
             </div>
 
-            <div className="diff-content-container">
-              {diffResult.chunks.map((chunk, idx) => {
-                if (chunk.type === 'added') {
-                  return <mark key={idx} className="diff-added-chunk">{chunk.text}</mark>;
-                }
-                if (chunk.type === 'removed') {
-                  return <del key={idx} className="diff-removed-chunk">{chunk.text}</del>;
-                }
-                return <span key={idx} className="diff-unchanged-chunk">{chunk.text}</span>;
-              })}
-            </div>
+            {diffResult.addedWords === 0 && diffResult.removedWords === 0 ? (
+              <div className="no-diff-placeholder" style={{ padding: '3rem', textAlign: 'center', opacity: 0.6, fontSize: '0.95rem' }}>
+                🫙 Nenhuma diferença encontrada entre as versões selecionadas.
+              </div>
+            ) : diffViewMode === 'side-by-side' ? (
+              <div className="diff-side-by-side-layout" style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                {/* Left Panel - Version A (removed highlighted) */}
+                <div 
+                  ref={leftScrollRef}
+                  className="diff-panel-pane left glass"
+                  onScroll={(e) => handleScrollSync(e, rightScrollRef)}
+                  style={{ overflowY: 'auto', maxHeight: '400px', minHeight: '200px', padding: '1rem', flex: 1, borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.1)' }}
+                >
+                  <h4 style={{ fontSize: '0.8rem', opacity: 0.5, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                    <span>📄</span> Versão #{diffVersion.versionNumber} (Original)
+                  </h4>
+                  <div className="diff-panel-text" style={{ fontSize: '0.9rem', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+                    {diffResult.chunks.map((chunk, idx) => {
+                      if (chunk.type === 'added') return null; // skip added
+                      if (chunk.type === 'removed') {
+                        return <del key={idx} className="diff-removed-chunk" style={{ background: 'rgba(239, 68, 68, 0.25)', color: '#f87171', textDecoration: 'line-through', padding: '0 2px', borderRadius: '2px' }}>{chunk.text}</del>;
+                      }
+                      return <span key={idx} className="diff-unchanged-chunk">{chunk.text}</span>;
+                    })}
+                  </div>
+                </div>
+
+                {/* Right Panel - Version B (added highlighted) */}
+                <div 
+                  ref={rightScrollRef}
+                  className="diff-panel-pane right glass"
+                  onScroll={(e) => handleScrollSync(e, leftScrollRef)}
+                  style={{ overflowY: 'auto', maxHeight: '400px', minHeight: '200px', padding: '1rem', flex: 1, borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.1)' }}
+                >
+                  <h4 style={{ fontSize: '0.8rem', opacity: 0.5, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                    <span>📄</span> Manuscrito Atual (Modificado)
+                  </h4>
+                  <div className="diff-panel-text" style={{ fontSize: '0.9rem', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+                    {diffResult.chunks.map((chunk, idx) => {
+                      if (chunk.type === 'removed') return null; // skip removed
+                      if (chunk.type === 'added') {
+                        return <mark key={idx} className="diff-added-chunk" style={{ background: 'rgba(16, 185, 129, 0.25)', color: '#34d399', padding: '0 2px', borderRadius: '2px', textDecoration: 'none' }}>{chunk.text}</mark>;
+                      }
+                      return <span key={idx} className="diff-unchanged-chunk">{chunk.text}</span>;
+                    })}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="diff-content-container" style={{ maxHeight: '400px', overflowY: 'auto', padding: '1rem', marginTop: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.1)', fontSize: '0.9rem', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+                {diffResult.chunks.map((chunk, idx) => {
+                  if (chunk.type === 'added') {
+                    return <mark key={idx} className="diff-added-chunk" style={{ background: 'rgba(16, 185, 129, 0.25)', color: '#34d399', padding: '0 2px', borderRadius: '2px' }}>{chunk.text}</mark>;
+                  }
+                  if (chunk.type === 'removed') {
+                    return <del key={idx} className="diff-removed-chunk" style={{ background: 'rgba(239, 68, 68, 0.25)', color: '#f87171', textDecoration: 'line-through', padding: '0 2px', borderRadius: '2px' }}>{chunk.text}</del>;
+                  }
+                  return <span key={idx} className="diff-unchanged-chunk">{chunk.text}</span>;
+                })}
+              </div>
+            )}
 
             <div className="diff-modal-actions">
               <button 
@@ -4876,6 +5311,196 @@ export default function EditorComponent() {
                 onClick={() => setShowDiffModal(false)}
               >
                 Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Branch Modal (UC-198) */}
+      {showBranchModal && branchTargetChapter && (
+        <div className="version-modal-overlay animate-fade-in">
+          <div className="export-modal-card glass" style={{ maxWidth: '450px' }}>
+            <div className="export-modal-header">
+              <h3>⌥ Criar Branch de Testes</h3>
+              <p className="export-subtitle">Crie uma cópia isolada do capítulo para testar rumos alternativos sem alterar a versão principal.</p>
+            </div>
+            <div className="export-form-body">
+              <div className="form-group">
+                <label>Nome da Ramificação:</label>
+                <input 
+                  type="text" 
+                  value={branchName} 
+                  onChange={(e) => setBranchName(e.target.value)} 
+                  placeholder="Ex: Final Alternativo de Morgana"
+                  required
+                  style={{ width: '100%' }}
+                />
+              </div>
+            </div>
+            <div className="export-modal-actions">
+              <button 
+                type="button" 
+                className="btn-modal-restore"
+                onClick={() => handleCreateBranch(branchName, branchTargetChapter)}
+                disabled={!branchName.trim()}
+              >
+                Criar Branch
+              </button>
+              <button 
+                type="button" 
+                className="btn-modal-close"
+                onClick={() => {
+                  setShowBranchModal(false);
+                  setBranchTargetChapter(null);
+                }}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Merge Conflict Resolution Modal (UC-200) */}
+      {showMergeConflictModal && mergeConflictData && (
+        <div className="version-modal-overlay animate-fade-in">
+          <div className="diff-modal-card glass" style={{ maxWidth: '900px', width: '90%' }}>
+            <div className="diff-modal-header">
+              <div>
+                <h3>⚠️ Resolver Conflitos de Mesclagem</h3>
+                <p className="diff-subtitle">
+                  Detectamos alterações concorrentes entre o capítulo principal e a sua ramificação. Escolha qual versão manter para cada parágrafo.
+                </p>
+              </div>
+              <button 
+                onClick={() => {
+                  setShowMergeConflictModal(false);
+                  setMergeConflictData(null);
+                }} 
+                className="btn-modal-close"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="conflicts-list-container" style={{ maxHeight: '350px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', margin: '1rem 0', padding: '0.5rem' }}>
+              {mergeConflictData.conflicts.map((conflict, idx) => (
+                <div key={conflict.id} className="conflict-block glass" style={{ border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '8px', overflow: 'hidden' }}>
+                  <div className="conflict-block-header" style={{ padding: '0.5rem 1rem', background: 'rgba(245, 158, 11, 0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#f59e0b' }}>Conflito #{idx + 1} de {mergeConflictData.conflicts.length}</span>
+                    <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>Parágrafo {idx + 1}</span>
+                  </div>
+                  
+                  <div className="conflict-columns" style={{ display: 'flex' }}>
+                    {/* Main Option */}
+                    <div 
+                      onClick={() => {
+                        const updated = [...mergeConflictData.conflicts];
+                        updated[idx].selected = 'main';
+                        setMergeConflictData({ ...mergeConflictData, conflicts: updated });
+                      }}
+                      className={`conflict-option-pane ${conflict.selected === 'main' ? 'active' : ''}`}
+                      style={{
+                        flex: 1,
+                        padding: '1rem',
+                        cursor: 'pointer',
+                        background: conflict.selected === 'main' ? 'rgba(139, 92, 246, 0.15)' : 'transparent',
+                        borderRight: '1px solid rgba(255,255,255,0.05)',
+                        transition: 'background 0.2s'
+                      }}
+                    >
+                      <h5 style={{ margin: '0 0 0.5rem 0', fontSize: '0.8rem', color: '#a78bfa', display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Texto Principal (Main)</span>
+                        {conflict.selected === 'main' && <span>✓ Selecionado</span>}
+                      </h5>
+                      <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--fg)', textDecoration: conflict.selected === 'branch' ? 'line-through' : 'none', opacity: conflict.selected === 'branch' ? 0.4 : 1 }}>
+                        {conflict.mainText || <em style={{ opacity: 0.5 }}>(Parágrafo Vazio ou Apagado)</em>}
+                      </p>
+                    </div>
+
+                    {/* Branch Option */}
+                    <div 
+                      onClick={() => {
+                        const updated = [...mergeConflictData.conflicts];
+                        updated[idx].selected = 'branch';
+                        setMergeConflictData({ ...mergeConflictData, conflicts: updated });
+                      }}
+                      className={`conflict-option-pane ${conflict.selected === 'branch' ? 'active' : ''}`}
+                      style={{
+                        flex: 1,
+                        padding: '1rem',
+                        cursor: 'pointer',
+                        background: conflict.selected === 'branch' ? 'rgba(236, 72, 153, 0.15)' : 'transparent',
+                        transition: 'background 0.2s'
+                      }}
+                    >
+                      <h5 style={{ margin: '0 0 0.5rem 0', fontSize: '0.8rem', color: '#f472b6', display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Ramificação (Branch)</span>
+                        {conflict.selected === 'branch' && <span>✓ Selecionado</span>}
+                      </h5>
+                      <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--fg)', textDecoration: conflict.selected === 'main' ? 'line-through' : 'none', opacity: conflict.selected === 'main' ? 0.4 : 1 }}>
+                        {conflict.branchText || <em style={{ opacity: 0.5 }}>(Parágrafo Vazio ou Apagado)</em>}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Central Merged Result Preview */}
+            <div className="merged-preview-container glass" style={{ padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.15)', marginBottom: '1rem' }}>
+              <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.85rem', opacity: 0.7 }}>🔍 Pré-visualização do Resultado Final Mesclado:</h4>
+              <div style={{ maxHeight: '120px', overflowY: 'auto', fontSize: '0.8rem', opacity: 0.8, lineHeight: '1.5' }}>
+                {(() => {
+                  const mainParagraphs = mergeConflictData.parentContent.split(/<\/p>/).map(p => p.replace(/<p>/, '').trim()).filter(Boolean);
+                  const branchParagraphs = mergeConflictData.branchContent.split(/<\/p>/).map(p => p.replace(/<p>/, '').trim()).filter(Boolean);
+                  
+                  let previewElements: React.ReactNode[] = [];
+                  const maxLen = Math.max(mainParagraphs.length, branchParagraphs.length);
+                  let conflictIdx = 0;
+                  
+                  for (let i = 0; i < maxLen; i++) {
+                    const mText = mainParagraphs[i] || '';
+                    const bText = branchParagraphs[i] || '';
+                    if (mText !== bText) {
+                      const conf = mergeConflictData.conflicts[conflictIdx++];
+                      if (!conf) continue;
+                      if (conf.selected === 'main') {
+                        previewElements.push(<p key={i} style={{ color: '#c084fc', borderLeft: '3px solid #8b5cf6', paddingLeft: '0.5rem' }}>{conf.mainText}</p>);
+                      } else if (conf.selected === 'branch') {
+                        previewElements.push(<p key={i} style={{ color: '#f472b6', borderLeft: '3px solid #ec4899', paddingLeft: '0.5rem' }}>{conf.branchText}</p>);
+                      } else {
+                        previewElements.push(<p key={i} style={{ color: '#f59e0b', borderLeft: '3px solid #f59e0b', paddingLeft: '0.5rem', fontStyle: 'italic' }}>[Aguardando seleção do Conflito #{conflictIdx}]</p>);
+                      }
+                    } else if (mText) {
+                      previewElements.push(<p key={i}>{mText}</p>);
+                    }
+                  }
+                  return previewElements.length > 0 ? previewElements : <p style={{ fontStyle: 'italic', opacity: 0.5 }}>Sem parágrafos.</p>;
+                })()}
+              </div>
+            </div>
+
+            <div className="diff-modal-actions">
+              <button 
+                type="button" 
+                className="btn-modal-restore"
+                onClick={handleResolveConflictAndMerge}
+                disabled={mergeConflictData.conflicts.some(c => c.selected === null)}
+                style={{ background: '#f59e0b' }}
+              >
+                Confirmar Resolução e Mesclar (UC-200)
+              </button>
+              <button 
+                type="button" 
+                className="btn-modal-close"
+                onClick={() => {
+                  setShowMergeConflictModal(false);
+                  setMergeConflictData(null);
+                }}
+              >
+                Cancelar e Abortar Mesclagem
               </button>
             </div>
           </div>
@@ -9530,6 +10155,35 @@ export default function EditorComponent() {
           border-radius: 4px;
           outline: none;
           width: 140px;
+        }
+
+        /* Branch Tree Node and Conflict Option Styles (UC-198, UC-200) */
+        .chapter-list-item.is-branch-node {
+          background: rgba(124, 58, 237, 0.04) !important;
+          border-left: 2px dashed var(--accent) !important;
+          opacity: 0.85;
+          margin-top: 0.15rem;
+          margin-bottom: 0.15rem;
+        }
+        .chapter-list-item.is-branch-node:hover {
+          background: rgba(124, 58, 237, 0.08) !important;
+          opacity: 1;
+        }
+        .chapter-list-item.is-branch-node .chapter-title-text {
+          font-style: italic;
+          font-weight: 500;
+          color: #a78bfa;
+        }
+        .conflict-option-pane {
+          border: 2px solid transparent;
+          border-radius: 6px;
+        }
+        .conflict-option-pane:hover {
+          border-color: rgba(255, 255, 255, 0.1);
+        }
+        .conflict-option-pane.active {
+          border-color: var(--accent) !important;
+          box-shadow: 0 0 10px rgba(124, 58, 237, 0.2);
         }
       `}</style>
     </div>
