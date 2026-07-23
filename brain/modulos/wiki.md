@@ -23,6 +23,11 @@ Este módulo gerencia a criação, consolidação e exportação de elementos do
     *   Permite ao autor revisar as substituições propostas em lote no editor.
     *   **Substituição Segura**: Caminha pela árvore DOM (DOM traversal) para substituir grafias somente em nós de texto, pulando tags de código (`<code>`, `<pre>`) e hiperlinks externos (`<a>`).
     *   A aplicação das substituições no banco IndexedDB ocorre dentro de uma transação Dexie atômica.
+6.  **Lore Chat & Respostas citando Fontes (UC-158)**:
+    *   Um assistente de conversação em tempo real integrado na aba "Lore Chat" do painel lateral direito do editor.
+    *   **Pipeline de RAG Local**: Realiza busca semântica baseada em densidade de palavras-chave analisando todos os parágrafos de manuscritos ativos e artigos da Wiki de forma off-line.
+    *   **Citações Numeradas**: Constrói respostas com links de notas de referência (ex: `[1]`) contendo metadados detalhados de origem (nome do capítulo, linha aproximada e snippet).
+    *   **Destaque e Rolo de Tela (Foco do Autor)**: Clicar no link de citação abre o capítulo, busca e seleciona o nó de texto no TipTap e rola a tela suavemente para a posição destacada. Se a citação vier de uma entidade da wiki, exibe um modal flutuante com a ficha completa de worldbuilding sem tirar o autor de seu fluxo de escrita.
 
 ## Componentes Importantes
 *   [page.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/wiki/page.tsx) - Tela principal do portal wiki, formulários de edição, cross-linking local e os scripts de geração estática de HTML/Markdown.

@@ -295,19 +295,19 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-152** — Marcar status do texto (rascunho, revisão, finalizado) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-154** — Favoritar pastas (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
+- [x] **UC-154** — Favoritar pastas (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
   - Depende de: UC-011, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-155** — Fixar pastas (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
+- [x] **UC-155** — Fixar pastas (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
   - Depende de: UC-011, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-156** — Arquivar pastas (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
+- [x] **UC-156** — Arquivar pastas (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
   - Depende de: UC-011, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-157** — Mover para lixeira com restauração posterior (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
+- [x] **UC-157** — Mover para lixeira com restauração posterior (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
   - Depende de: UC-011, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-158** — Responder perguntas citando a fonte (texto/trecho) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-158** — Responder perguntas citando a fonte (texto/trecho) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [x] **UC-159** — Alternar tema claro/escuro (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)

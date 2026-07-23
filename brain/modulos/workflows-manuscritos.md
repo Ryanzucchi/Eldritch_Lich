@@ -22,6 +22,11 @@ Este módulo implementa a gerência de múltiplos capítulos (manuscritos) e a m
 5.  **Personalização de Ícones (UC-086)**:
     *   Permite mudar o ícone de pastas e manuscritos a partir de um catálogo de 110 itens divididos por categorias e buscável por palavras-chave (como "espada", "mago", etc.).
     *   Suporta upload de SVGs customizados, protegidos por um analisador de segurança regex que rejeita tags `<script>` e inline handlers (XSS).
+6.  **Organização e Gestão de Pastas (UC-154, UC-155, UC-156, UC-157)**:
+    *   **Favoritar Pastas (UC-154)**: Permite marcar pastas com estrela (★), adicionando-as à seção "⭐ Favoritos" no topo da barra lateral, onde mantêm sua estrutura interna expansível de árvore de arquivos.
+    *   **Fixar Pastas (UC-155)**: Permite fixar pastas no topo de seu nível de diretório (indicado com 📌), priorizando-as na listagem da árvore em relação à ordenação alfabética padrão.
+    *   **Arquivar Pastas (UC-156)**: Permite arquivar pastas logicamente sob confirmação de modal. A flag de arquivamento é propagada recursivamente para todos os subcapítulos e subpastas, movendo-os para a seção "📦 Arquivados" e bloqueando edições/escritas no editor (modo leitura obrigatório).
+    *   **Lixeira e Restauração Posterior (UC-157)**: Exclusão lógica recursiva de pastas e capítulos com prazo de 30 dias. Apresenta contadores regressivos na gaveta "Lixeira" lateral e permite restaurar itens à sua localização original. Ocorre expurgo físico automático em segundo plano para registros que completaram 30 dias na lixeira.
 
 ## Componentes Importantes
 *   [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx) - Explorer de capítulos lateral, seletor de status no cabeçalho do documento, banner de bloqueio de edição e controle de permissões.

@@ -310,7 +310,19 @@ Este registro lista em ordem cronológica todas as atualizações de desenvolvim
 *   **Padronização Automática de Nomes nos Textos (UC-092)**:
     *   [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx): Adicionado item "Ferramentas" no menu suspenso do editor e botão "Padronizar Nomes". Implementada análise de correspondência de nomes de entidades do lore (erros de acentuação, casing e distância Levenshtein <= 2) no texto do manuscrito ativo, exibindo modal de lote. Substituição realizada apenas em nós de texto HTML da árvore DOM, preservando tags e hyperlinks externos, envelopados em transação atômica Dexie.
 
-### Documentação Vinculada
 *   [INDEX.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/INDEX.md)
 *   [wiki.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/wiki.md)
 *   [mapa.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/dependencias/mapa.md)
+
+## [2026-07-23] - Gestão Completa de Pastas (Pin/Fav/Arq/Lix) e Lore Chat com Citações RAG
+
+### Código Adicionado/Modificado
+*   **Gestão de Pastas na Árvore de Arquivos (UC-154, UC-155, UC-156, UC-157)**:
+    *   [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx): Inseridos botões de controle de pasta na barra lateral (Favoritar, Fixar no Topo, Arquivar, Renomear, Mover para Lixeira). Modificada a renderização para priorizar pastas fixadas (📌) no topo, seguidas por ordenação alfabética. Adicionado suporte a pastas em Favoritos (⭐) mantendo a expansibilidade reativa da subárvore.
+    *   **Arquivamento e Lixeira Recursivos**: Implementadas funções de varredura recursiva de diretórios que propagam status de arquivamento (`isArchived`) e lixeira (`inTrash`) para subpastas e manuscritos internos. Adicionado bloqueio de escrita (modo leitura apenas) no canvas de escrita principal quando o arquivo pertence a uma pasta arquivada. Implementado painel lateral Lixeira exibindo contagem regressiva para expurgo (30 dias) e suporte a restauração imediata. Loop em background remove fisicamente dados expirados.
+*   **Lore Chat com Respostas citando Fontes (UC-158)**:
+    *   [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx): Adicionada aba "Lore Chat" no painel lateral direito. Desenvolvido formulário e chat de perguntas. Implementado pipeline RAG local que analisa semanticamente por frequência de palavras-chave o conteúdo de manuscritos e da wiki, retornando respostas detalhadas com referências numeradas clicáveis (ex: `[1]`). Clicar na referência de manuscrito foca o editor, destaca o nó de texto selecionado no TipTap e rola a tela. Clicar em citação de ficha exibe modal de worldbuilding.
+
+### Documentação Vinculada
+*   [workflows-manuscritos.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/workflows-manuscritos.md)
+*   [wiki.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/wiki.md)
