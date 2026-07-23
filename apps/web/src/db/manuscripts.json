@@ -7,7 +7,7 @@
     "isLocked": false,
     "projectId": "95f71c04-c78b-4642-899e-5c089f155ed6",
     "createdAt": "2026-07-21T17:49:02.116Z",
-    "updatedAt": "2026-07-21T17:49:10.926Z"
+    "updatedAt": "2026-07-22T17:04:06.714Z"
   },
   {
     "id": "8a1bb89a-f409-4541-9c2c-99490d4a5d5a",
@@ -48,5 +48,65 @@
     "projectId": "95f71c04-c78b-4642-899e-5c089f155ed6",
     "createdAt": "2026-07-22T04:00:52.538Z",
     "updatedAt": "2026-07-22T04:00:58.472Z"
+  },
+  {
+    "id": "ms_1784738516941",
+    "title": "Jornada do Herói - Capítulo 1",
+    "content": "&lt;p&gt;Comece a escrever seu capítulo aqui...&lt;&#x2F;p&gt;",
+    "status": "RASCUNHO",
+    "isLocked": false,
+    "projectId": "95f71c04-c78b-4642-899e-5c089f155ed6",
+    "createdAt": "2026-07-22T16:41:56.941Z",
+    "updatedAt": "2026-07-22T16:42:11.520Z"
+  },
+  {
+    "id": "ms_1784738528070",
+    "title": "Novo Capítulo sem Título",
+    "content": "&lt;p&gt;Comece a escrever seu capítulo aqui...&lt;&#x2F;p&gt;",
+    "status": "RASCUNHO",
+    "isLocked": false,
+    "projectId": "95f71c04-c78b-4642-899e-5c089f155ed6",
+    "createdAt": "2026-07-22T16:42:08.070Z",
+    "updatedAt": "2026-07-22T16:42:13.346Z"
+  },
+  {
+    "id": "ms_1784738518502",
+    "title": "Novo Capítulo sem Título",
+    "content": "&lt;p&gt;Comece a escrever seu capítulo aqui...&lt;&#x2F;p&gt;",
+    "status": "RASCUNHO",
+    "isLocked": false,
+    "projectId": "95f71c04-c78b-4642-899e-5c089f155ed6",
+    "createdAt": "2026-07-22T16:41:58.502Z",
+    "updatedAt": "2026-07-22T16:42:16.475Z"
+  },
+  {
+    "id": "ms_1784738518285",
+    "title": "Novo Capítulo sem Título",
+    "content": "&lt;p&gt;Comece a escrever seu capítulo aqui...&lt;&#x2F;p&gt;",
+    "status": "RASCUNHO",
+    "isLocked": false,
+    "projectId": "95f71c04-c78b-4642-899e-5c089f155ed6",
+    "createdAt": "2026-07-22T16:41:58.285Z",
+    "updatedAt": "2026-07-22T16:42:18.798Z"
+  },
+  {
+    "id": "ms_1784738517780",
+    "title": "Jornada do Herói - Capítulo 1",
+    "content": "&lt;h2&gt;A Jornada do Herói: Chamado à Aventura&lt;&#x2F;h2&gt;&lt;p&gt;&lt;strong&gt;Mundo Comum:&lt;&#x2F;strong&gt; Apresente o protagonista em seu ambiente cotidiano antes do incidente incitante.&lt;&#x2F;p&gt;&lt;hr&gt;&lt;p&gt;&lt;strong&gt;O Chamado:&lt;&#x2F;strong&gt; Qual evento inesperado rompe a rotina do protagonista?&lt;&#x2F;p&gt;&lt;hr&gt;&lt;p&gt;&lt;strong&gt;Recusa do Chamado:&lt;&#x2F;strong&gt; Quais medos ou hesitações o impedem de agir?&lt;&#x2F;p&gt;",
+    "status": "RASCUNHO",
+    "isLocked": false,
+    "projectId": "95f71c04-c78b-4642-899e-5c089f155ed6",
+    "createdAt": "2026-07-22T16:41:57.780Z",
+    "updatedAt": "2026-07-22T16:42:21.019Z"
+  },
+  {
+    "id": "ms_1784738551894",
+    "title": "Estrutura de 3 Atos - Capítulo 1",
+    "content": "&lt;p&gt;Comece a escrever seu capítulo aqui...&lt;&#x2F;p&gt;",
+    "status": "RASCUNHO",
+    "isLocked": false,
+    "projectId": "95f71c04-c78b-4642-899e-5c089f155ed6",
+    "createdAt": "2026-07-22T16:42:31.894Z",
+    "updatedAt": "2026-07-22T16:42:37.176Z"
   }
 ]

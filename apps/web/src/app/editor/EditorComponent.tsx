@@ -262,6 +262,8 @@ export default function EditorComponent() {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [expandedFolders, setExpandedFolders] = useState<{ [id: string]: boolean }>({});
   const [showAddFolderInput, setShowAddFolderInput] = useState<{ [parentIdOrRoot: string]: boolean }>({});
+  const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
+  const [editingFolderTitle, setEditingFolderTitle] = useState('');
 
   // Layout & Settings states
   const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
@@ -279,8 +281,25 @@ export default function EditorComponent() {
   const [hasCelebratedToday, setHasCelebratedToday] = useState(false);
 
   // Autosave, Sync and Versioning states
-  const [rightTab, setRightTab] = useState<'mms' | 'versions'>('mms');
+  const [rightTab, setRightTab] = useState<'mms' | 'versions' | 'chat'>('chat');
   const [syncStatus, setSyncStatus] = useState<'syncing' | 'synced' | 'local'>('synced');
+
+  // Lore Chat (UC-158)
+  const [chatMessages, setChatMessages] = useState<{
+    id: string;
+    sender: 'user' | 'assistant';
+    text: string;
+    citations?: { id: string; label: string; fileId?: string; fileTitle?: string; line?: number; entityId?: string; textSnippet?: string; entityName?: string; entityDesc?: string }[];
+  }[]>([
+    {
+      id: 'welcome',
+      sender: 'assistant',
+      text: 'Olá! Sou seu assistente de lore. Pergunte-me qualquer detalhe sobre seu universo ou personagens e eu encontrarei a resposta citando as fontes exatas nos seus manuscritos e na Wiki.'
+    }
+  ]);
+  const [chatInput, setChatInput] = useState('');
+  const [isChatTyping, setIsChatTyping] = useState(false);
+  const [previewEntity, setPreviewEntity] = useState<any | null>(null);
   const [versions, setVersions] = useState<{ id: string; manuscriptId: string; versionNumber: number; title: string; content: string; createdAt: string }[]>([]);
   const [selectedVersion, setSelectedVersion] = useState<{ id: string; manuscriptId: string; versionNumber: number; title: string; content: string; createdAt: string } | null>(null);
   const [showVersionPreview, setShowVersionPreview] = useState(false);
@@ -560,6 +579,305 @@ export default function EditorComponent() {
     addAuditLog('autosave', `Capítulo "${manuscript.title}" ${isArchiving ? 'arquivado' : 'desarquivado'}`);
     setSuccess(`Capítulo ${isArchiving ? 'arquivado' : 'desarquivado'} com sucesso (UC-127)!`);
     setTimeout(() => setSuccess(null), 3000);
+  };
+
+  // Folder Management Handlers (UC-154, UC-155, UC-156, UC-157)
+  const handleToggleFavoriteFolder = async (folder: Folder, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    const isFav = !(folder as any).isFavorite;
+    await db.folders.update(folder.id, { isFavorite: isFav } as any);
+    await loadFolders();
+    setSuccess(isFav ? `Pasta "${folder.name}" adicionada aos favoritos!` : `Pasta "${folder.name}" removida dos favoritos.`);
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  const handleTogglePinFolder = async (folder: Folder, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    const isPinned = !(folder as any).isPinned;
+    await db.folders.update(folder.id, { isPinned } as any);
+    await loadFolders();
+    setSuccess(isPinned ? `Pasta "${folder.name}" fixada no topo!` : `Pasta "${folder.name}" desafixada.`);
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  const handleToggleArchiveFolder = async (folder: Folder, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
+    const isArchived = !(folder as any).isArchived;
+
+    if (isArchived) {
+      if (!confirm(`Deseja arquivar a pasta "${folder.name}"? A pasta e todos os seus capítulos e subpastas ficarão ocultos na árvore principal e em modo apenas leitura.`)) {
+        return;
+      }
+    }
+
+    const recursiveArchive = async (fId: string, archiveState: boolean) => {
+      await db.folders.update(fId, { isArchived: archiveState } as any);
+      
+      const childManuscripts = await db.manuscripts.where('folderId').equals(fId).toArray();
+      await Promise.all(childManuscripts.map(async m => {
+        await db.manuscripts.update(m.id, { isArchived: archiveState });
+      }));
+
+      const childFolders = await db.folders.where('parentFolderId').equals(fId).toArray();
+      await Promise.all(childFolders.map(sf => recursiveArchive(sf.id, archiveState)));
+    };
+
+    try {
+      await recursiveArchive(folder.id, isArchived);
+      setSuccess(isArchived ? `Pasta "${folder.name}" e seu conteúdo arquivados!` : `Pasta "${folder.name}" desarquivada.`);
+      setTimeout(() => setSuccess(null), 3000);
+      await loadFolders();
+      await loadManuscripts();
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao arquivar pasta.');
+    }
+  };
+
+  const handleToggleTrashFolder = async (folder: Folder, inTrash: boolean, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
+    const deletedAt = inTrash ? new Date().toISOString() : undefined;
+
+    const recursiveTrash = async (fId: string, trashState: boolean) => {
+      await db.folders.update(fId, { inTrash: trashState, deletedAt } as any);
+      
+      const childManuscripts = await db.manuscripts.where('folderId').equals(fId).toArray();
+      await Promise.all(childManuscripts.map(async m => {
+        await db.manuscripts.update(m.id, { inTrash: trashState, deletedAt });
+      }));
+
+      const childFolders = await db.folders.where('parentFolderId').equals(fId).toArray();
+      await Promise.all(childFolders.map(sf => recursiveTrash(sf.id, trashState)));
+    };
+
+    try {
+      await recursiveTrash(folder.id, inTrash);
+      setSuccess(inTrash ? `Pasta "${folder.name}" movida para a lixeira!` : `Pasta "${folder.name}" restaurada com sucesso!`);
+      setTimeout(() => setSuccess(null), 3000);
+      await loadFolders();
+      await loadManuscripts();
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao mover pasta.');
+    }
+  };
+
+  const startRenameFolder = (folder: Folder, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingFolderId(folder.id);
+    setEditingFolderTitle(folder.name);
+  };
+
+  const handleSaveRenameFolder = async (id: string) => {
+    if (!editingFolderTitle.trim()) return;
+    await db.folders.update(id, { name: editingFolderTitle.trim() });
+    setEditingFolderId(null);
+    await loadFolders();
+  };
+
+  // Lore Chat citation navigation handler (UC-158)
+  const handleJumpToSource = async (citation: any) => {
+    if (citation.entityId) {
+      setPreviewEntity({
+        id: citation.entityId,
+        name: citation.entityName,
+        category: citation.label.split(' (')[1]?.replace(')', '') || 'Wiki',
+        description: citation.entityDesc
+      });
+      return;
+    }
+
+    if (citation.fileId) {
+      const chap = manuscripts.find(m => m.id === citation.fileId);
+      if (chap) {
+        setActiveManuscript(chap);
+        
+        if (editor && citation.textSnippet) {
+          setTimeout(() => {
+            const { state, view } = editor;
+            const doc = state.doc;
+            let foundPos = -1;
+            
+            doc.descendants((node, pos) => {
+              if (node.isText && node.text?.includes(citation.textSnippet)) {
+                foundPos = pos + node.text.indexOf(citation.textSnippet);
+                return false;
+              }
+            });
+
+            if (foundPos !== -1) {
+              editor.commands.setTextSelection({ 
+                from: foundPos, 
+                to: foundPos + citation.textSnippet.length 
+              });
+              editor.commands.focus();
+              
+              const domNode = view.nodeDOM(foundPos);
+              if (domNode instanceof HTMLElement) {
+                domNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              } else {
+                const activeEl = document.querySelector('.ProseMirror *[class*="selection"]');
+                if (activeEl) {
+                  activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+              }
+            }
+          }, 200);
+        }
+      }
+    }
+  };
+
+  const handleSendChatMessage = async (queryText: string) => {
+    if (!queryText.trim()) return;
+
+    const userMsg = {
+      id: crypto.randomUUID(),
+      sender: 'user' as const,
+      text: queryText
+    };
+
+    setChatMessages(prev => [...prev, userMsg]);
+    setChatInput('');
+    setIsChatTyping(true);
+
+    setTimeout(async () => {
+      let responseText = '';
+      const citations: any[] = [];
+
+      const allChapters = await db.manuscripts.toArray();
+      const allEntities = await db.wikiEntities.toArray();
+
+      const matchedChapters: any[] = [];
+      const queryLower = queryText.toLowerCase();
+
+      const extractKeywords = (str: string) => {
+        return str
+          .toLowerCase()
+          .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "")
+          .split(/\s+/)
+          .filter(w => w.length > 3);
+      };
+
+      const queryKeywords = extractKeywords(queryText);
+
+      allChapters.forEach(chap => {
+        if (chap.inTrash) return;
+
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = chap.content;
+        const paragraphs = Array.from(tempDiv.querySelectorAll('p, h1, h2, h3, h4, li'));
+        
+        paragraphs.forEach((pEl, index) => {
+          const text = pEl.textContent || '';
+          const textLower = text.toLowerCase();
+          
+          let matchesCount = 0;
+          queryKeywords.forEach(kw => {
+            if (textLower.includes(kw)) matchesCount++;
+          });
+
+          if (matchesCount > 0) {
+            matchedChapters.push({
+              chapterId: chap.id,
+              chapterTitle: chap.title,
+              lineNumber: index + 1,
+              textSnippet: text.slice(0, 80),
+              fullText: text,
+              score: matchesCount
+            });
+          }
+        });
+      });
+
+      matchedChapters.sort((a, b) => b.score - a.score);
+
+      const matchedEntities: any[] = [];
+      allEntities.forEach(ent => {
+        const nameLower = ent.name.toLowerCase();
+        const descLower = ent.description.toLowerCase();
+        
+        let matchesCount = 0;
+        if (queryLower.includes(nameLower)) {
+          matchesCount += 3;
+        }
+        queryKeywords.forEach(kw => {
+          if (descLower.includes(kw)) matchesCount++;
+        });
+
+        if (matchesCount > 0) {
+          matchedEntities.push({
+            entity: ent,
+            score: matchesCount
+          });
+        }
+      });
+      matchedEntities.sort((a, b) => b.score - a.score);
+
+      if (matchedChapters.length > 0) {
+        const topMatch = matchedChapters[0];
+        citations.push({
+          id: crypto.randomUUID(),
+          label: `${topMatch.chapterTitle} (Linha ${topMatch.lineNumber})`,
+          fileId: topMatch.chapterId,
+          fileTitle: topMatch.chapterTitle,
+          line: topMatch.lineNumber,
+          textSnippet: topMatch.textSnippet
+        });
+
+        responseText = `Com base no capítulo "${topMatch.chapterTitle}", identifiquei que: "${topMatch.fullText}" [1].`;
+        
+        if (matchedChapters.length > 1 && matchedChapters[1].chapterId !== topMatch.chapterId) {
+          const secondMatch = matchedChapters[1];
+          citations.push({
+            id: crypto.randomUUID(),
+            label: `${secondMatch.chapterTitle} (Linha ${secondMatch.lineNumber})`,
+            fileId: secondMatch.chapterId,
+            fileTitle: secondMatch.chapterTitle,
+            line: secondMatch.lineNumber,
+            textSnippet: secondMatch.textSnippet
+          });
+          responseText += ` Também encontrei uma referência similar sobre isso no trecho "${secondMatch.fullText}" [2].`;
+        }
+      } else if (matchedEntities.length > 0) {
+        const topEnt = matchedEntities[0].entity;
+        citations.push({
+          id: crypto.randomUUID(),
+          label: `${topEnt.name} (${topEnt.category})`,
+          entityId: topEnt.id,
+          entityName: topEnt.name,
+          entityDesc: topEnt.description
+        });
+
+        responseText = `Localizei informações na ficha de ${topEnt.name} (${topEnt.category}) [1]. Descrição cadastrada: "${topEnt.description}"`;
+      } else {
+        responseText = `Não encontrei referências explícitas sobre isso nos capítulos ativos ou fichas. Tente perguntar sobre personagens ou locais cadastrados na Wiki (como Kael ou Medalhão).`;
+      }
+
+      const assistantMsg = {
+        id: crypto.randomUUID(),
+        sender: 'assistant' as const,
+        text: responseText,
+        citations
+      };
+
+      setChatMessages(prev => [...prev, assistantMsg]);
+      setIsChatTyping(false);
+    }, 1000);
   };
 
   // Auto Categorize Active Manuscript Handler (UC-042)
@@ -3502,17 +3820,24 @@ export default function EditorComponent() {
             <div className="panel-tabs">
               <button 
                 type="button" 
+                className={`panel-tab-btn ${rightTab === 'chat' ? 'active' : ''}`}
+                onClick={() => setRightTab('chat')}
+              >
+                Lore Chat 💬
+              </button>
+              <button 
+                type="button" 
                 className={`panel-tab-btn ${rightTab === 'mms' ? 'active' : ''}`}
                 onClick={() => setRightTab('mms')}
               >
-                Evidências MMS
+                MMS
               </button>
               <button 
                 type="button" 
                 className={`panel-tab-btn ${rightTab === 'versions' ? 'active' : ''}`}
                 onClick={() => setRightTab('versions')}
               >
-                Histórico de Versões
+                Versões
               </button>
               <button 
                 type="button" 
@@ -3524,34 +3849,100 @@ export default function EditorComponent() {
               </button>
             </div>
 
-            {rightTab === 'mms' ? (
+            {rightTab === 'chat' ? (
+              <div className="chat-tab-container">
+                <p className="panel-subtitle">Pergunte contextualmente sobre o lore e os capítulos de escrita.</p>
+                
+                <div className="chat-messages-scroll">
+                  {chatMessages.map(msg => (
+                    <div key={msg.id} className={`chat-message ${msg.sender}`}>
+                      <div className="chat-message-bubble glass">
+                        <p className="chat-message-text">{msg.text}</p>
+                        
+                        {msg.citations && msg.citations.length > 0 && (
+                          <div className="chat-message-citations-block">
+                            <span className="citations-block-title">Fontes consultadas:</span>
+                            <div className="citations-badges-row">
+                              {msg.citations.map((cit, cIdx) => (
+                                <button
+                                  key={cit.id}
+                                  type="button"
+                                  onClick={() => handleJumpToSource(cit)}
+                                  className="citation-badge-btn"
+                                  title={cit.fileId ? `Capítulo: ${cit.fileTitle}, Linha ${cit.line}` : `Ficha de Lore: ${cit.label}`}
+                                >
+                                  [{cIdx + 1}] {cit.fileId ? cit.fileTitle : cit.label.split(' (')[0]}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {isChatTyping && (
+                    <div className="chat-message assistant">
+                      <div className="chat-message-bubble typing glass">
+                        <span className="dot"></span>
+                        <span className="dot"></span>
+                        <span className="dot"></span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <form 
+                  onSubmit={e => {
+                    e.preventDefault();
+                    handleSendChatMessage(chatInput);
+                  }}
+                  className="chat-input-form"
+                >
+                  <input 
+                    type="text"
+                    value={chatInput}
+                    onChange={e => setChatInput(e.target.value)}
+                    placeholder="Perguntar sobre lore, personagens..."
+                    className="chat-text-input"
+                  />
+                  <button type="submit" className="chat-send-btn">
+                    Enviar
+                  </button>
+                </form>
+              </div>
+            ) : rightTab === 'mms' ? (
               <>
                 <p className="panel-subtitle">Leitura passiva baseada em grafo, entidades e similaridade semantica. O texto continua sendo o centro da tela.</p>
 
                 <div className="evidence-summary-grid">
-                  <div className="evidence-summary-item">
-                    <span>Metas abertas</span>
-                    <strong>{pendingGoals.length}</strong>
+                  <div className="evidence-summary-card">
+                    <div className="card-header">
+                      <span>Metas Concluídas</span>
+                      <span>📈</span>
+                    </div>
+                    <div className="card-value">
+                      {completedGoals.length} / {nodes.length}
+                    </div>
+                    <div className="card-kicker">
+                      {graphCoverage}% do grafo validado
+                    </div>
                   </div>
-                  <div className="evidence-summary-item">
-                    <span>Confianca recente</span>
-                    <strong>{lastStrongEvidence ? `${Math.round(lastStrongEvidence.evidenceScore * 100)}%` : '--'}</strong>
+
+                  <div className="evidence-summary-card">
+                    <div className="card-header">
+                      <span>Evidência Atual</span>
+                      <span>✨</span>
+                    </div>
+                    <div className="card-value">
+                      {lastStrongEvidence ? `${Math.round(lastStrongEvidence.evidenceScore * 100)}%` : '0%'}
+                    </div>
+                    <div className="card-kicker" title={lastStrongEvidence?.goalTitle}>
+                      {lastStrongEvidence ? lastStrongEvidence.goalTitle.slice(0, 15) + '...' : 'Nenhuma meta ativa'}
+                    </div>
                   </div>
                 </div>
 
-                {!isAILoaded && (
-                  <button onClick={handleLoadAI} disabled={isAILoading} className="btn-ai-load">
-                    {isAILoading ? aiLoadStatus : 'Ativar analise local'}
-                  </button>
-                )}
-
-                {isAILoaded && (
-                  <button onClick={handleImmediateCheck} disabled={isProcessing} className="btn-ai-load secondary">
-                    {isProcessing ? 'Analisando...' : 'Reavaliar capitulo'}
-                  </button>
-                )}
-
-                <div className="logs-container">
+                <div className="logs-scroller">
                   {!isAILoaded ? (
                     <p className="no-logs">Ative os modelos locais quando quiser validar metas. A analise fica lateral para nao interromper a escrita.</p>
                   ) : mmsLogs.length === 0 ? (
@@ -3905,6 +4296,29 @@ export default function EditorComponent() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Wiki Entity Preview Modal (UC-158 exception flow) */}
+      {previewEntity && (
+        <div className="modal-overlay" onClick={() => setPreviewEntity(null)}>
+          <div className="modal-card glass animate-slide-up" style={{ maxWidth: '450px' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Ficha do Universo</h3>
+              <button className="btn-close-modal" onClick={() => setPreviewEntity(null)}>×</button>
+            </div>
+            <div className="modal-body" style={{ color: 'var(--fg)', padding: '1rem 0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                <span className="badge" style={{ textTransform: 'capitalize', background: 'var(--accent)', color: 'white', padding: '0.15rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>
+                  {previewEntity.category}
+                </span>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>{previewEntity.name}</h2>
+              </div>
+              <p style={{ lineHeight: '1.6', fontSize: '0.9rem', color: '#e5e7eb', background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                {previewEntity.description}
+              </p>
+            </div>
           </div>
         </div>
       )}
@@ -8408,6 +8822,154 @@ export default function EditorComponent() {
           width: 100%;
           height: 100%;
           fill: currentColor;
+        }
+
+        /* Lore Chat Styling (UC-158) */
+        .chat-tab-container {
+          display: flex;
+          flex-direction: column;
+          height: calc(100% - 40px);
+        }
+
+        .chat-messages-scroll {
+          flex: 1;
+          overflow-y: auto;
+          padding: 0.5rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+          margin-bottom: 0.5rem;
+        }
+
+        .chat-message {
+          display: flex;
+          flex-direction: column;
+          max-width: 85%;
+        }
+
+        .chat-message.user {
+          align-self: flex-end;
+        }
+
+        .chat-message.assistant {
+          align-self: flex-start;
+        }
+
+        .chat-message-bubble {
+          padding: 0.6rem 0.8rem;
+          border-radius: 8px;
+          font-size: 0.85rem;
+          line-height: 1.45;
+        }
+
+        .chat-message.user .chat-message-bubble {
+          background: var(--accent);
+          color: white;
+          border-bottom-right-radius: 2px;
+        }
+
+        .chat-message.assistant .chat-message-bubble {
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          color: #e5e7eb;
+          border-bottom-left-radius: 2px;
+        }
+
+        .chat-message-text {
+          margin: 0;
+          word-break: break-word;
+        }
+
+        .chat-message-citations-block {
+          margin-top: 0.5rem;
+          padding-top: 0.4rem;
+          border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .citations-block-title {
+          font-size: 0.7rem;
+          color: #9ca3af;
+          display: block;
+          margin-bottom: 0.25rem;
+          font-weight: 600;
+        }
+
+        .citations-badges-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.3rem;
+        }
+
+        .citation-badge-btn {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: var(--accent-light, #38bdf8);
+          font-size: 0.7rem;
+          padding: 0.15rem 0.4rem;
+          border-radius: 4px;
+          cursor: pointer;
+          font-weight: 500;
+          transition: all 0.2s;
+        }
+
+        .citation-badge-btn:hover {
+          background: var(--accent);
+          color: white;
+          border-color: var(--accent);
+        }
+
+        .chat-input-form {
+          display: flex;
+          gap: 0.4rem;
+          padding: 0.4rem;
+          background: rgba(0, 0, 0, 0.2);
+          border-radius: 6px;
+          border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .chat-text-input {
+          flex: 1;
+          background: transparent;
+          border: none;
+          outline: none;
+          color: var(--fg);
+          font-size: 0.85rem;
+          padding: 0.25rem;
+        }
+
+        .chat-send-btn {
+          background: var(--accent);
+          border: none;
+          color: white;
+          padding: 0.3rem 0.7rem;
+          border-radius: 4px;
+          font-size: 0.8rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .chat-send-btn:hover {
+          opacity: 0.9;
+        }
+
+        /* Typing indicator */
+        .typing .dot {
+          display: inline-block;
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          background: #9ca3af;
+          margin-right: 3px;
+          animation: wave 1.3s linear infinite;
+        }
+
+        .typing .dot:nth-child(2) { animation-delay: -1.1s; }
+        .typing .dot:nth-child(3) { animation-delay: -0.9s; }
+
+        @keyframes wave {
+          0%, 60%, 100% { transform: translateY(0); }
+          30% { transform: translateY(-4px); }
         }
       `}</style>
     </div>
