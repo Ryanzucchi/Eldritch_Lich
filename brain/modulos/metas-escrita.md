@@ -13,9 +13,20 @@ O módulo de **Metas de Escrita** monitora a produtividade e constância do escr
     *   Contador dinâmico de palavras na sessão.
     *   Barra de progresso de escrita no rodapé do editor principal (`EditorComponent.tsx`).
     *   Animação comemorativa visual ao atingir 100% da cota do dia.
+4.  **Produtividade por Colaborador (UC-201)**:
+    *   O painel de estatísticas (`/stats`) agrega o histórico de snapshots por autor para exibir palavras adicionadas por período, horários de maior atividade e capítulos com maior contribuição.
+    *   Em projetos privados, o relatório é automaticamente reduzido ao autor atual ("Você"), evitando seleção de terceiros.
+5.  **Exportação de Métricas (UC-202)**:
+    *   Exportação de relatório em **CSV** (dados brutos tabulados) e **PDF** (resumo consolidado + tabelas de produtividade) diretamente do dashboard de estatísticas.
+    *   O exportador segue a mesma estratégia local-first do editor: geração no navegador sem round-trip obrigatório ao backend.
+6.  **Metas Coletivas de Equipe (UC-203, UC-204)**:
+    *   Criação de metas de produtividade coletiva por projeto com campos de nome, contribuição alvo por membro, prazo e opção de ranking.
+    *   Acompanhamento de progresso agregado com barra percentual global, alerta a partir de 90% e leaderboard opcional de contribuição individual.
+    *   Em projetos sem colaboradores ativos, a criação da meta coletiva é bloqueada com orientação explícita para meta individual.
 
 ## Componentes Importantes
 *   [types.ts](file:///home/zucchi/Projetos/Eldritch_Lich/packages/domain/src/metrics/types.ts) - Interfaces `WritingGoal`, `WritingLog` e `WritingStreak`.
 *   [streak-calculator.ts](file:///home/zucchi/Projetos/Eldritch_Lich/packages/domain/src/metrics/streak-calculator.ts) - Algoritmo de cálculo de streaks e cotas de prazo.
 *   [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx) - Integração da barra de progresso diária e modal de metas com o TipTap.
+*   [stats/page.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/stats/page.tsx) - Dashboard com métricas globais, análise por colaborador e exportação CSV/PDF.
 *   [schema.ts](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/db/schema.ts) - Criação das tabelas no Dexie DB sob a versão 2 do banco local.

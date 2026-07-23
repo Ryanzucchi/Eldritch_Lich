@@ -36,8 +36,11 @@ graph TD
     KanbanBoard -->|Lê/Grava Metas| DexieSchema
     ManuscriptEditor[app/editor/page.tsx] -->|Analisa digitação| MMSService
     ManuscriptEditor -->|Atualiza status| DexieSchema
+    ProjectsHub[app/projects/GoogleDocsHomeComponent.tsx] -->|Consome sessão e projetos| AppContext
+    ProjectsHub -->|Cria/abre workspace| DexieSchema
     StatsPage[app/stats/page.tsx] -->|Layout unificado| DashboardLayout
     StatsPage -->|Lê estatísticas| DexieSchema
+    StatsPage -->|Consulta membros do projeto| ShareAPI[app/api/projects/share/route.ts]
     DashboardLayout -->|Gerencia lembretes| DexieSchema
     WikiPortal[app/wiki/page.tsx] -->|Layout unificado| DashboardLayout
     WikiPortal -->|Lê/Grava Lore| DexieSchema

@@ -892,16 +892,16 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 
 ## Fase 6 — Gestão de Projetos, OKRs, RH, Financeiro, Game Design e Pesquisa Científica
 
-- [ ] **UC-201** — Visualizar estatísticas de produtividade do colaborador (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
+- [x] **UC-201** — Visualizar estatísticas de produtividade do colaborador (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-202** — Exportar estatísticas do projeto (CSV/PDF) (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
+- [x] **UC-202** — Exportar estatísticas do projeto (CSV/PDF) (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-203** — Criar metas de produtividade em equipe (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
+- [x] **UC-203** — Criar metas de produtividade em equipe (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-204** — Acompanhar progresso da equipe (meta coletiva) (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
+- [x] **UC-204** — Acompanhar progresso da equipe (meta coletiva) (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-301** — Cadastrar funcionários (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)

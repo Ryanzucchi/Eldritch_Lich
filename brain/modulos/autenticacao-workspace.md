@@ -11,10 +11,11 @@ Este módulo é responsável pelo cadastro, login, redefinição de senha, gest�
 *   [types.ts](file:///home/zucchi/Projetos/Eldritch_Lich/packages/domain/src/auth/types.ts) e [types.ts](file:///home/zucchi/Projetos/Eldritch_Lich/packages/domain/src/project/types.ts): Definições de tipos de dados para `User`, `AuthSession`, `ResetToken` e `Project`.
 *   [auth-backend.ts](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/services/auth-backend.ts): Utilitário backend para manipulação do banco local de usuários e criptografia.
 *   [middleware.ts](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/middleware.ts): Middleware Next.js para controle e proteção das rotas privadas.
-*   [Navbar.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/components/Navbar.tsx): Componente global reutilizável para navegação, troca de contexto e criação de projetos.
+*   [GoogleDocsHomeComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/projects/GoogleDocsHomeComponent.tsx): Hub de projetos com criação/abertura de workspace, seleção de visibilidade e feedback visual para estado privado/compartilhado.
 *   [schema.ts](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/db/schema.ts): Inicializador do Dexie DB parametrizado com o ID do projeto ativo para isolamento local.
 
 ## Fluxo Causal e Segurança
 1.  Qualquer acesso a rotas sob `/gmn` ou `/kanban` sem cookie `token` válido é interceptado pelo middleware e redirecionado para `/auth`.
 2.  Ao registrar ou logar, o token JWT gerado é salvo como cookie `httpOnly`, impedindo o roubo de sessão via scripts de terceiros (XSS).
 3.  Ao alternar projetos, a aplicação grava a chave `activeProjectId` no `localStorage` e recarrega a página. Isso força o Dexie a se conectar ao banco de dados específico daquele projeto, garantindo 100% de isolamento.
+4.  O hub de projetos prioriza clareza de estado (badges de visibilidade) e acessibilidade de navegação por teclado (`focus-visible`) para reduzir ambiguidade ao criar e abrir workspaces.

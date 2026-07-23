@@ -6,13 +6,29 @@ import { useRouter } from 'next/navigation';
 import { useApp } from '../../context/AppContext';
 import { Project } from '@eldritch/domain';
 
+const GENRE_OPTIONS = [
+  'Fantasia',
+  'Ficção Científica',
+  'Mistério / Thriller',
+  'Romance',
+  'Horror / Terror',
+  'Não-Ficção'
+] as const;
+
+type ProjectVisibility = 'PRIVADO' | 'COMPARTILHADO';
+
+const VISIBILITY_META: Record<ProjectVisibility, { label: string; className: string }> = {
+  PRIVADO: { label: 'Privado', className: 'is-private' },
+  COMPARTILHADO: { label: 'Compartilhado', className: 'is-shared' }
+};
+
 export default function GoogleDocsHomeComponent() {
   const router = useRouter();
   const { user, projects, activeProject, selectProject, createProject, logout } = useApp();
 
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectGenre, setNewProjectGenre] = useState('Fantasia');
-  const [newProjectVisibility, setNewProjectVisibility] = useState<'PRIVADO' | 'COMPARTILHADO'>('PRIVADO');
+  const [newProjectVisibility, setNewProjectVisibility] = useState<ProjectVisibility>('PRIVADO');
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,6 +55,12 @@ export default function GoogleDocsHomeComponent() {
       setError(err.message || 'Erro ao criar o projeto.');
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleVisibilityChange = (value: string) => {
+    if (value === 'PRIVADO' || value === 'COMPARTILHADO') {
+      setNewProjectVisibility(value);
     }
   };
 
@@ -111,7 +133,7 @@ export default function GoogleDocsHomeComponent() {
               <div className="active-details">
                 <span className="active-badge">PROJETO ATIVO ATUAL</span>
                 <h3>📁 {activeProject.name}</h3>
-                <p>{activeProject.genre} • {activeProject.visibility.toLowerCase()}</p>
+                <p>{activeProject.genre} • {VISIBILITY_META[activeProject.visibility].label}</p>
               </div>
               <button 
                 onClick={() => handleOpenProject(activeProject)}
@@ -134,7 +156,9 @@ export default function GoogleDocsHomeComponent() {
                 <div className="project-card-header">
                   <span className="project-card-icon">📁</span>
                   <div className="project-card-meta">
-                    <span className="project-card-visibility">{proj.visibility}</span>
+                    <span className={`project-card-visibility ${VISIBILITY_META[proj.visibility].className}`}>
+                      {VISIBILITY_META[proj.visibility].label}
+                    </span>
                   </div>
                 </div>
                 <h3 className="project-card-name" title={proj.name}>{proj.name}</h3>
@@ -181,12 +205,9 @@ export default function GoogleDocsHomeComponent() {
                 <div className="portal-form-group flex-1">
                   <label>Gênero Literário</label>
                   <select value={newProjectGenre} onChange={(e) => setNewProjectGenre(e.target.value)}>
-                    <option value="Fantasia">Fantasia</option>
-                    <option value="Ficção Científica">Ficção Científica</option>
-                    <option value="Mistério / Thriller">Mistério / Thriller</option>
-                    <option value="Romance">Romance</option>
-                    <option value="Horror / Terror">Horror / Terror</option>
-                    <option value="Não-Ficção">Não-Ficção</option>
+                    {GENRE_OPTIONS.map((genre) => (
+                      <option key={genre} value={genre}>{genre}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -194,7 +215,7 @@ export default function GoogleDocsHomeComponent() {
                   <label>Visibilidade</label>
                   <select 
                     value={newProjectVisibility} 
-                    onChange={(e) => setNewProjectVisibility(e.target.value as any)}
+                    onChange={(e) => handleVisibilityChange(e.target.value)}
                   >
                     <option value="PRIVADO">Privado (Local-First)</option>
                     <option value="COMPARTILHADO">Compartilhado (Colaborativo)</option>
@@ -543,12 +564,21 @@ export default function GoogleDocsHomeComponent() {
         .project-card-visibility {
           font-size: 0.65rem;
           font-weight: 700;
-          color: #60a5fa;
-          background: rgba(59, 130, 246, 0.12);
-          border: 1px solid rgba(59, 130, 246, 0.2);
           padding: 0.15rem 0.45rem;
           border-radius: 4px;
           text-transform: uppercase;
+        }
+
+        .project-card-visibility.is-private {
+          color: #f59e0b;
+          background: rgba(245, 158, 11, 0.12);
+          border: 1px solid rgba(245, 158, 11, 0.25);
+        }
+
+        .project-card-visibility.is-shared {
+          color: #60a5fa;
+          background: rgba(59, 130, 246, 0.12);
+          border: 1px solid rgba(59, 130, 246, 0.2);
         }
 
         .project-card-name {
@@ -711,6 +741,17 @@ export default function GoogleDocsHomeComponent() {
           color: #9ca3af;
           cursor: not-allowed;
           box-shadow: none;
+        }
+
+        .btn-portal-logout:focus-visible,
+        .btn-active-open:focus-visible,
+        .btn-profile-link:focus-visible,
+        .btn-project-open:focus-visible,
+        .btn-portal-create:focus-visible,
+        .portal-form-group input:focus-visible,
+        .portal-form-group select:focus-visible {
+          outline: 2px solid #14b8a6;
+          outline-offset: 2px;
         }
 
         .portal-error-msg {

@@ -325,6 +325,36 @@ Este registro lista em ordem cronológica todas as atualizações de desenvolvim
 
 ### Documentação Vinculada
 *   [workflows-manuscritos.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/workflows-manuscritos.md)
+
+## [2026-07-23] - Dashboard de Estatísticas por Colaborador, Exportação de Relatório e Metas Coletivas (UC-201, UC-202, UC-203, UC-204)
+
+### Código Adicionado/Modificado
+*   **Produtividade individual por colaborador (UC-201)**:
+    *   [stats/page.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/stats/page.tsx): Incluído painel "Métricas dos Colaboradores" com seletor de membro, total de palavras adicionadas, horários de maior atividade e capítulos de maior contribuição. O cálculo é derivado de snapshots/versionamento local para manter o fluxo local-first.
+    *   Em projetos privados, o fluxo alternativo é aplicado automaticamente, exibindo apenas o relatório do próprio autor.
+*   **Exportação de métricas (UC-202)**:
+    *   [stats/page.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/stats/page.tsx): Adicionados botões de exportação para CSV (dados tabulares) e PDF (relatório consolidado imprimível) no cabeçalho do dashboard.
+*   **Metas de produtividade em equipe (UC-203, UC-204)**:
+    *   [stats/page.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/stats/page.tsx): Incluso fluxo de criação de "Meta Coletiva" com contribuição alvo por membro, prazo e modo ranking. Implementado painel de progresso da equipe com barra percentual, somatório consolidado e alerta visual ao ultrapassar 90% da meta.
+*   **Planejamento macro**:
+    *   [ROADMAP.md](file:///home/zucchi/Projetos/Eldritch_Lich/ROADMAP.md): UC-201, UC-202, UC-203 e UC-204 marcadas como concluídas.
+
+### Documentação Vinculada
+*   [metas-escrita.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/metas-escrita.md)
+*   [mapa.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/dependencias/mapa.md)
+
+## [2026-07-23] - Revisão de Código, Refino Visual do Hub de Projetos e Robustez no Merge de Conflitos
+
+### Código Adicionado/Modificado
+*   **Resolução de conflitos com preservação estrutural (UC-200)**:
+    *   [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx): A lógica de merge conflitante foi refinada para comparar e reconciliar por blocos HTML, mantendo os blocos originais selecionados no resultado final em vez de reconstrução textual simplificada por `<p>`.
+*   **UX e tipagem no hub de projetos**:
+    *   [GoogleDocsHomeComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/projects/GoogleDocsHomeComponent.tsx): Adicionados badges visuais distintos para `Privado`/`Compartilhado`, estados `focus-visible` para navegação por teclado e centralização de opções de gênero/visibilidade com tipagem explícita.
+
+### Documentação Vinculada
+*   [workflows-manuscritos.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/workflows-manuscritos.md)
+*   [autenticacao-workspace.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/autenticacao-workspace.md)
+*   [mapa.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/dependencias/mapa.md)
 *   [wiki.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/wiki.md)
 
 ## [2026-07-23] - Importação/Exportação DOCX Avançadas, Modo Leitura, Tela Cheia e Acessibilidade (ARIA/Keyboard)

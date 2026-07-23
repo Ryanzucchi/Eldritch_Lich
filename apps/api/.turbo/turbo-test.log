@@ -1,0 +1,6 @@
+
+> @eldritch/api@0.1.0 test /home/zucchi/Projetos/Eldritch_Lich/apps/api
+> jest
+
+sh: linha 1: jest: comando não encontrado
+ ELIFECYCLE  Test failed. See above for more details.

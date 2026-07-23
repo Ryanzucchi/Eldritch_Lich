@@ -353,12 +353,20 @@ export default function EditorComponent() {
   const [branchName, setBranchName] = useState('');
   const [branchTargetChapter, setBranchTargetChapter] = useState<Manuscript | null>(null);
   const [showMergeConflictModal, setShowMergeConflictModal] = useState(false);
+  type MergeConflictItem = {
+    id: string;
+    mainText: string;
+    branchText: string;
+    mainBlockHtml: string;
+    branchBlockHtml: string;
+    selected: 'main' | 'branch' | null;
+  };
   const [mergeConflictData, setMergeConflictData] = useState<{
     branch: Manuscript;
     parent: Manuscript;
-    parentContent: string;
-    branchContent: string;
-    conflicts: { id: string; mainText: string; branchText: string; selected: 'main' | 'branch' | null }[];
+    parentBlocks: string[];
+    branchBlocks: string[];
+    conflicts: MergeConflictItem[];
   } | null>(null);
 
   const leftScrollRef = useRef<HTMLDivElement>(null);
@@ -1921,6 +1929,20 @@ export default function EditorComponent() {
   };
 
   // Branch & Merge Helpers (UC-198, UC-199, UC-200)
+  const getHtmlBlocks = (html: string): string[] => {
+    const parsed = new DOMParser().parseFromString(`<body>${html}</body>`, 'text/html');
+    const blocks = Array.from(parsed.body.children)
+      .map((el) => el.outerHTML.trim())
+      .filter(Boolean);
+
+    return blocks.length > 0 ? blocks : ['<p><br></p>'];
+  };
+
+  const getTextFromHtmlBlock = (htmlBlock: string): string => {
+    const parsed = new DOMParser().parseFromString(htmlBlock, 'text/html');
+    return (parsed.body.textContent || '').trim();
+  };
+
   const handleCreateBranch = async (title: string, parentChapter: Manuscript) => {
     if (!title.trim() || !parentChapter) return;
     
@@ -1967,23 +1989,26 @@ export default function EditorComponent() {
     
     const currentMainContent = parent.content;
     const branchBaseContent = (branch as any).branchBaseContent || '';
+    const parentBlocks = getHtmlBlocks(currentMainContent);
+    const branchBlocks = getHtmlBlocks(branch.content);
     
     if (currentMainContent !== branchBaseContent) {
       // Conflict detected!
-      const mainParagraphs = currentMainContent.split(/<\/p>/).map(p => p.replace(/<p>/, '').trim()).filter(Boolean);
-      const branchParagraphs = branch.content.split(/<\/p>/).map(p => p.replace(/<p>/, '').trim()).filter(Boolean);
-      
-      const conflicts: { id: string; mainText: string; branchText: string; selected: 'main' | 'branch' | null }[] = [];
-      const maxLen = Math.max(mainParagraphs.length, branchParagraphs.length);
+      const conflicts: MergeConflictItem[] = [];
+      const maxLen = Math.max(parentBlocks.length, branchBlocks.length);
       
       for (let i = 0; i < maxLen; i++) {
-        const mText = mainParagraphs[i] || '';
-        const bText = branchParagraphs[i] || '';
-        if (mText !== bText) {
+        const mainBlockHtml = parentBlocks[i] || '<p><br></p>';
+        const branchBlockHtml = branchBlocks[i] || '<p><br></p>';
+        if (mainBlockHtml !== branchBlockHtml) {
+          const mText = getTextFromHtmlBlock(mainBlockHtml);
+          const bText = getTextFromHtmlBlock(branchBlockHtml);
           conflicts.push({
             id: `conflict_${i}_${Date.now()}`,
             mainText: mText,
             branchText: bText,
+            mainBlockHtml,
+            branchBlockHtml,
             selected: null
           });
         }
@@ -1993,8 +2018,8 @@ export default function EditorComponent() {
         setMergeConflictData({
           branch,
           parent,
-          parentContent: currentMainContent,
-          branchContent: branch.content,
+          parentBlocks,
+          branchBlocks,
           conflicts
         });
         setShowMergeConflictModal(true);
@@ -2024,7 +2049,7 @@ export default function EditorComponent() {
 
   const handleResolveConflictAndMerge = async () => {
     if (!mergeConflictData) return;
-    const { branch, parent, conflicts } = mergeConflictData;
+    const { branch, parent, conflicts, parentBlocks, branchBlocks } = mergeConflictData;
     
     const unresolved = conflicts.some(c => c.selected === null);
     if (unresolved) {
@@ -2032,25 +2057,22 @@ export default function EditorComponent() {
       return;
     }
     
-    const mainParagraphs = mergeConflictData.parentContent.split(/<\/p>/).map(p => p.replace(/<p>/, '').trim()).filter(Boolean);
-    const branchParagraphs = mergeConflictData.branchContent.split(/<\/p>/).map(p => p.replace(/<p>/, '').trim()).filter(Boolean);
-    
     let resolvedHtml = '';
-    const maxLen = Math.max(mainParagraphs.length, branchParagraphs.length);
+    const maxLen = Math.max(parentBlocks.length, branchBlocks.length);
     let conflictIdx = 0;
     
     for (let i = 0; i < maxLen; i++) {
-      const mText = mainParagraphs[i] || '';
-      const bText = branchParagraphs[i] || '';
-      if (mText !== bText) {
+      const mainBlockHtml = parentBlocks[i] || '<p><br></p>';
+      const branchBlockHtml = branchBlocks[i] || '<p><br></p>';
+      if (mainBlockHtml !== branchBlockHtml) {
         const conf = conflicts[conflictIdx++];
         if (conf.selected === 'main') {
-          resolvedHtml += `<p>${conf.mainText}</p>`;
+          resolvedHtml += conf.mainBlockHtml;
         } else {
-          resolvedHtml += `<p>${conf.branchText}</p>`;
+          resolvedHtml += conf.branchBlockHtml;
         }
-      } else if (mText) {
-        resolvedHtml += `<p>${mText}</p>`;
+      } else {
+        resolvedHtml += mainBlockHtml;
       }
     }
     
@@ -5453,17 +5475,17 @@ export default function EditorComponent() {
               <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.85rem', opacity: 0.7 }}>🔍 Pré-visualização do Resultado Final Mesclado:</h4>
               <div style={{ maxHeight: '120px', overflowY: 'auto', fontSize: '0.8rem', opacity: 0.8, lineHeight: '1.5' }}>
                 {(() => {
-                  const mainParagraphs = mergeConflictData.parentContent.split(/<\/p>/).map(p => p.replace(/<p>/, '').trim()).filter(Boolean);
-                  const branchParagraphs = mergeConflictData.branchContent.split(/<\/p>/).map(p => p.replace(/<p>/, '').trim()).filter(Boolean);
+                  const mainBlocks = mergeConflictData.parentBlocks;
+                  const branchBlocks = mergeConflictData.branchBlocks;
                   
                   let previewElements: React.ReactNode[] = [];
-                  const maxLen = Math.max(mainParagraphs.length, branchParagraphs.length);
+                  const maxLen = Math.max(mainBlocks.length, branchBlocks.length);
                   let conflictIdx = 0;
                   
                   for (let i = 0; i < maxLen; i++) {
-                    const mText = mainParagraphs[i] || '';
-                    const bText = branchParagraphs[i] || '';
-                    if (mText !== bText) {
+                    const mainBlockHtml = mainBlocks[i] || '<p><br></p>';
+                    const branchBlockHtml = branchBlocks[i] || '<p><br></p>';
+                    if (mainBlockHtml !== branchBlockHtml) {
                       const conf = mergeConflictData.conflicts[conflictIdx++];
                       if (!conf) continue;
                       if (conf.selected === 'main') {
@@ -5473,8 +5495,11 @@ export default function EditorComponent() {
                       } else {
                         previewElements.push(<p key={i} style={{ color: '#f59e0b', borderLeft: '3px solid #f59e0b', paddingLeft: '0.5rem', fontStyle: 'italic' }}>[Aguardando seleção do Conflito #{conflictIdx}]</p>);
                       }
-                    } else if (mText) {
-                      previewElements.push(<p key={i}>{mText}</p>);
+                    } else {
+                      const unchangedText = getTextFromHtmlBlock(mainBlockHtml);
+                      if (unchangedText) {
+                        previewElements.push(<p key={i}>{unchangedText}</p>);
+                      }
                     }
                   }
                   return previewElements.length > 0 ? previewElements : <p style={{ fontStyle: 'italic', opacity: 0.5 }}>Sem parágrafos.</p>;
