@@ -39,6 +39,9 @@ graph TD
     StatsPage[app/stats/page.tsx] -->|Layout unificado| DashboardLayout
     StatsPage -->|Lê estatísticas| DexieSchema
     DashboardLayout -->|Gerencia lembretes| DexieSchema
+    WikiPortal[app/wiki/page.tsx] -->|Layout unificado| DashboardLayout
+    WikiPortal -->|Lê/Grava Lore| DexieSchema
+    ManuscriptEditor -->|Padroniza Nomes| DexieSchema
 ```
 
 ## Resumo das Dependências Físicas

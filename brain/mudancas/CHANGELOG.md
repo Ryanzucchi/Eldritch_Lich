@@ -299,3 +299,18 @@ Este registro lista em ordem cronológica todas as atualizações de desenvolvim
 *   [workflows-manuscritos.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/workflows-manuscritos.md)
 *   [reminders.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/reminders.md)
 *   [mapa.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/dependencias/mapa.md)
+
+## [2026-07-23] - Portal Wiki do Universo, Compilação de HTML SPA e Padronização de Nomes
+
+### Código Adicionado/Modificado
+*   **Portal Wiki do Universo & Exportações (UC-090, UC-091)**:
+    *   [schema.ts](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/db/schema.ts): Criada tabela `wikiEntities` no IndexedDB local sob a versão de schema 11.
+    *   [page.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/wiki/page.tsx): Nova rota `/wiki` que disponibiliza a Central de Worldbuilding. Oferece visualização, adição, edição e exclusão de artigos de lore. Conta com cross-linking automático (geração dinâmica de links de navegação para outras entidades), gerador e download do Portal Web Wiki (index.html estático SPA e auto-suficiente) e gerador do Manual do Universo em Markdown categorizado alfabeticamente.
+    *   [ClientLayout.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/components/ClientLayout.tsx): Vinculada a rota `/wiki` no menu de navegação da barra lateral e cadastrada a regra de segurança que exige projeto ativo.
+*   **Padronização Automática de Nomes nos Textos (UC-092)**:
+    *   [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx): Adicionado item "Ferramentas" no menu suspenso do editor e botão "Padronizar Nomes". Implementada análise de correspondência de nomes de entidades do lore (erros de acentuação, casing e distância Levenshtein <= 2) no texto do manuscrito ativo, exibindo modal de lote. Substituição realizada apenas em nós de texto HTML da árvore DOM, preservando tags e hyperlinks externos, envelopados em transação atômica Dexie.
+
+### Documentação Vinculada
+*   [INDEX.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/INDEX.md)
+*   [wiki.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/wiki.md)
+*   [mapa.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/dependencias/mapa.md)

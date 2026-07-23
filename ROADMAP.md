@@ -223,13 +223,13 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-086** — Personalizar ícones (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-090** — Gerar wiki automaticamente (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-090** — Gerar wiki automaticamente (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-091** — Gerar documentação automaticamente (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-091** — Gerar documentação automaticamente (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-092** — Padronizar nomes automaticamente (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-092** — Padronizar nomes automaticamente (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [x] **UC-093** — Visualizar estatísticas do projeto (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
