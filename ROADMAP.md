@@ -331,22 +331,22 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-194** — Importar textos em formato DOCX (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-195** — Visualizar histórico de alterações por colaborador (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-195** — Visualizar histórico de alterações por colaborador (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-081, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-196** — Comparar versões de textos (diff side-by-side) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-196** — Comparar versões de textos (diff side-by-side) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-197** — Restaurar versão específica (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-197** — Restaurar versão específica (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-198** — Criar ramificação do texto (branch) para testes (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-198** — Criar ramificação do texto (branch) para testes (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-199** — Mesclar ramificação de volta ao texto principal (merge) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-199** — Mesclar ramificação de volta ao texto principal (merge) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-200** — Gerenciar conflitos na mesclagem (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-200** — Gerenciar conflitos na mesclagem (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-246** — Visualizar sumário interativo do texto (tabela de conteúdos) (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)

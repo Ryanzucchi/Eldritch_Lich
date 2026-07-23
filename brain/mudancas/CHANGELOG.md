@@ -337,3 +337,14 @@ Este registro lista em ordem cronológica todas as atualizações de desenvolvim
 
 ### Documentação Vinculada
 *   [workflows-manuscritos.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/workflows-manuscritos.md)
+
+## [2026-07-23] - Ramificação, Mesclagem, Resolução de Conflitos e Histórico Colaborativo (UC-195, UC-196, UC-198, UC-199, UC-200)
+
+### Código Adicionado/Modificado
+*   **Ramificação e Mesclagem de Manuscritos (UC-198, UC-199, UC-200)**:
+    *   [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx): Adicionado botão na árvore lateral para criar branch de testes isolada, renderizada aninhada sob o capítulo pai com ícone `⌥`. Desenvolvida função de mesclagem automática no capítulo pai com auto-snapshot de histórico. Desenvolvido modal de resolução interativa de conflitos parágrafo por parágrafo, com opções "Manter Principal", "Manter Ramificação" e pré-visualização em tempo real do resultado antes de salvar no IndexedDB.
+*   **Histórico Colaborativo e Diff Lado a Lado (UC-195, UC-196)**:
+    *   [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx): Inserido filtro de histórico por colaborador (Você, Morgana, Lucas, Clarice) e botão de realce visual de alterações, que renderiza um painel read-only do texto colorindo edições feitas pelo autor com destaque de contraste WCAG AA. Redesenhado modal de diff com suporte a dois painéis de comparação lado a lado (side-by-side) com rolagem sincronizada pixel-perfect e toggle para diff inline corrido.
+
+### Documentação Vinculada
+*   [workflows-manuscritos.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/workflows-manuscritos.md)

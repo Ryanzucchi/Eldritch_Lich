@@ -35,6 +35,14 @@ Este módulo implementa a gerência de múltiplos capítulos (manuscritos) e a m
     *   **Tela Cheia (UC-164)**: Integração com a API Fullscreen do navegador para maximizar o editor, ocultando abas e barras de tarefas de forma limpa.
     *   **Estimativa de Tempo (UC-186)**: Exibe no rodapé da página o tempo de leitura dinâmico baseado em WPM (palavras por minuto), ajustável pelo autor na aba de configurações.
     *   **Acessibilidade / Leitores de Tela (UC-160)**: Inclui anotações semânticas HTML5 de acessibilidade e atributos ARIA (`aria-label`, `aria-expanded`, `role`) em todos os botões e pastas reativas. Adiciona atalho global de teclado `Alt + Shift + E` para forçar o foco direto no canvas de digitação.
+9.  **Ramificação, Mesclagem e Histórico Colaborativo (UC-198, UC-199, UC-200, UC-195, UC-196, UC-197)**:
+    *   **Criar Branch (UC-198)**: Clona logicamente o capítulo de texto selecionado em uma ramificação isolada de testes (marcada com `⌥`). Exibida de forma aninhada abaixo do manuscrito pai na árvore de diretórios lateral.
+    *   **Mesclar Branch (UC-199)**: Mescla as alterações do branch de volta ao texto principal. Se não houver modificações concorrentes, o conteúdo do manuscrito pai é atualizado diretamente e o branch é deletado. Cria um ponto de restauração automática no histórico de versões do capítulo principal.
+    *   **Resolução de Conflitos (UC-200)**: Se houver modificações concorrentes no texto principal desde a ramificação, o merge é interrompido e abre-se a tela de resolução de conflitos, exibindo as diferenças parágrafo por parágrafo, onde o usuário pode optar por manter o trecho do principal ("Manter Principal"), do branch ("Manter Ramificação"), e pré-visualizar o resultado resolvido antes da conclusão transacional.
+    *   **Filtro por Colaborador & Realce de Edição (UC-195)**: Permite filtrar o histórico de salvamento e snapshots por colaborador (Você, Morgana, Lucas, Clarice) com identificadores de avatar. Ao clicar em "Realçar", o editor entra em modo leitura e colore em destaque as palavras inseridas ou modificadas por aquele autor em tons adequados conforme contraste WCAG AA.
+    *   **Comparação Lado a Lado (UC-196)**: Modal de diff com visualização em dois painéis paralelos (Painel Esquerdo exibe exclusões da versão antiga em vermelho; Painel Direito exibe adições no texto atual em verde) com sincronização automática de rolagem vertical, além de suporte a visualização corrida inline e validação de versões idênticas.
+    *   **Restauração de Versão (UC-197)**: Recupera o texto de qualquer snapshot histórico e salva o estado imediatamente anterior como um novo snapshot de segurança.
+
 
 ## Componentes Importantes
 *   [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx) - Explorer de capítulos lateral, seletor de status no cabeçalho do documento, banner de bloqueio de edição e controle de permissões.
