@@ -326,3 +326,14 @@ Este registro lista em ordem cronológica todas as atualizações de desenvolvim
 ### Documentação Vinculada
 *   [workflows-manuscritos.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/workflows-manuscritos.md)
 *   [wiki.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/wiki.md)
+
+## [2026-07-23] - Importação/Exportação DOCX Avançadas, Modo Leitura, Tela Cheia e Acessibilidade (ARIA/Keyboard)
+
+### Código Adicionado/Modificado
+*   **Importação e Exportação Word DOCX (UC-163, UC-194)**:
+    *   [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx): Adicionadas configurações de layout de documento no modal de exportação para Word (fonte Calibri/Times/Arial, espaçamento de 1.0 a 2.0, recuos de parágrafo). Implementada compilação do conteúdo do editor gerando tags de comentário Word nativos (`mso-special-character`). Adicionado suporte a importação local-first de arquivos binários `.docx`: leitor local extrai `word/document.xml` por leitura de headers de arquivo ZIP e decompressão off-line com `DecompressionStream('deflate-raw')`, convertendo elementos XML em HTML semântico. Adicionado aviso de formato `.doc` antigo incompatível.
+*   **Modo Leitura, Tela Cheia, Tempo de Leitura e Acessibilidade (UC-187, UC-164, UC-186, UC-160)**:
+    *   [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx): Desenvolvidos esquemas de cores Sépia e Cinza para leitura. Ativação do modo leitura altera tamanho de margens para 6rem, oculta a régua e força TipTap para read-only. Adicionado botão para acionar API Fullscreen do navegador. Implementada estimativa de leitura do rodapé ajustável por WPM dinâmico no painel de configurações. Registrados atributos ARIA estruturais e atalho global `Alt + Shift + E` para forçar o foco de digitação no editor.
+
+### Documentação Vinculada
+*   [workflows-manuscritos.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/workflows-manuscritos.md)

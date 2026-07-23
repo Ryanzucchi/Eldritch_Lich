@@ -313,22 +313,22 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-159** — Alternar tema claro/escuro (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-160** — Suporte a leitor de tela (acessibilidade) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-160** — Suporte a leitor de tela (acessibilidade) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-163** — Exportar textos em formato DOCX (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-163** — Exportar textos em formato DOCX (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-164** — Visualizar modo tela cheia (editor) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-164** — Visualizar modo tela cheia (editor) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-186** — Estimar tempo de leitura do texto (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-186** — Estimar tempo de leitura do texto (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-187** — Modo leitura (sem edição, layout limpo) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-187** — Modo leitura (sem edição, layout limpo) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-194** — Importar textos em formato DOCX (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-194** — Importar textos em formato DOCX (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-195** — Visualizar histórico de alterações por colaborador (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
