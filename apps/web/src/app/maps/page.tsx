@@ -3,13 +3,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { db } from '../../db/schema';
-import { GeoMap, GeoMapMarker, calculateMapDistanceKm } from '@eldritch/domain';
+import { GeoMap, GeoMapMarker, calculateMapDistanceKm, TimelineEvent } from '@eldritch/domain';
 
 export default function MapsPage() {
   const { activeProject } = useApp();
   const [maps, setMaps] = useState<GeoMap[]>([]);
   const [activeMap, setActiveMap] = useState<GeoMap | null>(null);
   const [markers, setMarkers] = useState<GeoMapMarker[]>([]);
+  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]); // UC-168
+
+  // Time Slider & Event Layer State (UC-168)
+  const [showEventLayer, setShowEventLayer] = useState(false);
+  const [isPlayingAnimation, setIsPlayingAnimation] = useState(false);
+  const [sliderIndex, setSliderIndex] = useState(0);
 
   // Create Map Modal (UC-099)
   const [showCreateMapModal, setShowCreateMapModal] = useState(false);
@@ -47,14 +53,20 @@ export default function MapsPage() {
     }
   };
 
-  // Load Markers for Active Map
-  const loadMarkers = async () => {
+  // Load Markers and Timeline Events for Active Map (UC-168)
+  const loadMarkersAndEvents = async () => {
     if (!activeMap) {
       setMarkers([]);
+      setTimelineEvents([]);
       return;
     }
     const list = await db.geoMapMarkers.where('mapId').equals(activeMap.id).toArray();
     setMarkers(list);
+
+    // Fetch timeline events for location matching (UC-168)
+    const evList = await db.timelineEvents.toArray();
+    evList.sort((a, b) => a.sortOrder - b.sortOrder);
+    setTimelineEvents(evList);
   };
 
   useEffect(() => {
@@ -62,8 +74,25 @@ export default function MapsPage() {
   }, [activeProject]);
 
   useEffect(() => {
-    loadMarkers();
+    loadMarkersAndEvents();
   }, [activeMap]);
+
+  // Animation Loop for Time Slider (UC-168)
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isPlayingAnimation && timelineEvents.length > 0) {
+      timer = setInterval(() => {
+        setSliderIndex((prev) => {
+          if (prev >= timelineEvents.length - 1) {
+            setIsPlayingAnimation(false);
+            return prev;
+          }
+          return prev + 1;
+        });
+      }, 1500);
+    }
+    return () => clearInterval(timer);
+  }, [isPlayingAnimation, timelineEvents.length]);
 
   // Handle Map Upload/Creation (UC-099)
   const handleCreateMap = async (e: React.FormEvent) => {
@@ -151,7 +180,7 @@ export default function MapsPage() {
     setMarkerDate('');
     setMarkerDesc('');
     setShowMarkerModal(false);
-    await loadMarkers();
+    await loadMarkersAndEvents();
     setSuccess(`Marcador "${newMarker.name}" adicionado ao mapa!`);
     setTimeout(() => setSuccess(null), 3000);
   };
@@ -170,6 +199,13 @@ export default function MapsPage() {
         </div>
 
         <div style={{ display: 'flex', gap: '0.6rem' }}>
+          <button 
+            onClick={() => setShowEventLayer(!showEventLayer)}
+            disabled={!activeMap}
+            style={{ background: showEventLayer ? '#10b981' : 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.15)', color: 'white', padding: '0.6rem 1rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
+          >
+            ⏳ {showEventLayer ? 'Ocultar Camada de Eventos' : 'Exibir Camada de Eventos (UC-168)'}
+          </button>
           <button 
             onClick={() => { setRulerMode(!rulerMode); setRulerStart(null); setRulerEnd(null); setMeasuredDistance(null); }}
             disabled={!activeMap}
@@ -251,6 +287,37 @@ export default function MapsPage() {
               <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
             )}
 
+            {/* Render Event Layer Markers (UC-168) */}
+            {showEventLayer && timelineEvents.length > 0 && (() => {
+              const currentEv = timelineEvents[sliderIndex];
+              if (!currentEv || !currentEv.locationId) return null;
+              // Find matching location marker on active map
+              const matchingMarker = markers.find(m => m.name.toLowerCase() === currentEv.locationId?.toLowerCase());
+              if (!matchingMarker) return null;
+
+              return (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: `${matchingMarker.yPercent - 12}%`,
+                    left: `${matchingMarker.xPercent}%`,
+                    transform: 'translate(-50%, -100%)',
+                    background: '#ef4444',
+                    color: 'white',
+                    padding: '0.3rem 0.8rem',
+                    borderRadius: '8px',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    boxShadow: '0 0 15px rgba(239, 68, 68, 0.8)',
+                    zIndex: 10,
+                    animation: 'pulse 1.5s infinite'
+                  }}
+                >
+                  ⚡ EVENTO: {currentEv.title} ({currentEv.dateStr})
+                </div>
+              );
+            })()}
+
             {/* Render Markers (UC-100, UC-101) */}
             {markers.map(mk => (
               <div
@@ -277,6 +344,35 @@ export default function MapsPage() {
               </div>
             ))}
           </div>
+
+          {/* Time Slider Controls Bar (UC-168) */}
+          {showEventLayer && (
+            <div style={{ marginTop: '1.2rem', background: 'rgba(255, 255, 255, 0.03)', padding: '1rem 1.2rem', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                  <button 
+                    onClick={() => setIsPlayingAnimation(!isPlayingAnimation)}
+                    style={{ background: '#10b981', border: 'none', color: 'white', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}
+                  >
+                    {isPlayingAnimation ? '⏸️ Pausar Animação' : '▶️ Modo História Animado'}
+                  </button>
+                  <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#60a5fa' }}>
+                    {timelineEvents[sliderIndex]?.dateStr || 'Sem Data'} — {timelineEvents[sliderIndex]?.title || 'Selecione um evento'}
+                  </span>
+                </div>
+                <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>Evento {sliderIndex + 1} de {timelineEvents.length}</span>
+              </div>
+
+              <input 
+                type="range"
+                min={0}
+                max={Math.max(0, timelineEvents.length - 1)}
+                value={sliderIndex}
+                onChange={e => { setSliderIndex(parseInt(e.target.value)); setIsPlayingAnimation(false); }}
+                style={{ width: '100%', cursor: 'pointer' }}
+              />
+            </div>
+          )}
         </div>
       ) : (
         <div style={{ textAlign: 'center', padding: '4rem', opacity: 0.5 }}>
