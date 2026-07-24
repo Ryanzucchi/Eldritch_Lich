@@ -1390,7 +1390,7 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-400** — Exportar roteiro no formato padrão (Courier, etc.) (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-412** — Gerar playlist automática por capítulo/humor (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-412** — Gerar playlist automática por capítulo/humor (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-425** — Suportar pelo menos X usuários simultâneos sem degradação perceptível de performance (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)

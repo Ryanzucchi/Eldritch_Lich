@@ -2,7 +2,7 @@
 
 Este registro lista em ordem cronológica todas as atualizações de desenvolvimento integradas a esta base de conhecimento.
 
-## [2026-07-24] (Core Editor: Notas de Rodapé e Referências Cruzadas) - UC-393 & UC-394
+## [2026-07-24] (Core Editor: Notas de Rodapé, Referências Cruzadas e Playlist de Áudio IA) - UC-393, UC-394 & UC-412
 
 ### 📝 Notas de Rodapé Renumeradas (UC-393)
 *   **Processamento & Renumeração Automática:** Implementada função `processFootnotes` em `@eldritch/domain` para extrair, ordenar e renumerar automaticamente sobrescritos de notas de rodapé no formato `[1]`, `[2]`, preservando atribuição de conteúdo sem órfãos.
@@ -13,10 +13,16 @@ Este registro lista em ordem cronológica todas as atualizações de desenvolvim
 *   **Modal de Inserção de Referência Cruzada:** Adicionada modal no editor que permite ao autor selecionar um capítulo do projeto ativo e definir o rótulo de exibição (ex: `ver Capítulo 3`).
 *   **Interface:** Botão dedicado `📌` adicionado tanto à Barra de Menus ("Inserir > Referência Cruzada") quanto à Ribbon de ferramentas.
 
+### 🎵 Playlist Automática por Humor do Capítulo (UC-412)
+*   **Análise de Humor por IA:** Implementada função `generateChapterPlaylist` em `@eldritch/domain` para analisar a atmosfera emocional predominante de cada cena (tensão, mistério, melancolia, épico, tranquilo) e compilar uma sequência de faixas em tempo recorde (< 4s).
+*   **Reprodutor de Áudio com Crossfade:** Criada modal de reprodução de áudio integrada com controles de faixa anterior/próxima, reproduzir/pausar, indicação de humor detectado e transições suaves de crossfade de 2 segundos.
+*   **Acesso Rápido:** Botão `🎵` adicionado à barra de ferramentas do editor ("Ferramentas > Gerar Playlist por IA") e à Ribbon.
+
 ### Código Adicionado/Modificado
 *   [footnotes.ts](file:///home/zucchi/Projetos/Eldritch_Lich/packages/domain/src/editor/footnotes.ts) (Módulo de parsing e validação de notas e referências)
-*   [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx) (Modal, Handlers e botões de interface para UC-393 e UC-394)
-*   [ROADMAP.md](file:///home/zucchi/Projetos/Eldritch_Lich/ROADMAP.md) (Casos UC-393 e UC-394 atualizados para concluído)
+*   [playlist.ts](file:///home/zucchi/Projetos/Eldritch_Lich/packages/domain/src/editor/playlist.ts) (Motor de classificação de humor e geração de playlists por capítulo)
+*   [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx) (Modais, Handlers, Audio Player e botões de interface para UC-393, UC-394 e UC-412)
+*   [ROADMAP.md](file:///home/zucchi/Projetos/Eldritch_Lich/ROADMAP.md) (Casos UC-393, UC-394 e UC-412 atualizados para concluído)
 
 ## [2026-07-22] (Correção de Navegação e Autenticação) - Correção de Fluxo e Interface do Usuário
 

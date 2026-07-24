@@ -28,6 +28,7 @@ __exportStar(require("./editor/exporter.js"), exports);
 __exportStar(require("./editor/templates.js"), exports);
 __exportStar(require("./editor/comments.js"), exports);
 __exportStar(require("./editor/footnotes.js"), exports);
+__exportStar(require("./editor/playlist.js"), exports);
 __exportStar(require("./editor/categories.js"), exports);
 __exportStar(require("./editor/audit.js"), exports);
 __exportStar(require("./auth/types.js"), exports);

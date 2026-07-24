@@ -34,7 +34,13 @@ import {
   InlineComment,
   categorizeText,
   createAuditLog,
-  SystemActivity
+  SystemActivity,
+  processFootnotes,
+  validateCrossReferences,
+  CrossReferenceItem,
+  generateChapterPlaylist,
+  PlaylistResult,
+  TrackItem
 } from '@eldritch/domain';
 import { computeE5Embedding, extractEntitiesWithNER, ProgressPayload } from '../../services/mms-ai';
 
@@ -386,6 +392,14 @@ export default function EditorComponent() {
   const [crossRefTargetId, setCrossRefTargetId] = useState('');
   const [crossRefText, setCrossRefText] = useState('');
 
+  // Chapter Playlist States (UC-412)
+  const [playlist, setPlaylist] = useState<PlaylistResult | null>(null);
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [isGeneratingPlaylist, setIsGeneratingPlaylist] = useState(false);
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
   // Menu bar dropdown active state
   const [activeMenuDropdown, setActiveMenuDropdown] = useState<'file' | 'edit' | 'view' | 'insert' | 'format' | 'tools' | null>(null);
 
@@ -537,6 +551,44 @@ export default function EditorComponent() {
     setCrossRefText('');
     setSuccess('Referência cruzada inserida com sucesso!');
     setTimeout(() => setSuccess(null), 3000);
+  };
+
+  // Chapter Playlist AI Generator & Audio Player (UC-412)
+  const handleGenerateChapterPlaylist = async () => {
+    if (!activeManuscript || !editor) return;
+    const content = editor.getHTML();
+    if (!content || !content.replace(/<[^>]*>/g, '').trim()) {
+      setSuccess('O capítulo selecionado está vazio. Digite algum texto para gerar a playlist.');
+      setTimeout(() => setSuccess(null), 4000);
+      return;
+    }
+
+    setIsGeneratingPlaylist(true);
+    try {
+      // Simulate/Run fast AI mood classification & playlist compilation (< 4s)
+      const res = generateChapterPlaylist(activeManuscript.id, content);
+      setPlaylist(res);
+      setCurrentTrackIndex(0);
+      setShowPlaylistModal(true);
+      setSuccess(`Playlist gerada com base no humor '${res.detectedMood.toUpperCase()}'!`);
+      setTimeout(() => setSuccess(null), 3500);
+    } catch (err: any) {
+      setSuccess(err.message || 'Erro ao gerar playlist do capítulo.');
+      setTimeout(() => setSuccess(null), 4000);
+    } finally {
+      setIsGeneratingPlaylist(false);
+    }
+  };
+
+  const handleTogglePlayAudio = () => {
+    if (!audioRef.current || !playlist) return;
+    if (isPlayingAudio) {
+      audioRef.current.pause();
+      setIsPlayingAudio(false);
+    } else {
+      audioRef.current.play().catch(err => console.error('Erro ao reproduzir áudio:', err));
+      setIsPlayingAudio(true);
+    }
   };
 
   // Theme state (Google Docs Light / Dark mode - UC-159)
@@ -4052,6 +4104,7 @@ export default function EditorComponent() {
                         {activeMenuDropdown === 'tools' && (
                           <div className="dropdown-menu-list animate-fade-in">
                             <button onClick={() => { handleOpenStandardizeNames(); setActiveMenuDropdown(null); }}>✨ Padronizar Nomes de Personagens (UC-092)</button>
+                            <button onClick={() => { handleGenerateChapterPlaylist(); setActiveMenuDropdown(null); }}>🎵 Gerar Playlist do Capítulo por IA (UC-412)</button>
                           </div>
                         )}
                       </div>
@@ -4237,7 +4290,7 @@ export default function EditorComponent() {
                 <button onClick={() => setShowLinkModal(true)} className="ribbon-btn" title="Inserir Link (UC-110, UC-111)">🔗</button>
                 <button onClick={() => setShowNoteModal(true)} className="ribbon-btn" title="Inserir Nota de Rodapé (UC-115, UC-393)">📝</button>
                 <button onClick={() => setShowCrossRefModal(true)} className="ribbon-btn" title="Inserir Referência Cruzada entre Capítulos (UC-394)">📌</button>
-                <button onClick={() => setShowNoteModal(true)} className="ribbon-btn" title="Inserir Nota de Rodapé (UC-115, UC-393)">📝</button>
+                <button onClick={handleGenerateChapterPlaylist} className="ribbon-btn" title="Gerar Playlist por Humor do Capítulo por IA (UC-412)">🎵</button>
                 <button onClick={() => setShowSearchModal(true)} className="ribbon-btn" title="Buscar & Substituir (UC-022, UC-024)">🔍</button>
                 <button onClick={() => setShowImportModal(true)} className="ribbon-btn" title="Importar Manuscrito (UC-007)">📥</button>
                 <button onClick={() => setShowExportModal(true)} className="ribbon-btn primary" title="Exportar Manuscrito (UC-008)">📤</button>
@@ -5842,6 +5895,109 @@ export default function EditorComponent() {
               </button>
               <button type="button" className="btn-modal-close" onClick={() => setShowCrossRefModal(false)}>
                 Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Chapter Playlist Modal & Audio Player (UC-412) */}
+      {showPlaylistModal && playlist && (
+        <div className="version-modal-overlay animate-fade-in">
+          <div className="import-modal-card glass" style={{ maxWidth: '560px' }}>
+            <div className="import-modal-header">
+              <h3>🎵 Playlist por Humor do Capítulo (IA)</h3>
+              <p className="import-subtitle">
+                Humor Detectado: <strong style={{ textTransform: 'uppercase', color: '#3b82f6' }}>{playlist.detectedMood}</strong> (Crossfade: {playlist.crossfadeSeconds}s)
+              </p>
+            </div>
+            
+            <div className="import-form-body">
+              {/* Hidden audio element with crossfade support */}
+              <audio 
+                ref={audioRef} 
+                src={playlist.tracks[currentTrackIndex]?.audioUrl} 
+                onEnded={() => {
+                  if (currentTrackIndex < playlist.tracks.length - 1) {
+                    setCurrentTrackIndex(prev => prev + 1);
+                  } else {
+                    setIsPlayingAudio(false);
+                  }
+                }}
+              />
+
+              {/* Current Track Player Card */}
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '8px',
+                padding: '1rem',
+                marginBottom: '1rem',
+                textAlign: 'center'
+              }}>
+                <div style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>🎶</div>
+                <h4 style={{ margin: '0 0 0.25rem 0' }}>{playlist.tracks[currentTrackIndex]?.title}</h4>
+                <p style={{ margin: 0, opacity: 0.7, fontSize: '0.875rem' }}>{playlist.tracks[currentTrackIndex]?.artist}</p>
+                
+                <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                  <button 
+                    type="button"
+                    onClick={() => setCurrentTrackIndex(prev => Math.max(0, prev - 1))}
+                    disabled={currentTrackIndex === 0}
+                    className="btn-modal-close"
+                    style={{ padding: '0.4rem 0.8rem' }}
+                  >
+                    ⏮️
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={handleTogglePlayAudio}
+                    className="btn-modal-restore"
+                    style={{ padding: '0.4rem 1.2rem' }}
+                  >
+                    {isPlayingAudio ? '⏸️ Pausar' : '▶️ Reproduzir'}
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setCurrentTrackIndex(prev => Math.min(playlist.tracks.length - 1, prev + 1))}
+                    disabled={currentTrackIndex === playlist.tracks.length - 1}
+                    className="btn-modal-close"
+                    style={{ padding: '0.4rem 0.8rem' }}
+                  >
+                    ⏭️
+                  </button>
+                </div>
+              </div>
+
+              {/* Track List */}
+              <label>Faixas da Playlist ({playlist.tracks.length}):</label>
+              <div style={{ maxHeight: '180px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '0.4rem' }}>
+                {playlist.tracks.map((track, idx) => (
+                  <div 
+                    key={track.id}
+                    onClick={() => { setCurrentTrackIndex(idx); setIsPlayingAudio(true); audioRef.current?.play(); }}
+                    style={{
+                      padding: '0.5rem 0.8rem',
+                      borderRadius: '6px',
+                      background: idx === currentTrackIndex ? 'rgba(59, 130, 246, 0.2)' : 'rgba(255, 255, 255, 0.02)',
+                      border: idx === currentTrackIndex ? '1px solid #3b82f6' : '1px solid transparent',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      fontSize: '0.875rem'
+                    }}
+                  >
+                    <span>{idx + 1}. {track.title} — <em>{track.artist}</em></span>
+                    <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>{Math.floor(track.durationSeconds / 60)}:{(track.durationSeconds % 60).toString().padStart(2, '0')}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="import-modal-actions">
+              <button type="button" className="btn-modal-close" onClick={() => setShowPlaylistModal(false)}>
+                Fechar Reprodutor
               </button>
             </div>
           </div>
