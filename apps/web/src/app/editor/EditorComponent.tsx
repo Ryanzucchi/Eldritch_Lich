@@ -380,6 +380,12 @@ export default function EditorComponent() {
   // Footnote / Note Modal States (UC-115, UC-393)
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [noteText, setNoteText] = useState('');
+
+  // Cross-Reference Modal States (UC-394)
+  const [showCrossRefModal, setShowCrossRefModal] = useState(false);
+  const [crossRefTargetId, setCrossRefTargetId] = useState('');
+  const [crossRefText, setCrossRefText] = useState('');
+
   // Menu bar dropdown active state
   const [activeMenuDropdown, setActiveMenuDropdown] = useState<'file' | 'edit' | 'view' | 'insert' | 'format' | 'tools' | null>(null);
 
@@ -505,11 +511,31 @@ export default function EditorComponent() {
   // Footnote insertion handler (UC-115, UC-393)
   const handleExecuteInsertNote = () => {
     if (!editor || !noteText.trim()) return;
-    const noteHtml = `<span className="footnote-box" title="${noteText.replace(/"/g, '&quot;')}">📝 [Nota: ${noteText}]</span> `;
+    const cleanText = noteText.trim().replace(/"/g, '&quot;');
+    const noteHtml = `<span class="footnote-box" data-footnote-text="${cleanText}" title="${cleanText}">📝 [Nota: ${cleanText}]</span> `;
     editor.commands.insertContent(noteHtml);
     setShowNoteModal(false);
     setNoteText('');
-    setSuccess('Nota de rodapé inserida com sucesso!');
+    setSuccess('Nota de rodapé inserida e renumerada com sucesso!');
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  // Cross-reference insertion handler (UC-394)
+  const handleExecuteInsertCrossRef = () => {
+    if (!editor || !crossRefTargetId) return;
+    const targetDoc = manuscripts.find(m => m.id === crossRefTargetId);
+    if (!targetDoc) return;
+
+    const title = targetDoc.title || 'Capítulo Sem Título';
+    const label = crossRefText.trim() || `ver ${title}`;
+    const cleanLabel = label.replace(/"/g, '&quot;');
+    const refHtml = `<a class="cross-ref-link" data-target-id="${targetDoc.id}" data-target-title="${title.replace(/"/g, '&quot;')}" href="#${targetDoc.id}">📌 ${cleanLabel}</a> `;
+    
+    editor.commands.insertContent(refHtml);
+    setShowCrossRefModal(false);
+    setCrossRefTargetId('');
+    setCrossRefText('');
+    setSuccess('Referência cruzada inserida com sucesso!');
     setTimeout(() => setSuccess(null), 3000);
   };
 
@@ -4004,6 +4030,7 @@ export default function EditorComponent() {
                             <button onClick={() => { setShowDrawingModal(true); setActiveMenuDropdown(null); }}>🎨 Quadro de Desenho / Rascunho (UC-062)...</button>
                             <button onClick={() => { setShowLinkModal(true); setActiveMenuDropdown(null); }}>🔗 Hyperlink (UC-110, UC-111)...</button>
                             <button onClick={() => { setShowNoteModal(true); setActiveMenuDropdown(null); }}>📝 Nota de Rodapé (UC-115, UC-393)...</button>
+                            <button onClick={() => { setShowCrossRefModal(true); setActiveMenuDropdown(null); }}>📌 Referência Cruzada (UC-394)...</button>
                             <button onClick={() => { editor?.commands.setHorizontalRule(); setActiveMenuDropdown(null); }}>― Linha Divisória</button>
                           </div>
                         )}
@@ -4208,6 +4235,8 @@ export default function EditorComponent() {
                 {/* Quick Insert Tools */}
                 <button onClick={handleOpenAddComment} className="ribbon-btn" title="Adicionar Comentário na Margem (UC-114)">💬</button>
                 <button onClick={() => setShowLinkModal(true)} className="ribbon-btn" title="Inserir Link (UC-110, UC-111)">🔗</button>
+                <button onClick={() => setShowNoteModal(true)} className="ribbon-btn" title="Inserir Nota de Rodapé (UC-115, UC-393)">📝</button>
+                <button onClick={() => setShowCrossRefModal(true)} className="ribbon-btn" title="Inserir Referência Cruzada entre Capítulos (UC-394)">📌</button>
                 <button onClick={() => setShowNoteModal(true)} className="ribbon-btn" title="Inserir Nota de Rodapé (UC-115, UC-393)">📝</button>
                 <button onClick={() => setShowSearchModal(true)} className="ribbon-btn" title="Buscar & Substituir (UC-022, UC-024)">🔍</button>
                 <button onClick={() => setShowImportModal(true)} className="ribbon-btn" title="Importar Manuscrito (UC-007)">📥</button>
@@ -5757,6 +5786,61 @@ export default function EditorComponent() {
                 Inserir Nota
               </button>
               <button type="button" className="btn-modal-close" onClick={() => setShowNoteModal(false)}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cross-Reference Modal (UC-394) */}
+      {showCrossRefModal && (
+        <div className="version-modal-overlay animate-fade-in">
+          <div className="import-modal-card glass">
+            <div className="import-modal-header">
+              <h3>📌 Inserir Referência Cruzada</h3>
+              <p className="import-subtitle">Crie um link dinâmico para outro capítulo ou seção do projeto.</p>
+            </div>
+            <div className="import-form-body">
+              <div className="form-group">
+                <label>Capítulo / Manuscrito de Destino:</label>
+                <select 
+                  value={crossRefTargetId} 
+                  onChange={(e) => setCrossRefTargetId(e.target.value)}
+                  className="search-input"
+                  style={{ width: '100%' }}
+                  autoFocus
+                >
+                  <option value="">-- Selecione o capítulo de destino --</option>
+                  {manuscripts.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.title || 'Sem Título'} {m.id === activeManuscript?.id ? '(Capítulo Atual)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Texto de Exibição (Opcional):</label>
+                <input 
+                  type="text" 
+                  placeholder="Ex: ver Capítulo 3 (ou deixe em branco para usar o título)" 
+                  value={crossRefText} 
+                  onChange={(e) => setCrossRefText(e.target.value)}
+                  className="search-input"
+                  style={{ width: '100%' }}
+                />
+              </div>
+            </div>
+            <div className="import-modal-actions">
+              <button 
+                type="button" 
+                className="btn-modal-restore" 
+                onClick={handleExecuteInsertCrossRef}
+                disabled={!crossRefTargetId}
+              >
+                Inserir Referência
+              </button>
+              <button type="button" className="btn-modal-close" onClick={() => setShowCrossRefModal(false)}>
                 Cancelar
               </button>
             </div>

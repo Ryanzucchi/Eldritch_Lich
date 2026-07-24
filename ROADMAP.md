@@ -550,10 +550,10 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-294** — Filtrar eventos históricos por facção (participação política) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-393** — Gerenciar notas de rodapé de textos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-393** — Gerenciar notas de rodapé de textos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-394** — Criar referências cruzadas entre capítulos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-394** — Criar referências cruzadas entre capítulos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-399** — Associar trilha sonora/música a cenas (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)

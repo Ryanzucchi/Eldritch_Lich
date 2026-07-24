@@ -11,6 +11,7 @@ export * from './editor/search.js';
 export * from './editor/exporter.js';
 export * from './editor/templates.js';
 export * from './editor/comments.js';
+export * from './editor/footnotes.js';
 export * from './editor/categories.js';
 export * from './editor/audit.js';
 export * from './auth/types.js';

@@ -2,6 +2,22 @@
 
 Este registro lista em ordem cronológica todas as atualizações de desenvolvimento integradas a esta base de conhecimento.
 
+## [2026-07-24] (Core Editor: Notas de Rodapé e Referências Cruzadas) - UC-393 & UC-394
+
+### 📝 Notas de Rodapé Renumeradas (UC-393)
+*   **Processamento & Renumeração Automática:** Implementada função `processFootnotes` em `@eldritch/domain` para extrair, ordenar e renumerar automaticamente sobrescritos de notas de rodapé no formato `[1]`, `[2]`, preservando atribuição de conteúdo sem órfãos.
+*   **Integração no Editor Rico:** Modal de inclusão de notas atualizada para gravar o atributo `data-footnote-text`, permitindo renderização limpa e renumeração em tempo real.
+
+### 📌 Referências Cruzadas entre Capítulos (UC-394)
+*   **Links Dinâmicos Inter-Capítulos:** Implementada função `validateCrossReferences` em `@eldritch/domain` para detectar links cruzados e sinalizar visualmente referências quebradas (`is-broken`) caso capítulos de destino sejam deletados.
+*   **Modal de Inserção de Referência Cruzada:** Adicionada modal no editor que permite ao autor selecionar um capítulo do projeto ativo e definir o rótulo de exibição (ex: `ver Capítulo 3`).
+*   **Interface:** Botão dedicado `📌` adicionado tanto à Barra de Menus ("Inserir > Referência Cruzada") quanto à Ribbon de ferramentas.
+
+### Código Adicionado/Modificado
+*   [footnotes.ts](file:///home/zucchi/Projetos/Eldritch_Lich/packages/domain/src/editor/footnotes.ts) (Módulo de parsing e validação de notas e referências)
+*   [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx) (Modal, Handlers e botões de interface para UC-393 e UC-394)
+*   [ROADMAP.md](file:///home/zucchi/Projetos/Eldritch_Lich/ROADMAP.md) (Casos UC-393 e UC-394 atualizados para concluído)
+
 ## [2026-07-22] (Correção de Navegação e Autenticação) - Correção de Fluxo e Interface do Usuário
 
 ### 🎯 Correção do Fluxo de Navegação & Tela de Entrada
