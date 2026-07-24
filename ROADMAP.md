@@ -661,10 +661,10 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-266** — Navegar entre mapas aninhados (zoom in/out de região) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-099, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-267** — Importar mapas geográficos (arquivos de imagem) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-267** — Importar mapas geográficos (arquivos de imagem) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-099, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-268** — Exportar mapas geográficos (imagem com pinos) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-268** — Exportar mapas geográficos (imagem com pinos) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-099, UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-270** — Visualizar galeria de imagens do projeto (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)

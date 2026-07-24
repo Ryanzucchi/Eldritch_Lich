@@ -2,11 +2,11 @@
 
 Este registro lista em ordem cronológica todas as atualizações de desenvolvimento integradas a esta base de conhecimento.
 
-## [2026-07-24] (Mapas Mentais, Cartografia, Linhas do Tempo e Core Editor) - UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
+## [2026-07-24] (Cartografia, Mapas Mentais, Linhas do Tempo e Core Editor) - UC-267, UC-268, UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
 
-### 🧠 Mapas Mentais Radiais e Conversão com Grafo de Conhecimento (UC-102, UC-103, UC-104)
-*   **Criação de Mapas Mentais Radiais (UC-102):** Módulo e tela `/mindmaps` para criação de árvores conceituais radiais com nós centrais e filhos. Salvamento automático no IndexedDB Dexie (Versão 14).
-*   **Conversão Bi-direcional Grafo ⇄ Mapa Mental (UC-103, UC-104):** Funções `convertGraphToMindMap` e `convertMindMapToGraph` em `@eldritch/domain` permitindo transformar redes do grafo em mapas mentais radiais a partir de uma raiz e converter árvores de mapas mentais diretamente em nós/arestas no Grafo de Entidades.
+### 🗺️ Importação e Exportação de Mapas Geográficos (UC-267, UC-268)
+*   **Importação de Mapas Geográficos (UC-267):** Modal de upload com suporte a múltiplos formatos de imagem (.png, .jpg, .webp) com limite de 20MB e renderização responsiva.
+*   **Exportação de Mapa com Pinos (UC-268):** Botão `📥 Exportar Mapa (UC-268)` em `/maps` permitindo download direto da imagem com preservação de escala.
 
 ### ⏳ Linhas do Tempo, Vínculo com Lore e Exportação (UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264)
 *   **Exportação Multiformato e HTML Interativo (UC-171, UC-264):** Módulo `exportTimeline` em `@eldritch/domain` (.html, .md, .json).

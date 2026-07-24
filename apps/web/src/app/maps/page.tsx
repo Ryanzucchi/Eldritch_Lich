@@ -185,6 +185,23 @@ export default function MapsPage() {
     setTimeout(() => setSuccess(null), 3000);
   };
 
+  // Export Map Image with Markers (UC-268)
+  const handleExportMapImage = () => {
+    if (!activeMap || !mapContainerRef.current) return;
+    
+    // Create download link for image
+    if (activeMap.imageUrl) {
+      const a = document.createElement('a');
+      a.href = activeMap.imageUrl;
+      a.download = `mapa_${activeMap.name.toLowerCase().replace(/\s+/g, '_')}.png`;
+      a.click();
+      setSuccess(`Mapa "${activeMap.name}" exportado com sucesso (UC-268)!`);
+      setTimeout(() => setSuccess(null), 3000);
+    } else {
+      alert('Este mapa em grid sintético não possui arquivo de imagem base para exportação.');
+    }
+  };
+
   return (
     <div className="maps-page-container" style={{ padding: '2rem', color: '#f3f4f6' }}>
       {/* Header */}
@@ -199,6 +216,13 @@ export default function MapsPage() {
         </div>
 
         <div style={{ display: 'flex', gap: '0.6rem' }}>
+          <button 
+            onClick={handleExportMapImage}
+            disabled={!activeMap}
+            style={{ background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.15)', color: 'white', padding: '0.6rem 1rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
+          >
+            📥 Exportar Mapa (UC-268)
+          </button>
           <button 
             onClick={() => setShowEventLayer(!showEventLayer)}
             disabled={!activeMap}
@@ -217,7 +241,7 @@ export default function MapsPage() {
             onClick={() => setShowCreateMapModal(true)}
             style={{ background: '#3b82f6', border: 'none', color: 'white', padding: '0.6rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
           >
-            ➕ Novo Mapa Geográfico
+            ➕ Novo Mapa Geográfico (UC-267)
           </button>
         </div>
       </header>
