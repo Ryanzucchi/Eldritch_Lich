@@ -3,13 +3,23 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { db } from '../../db/schema';
-import { Timeline, TimelineEvent, validateTimelineConsistency } from '@eldritch/domain';
+import { Timeline, TimelineEvent, validateTimelineConsistency, compareTimelines, TimelineComparisonResult } from '@eldritch/domain';
 
 export default function TimelinePage() {
   const { activeProject } = useApp();
   const [timelines, setTimelines] = useState<Timeline[]>([]);
   const [activeTimeline, setActiveTimeline] = useState<Timeline | null>(null);
   const [events, setEvents] = useState<TimelineEvent[]>([]);
+  
+  // Parallel Branch States (UC-076)
+  const [showBranchModal, setShowBranchModal] = useState(false);
+  const [branchTimelineName, setBranchTimelineName] = useState('');
+  const [bifurcationEventId, setBifurcationEventId] = useState('');
+
+  // Comparison States (UC-079)
+  const [showCompareModal, setShowCompareModal] = useState(false);
+  const [compareTimelineIdB, setCompareTimelineIdB] = useState('');
+  const [comparisonResult, setComparisonResult] = useState<TimelineComparisonResult | null>(null);
   
   // Modal states
   const [showCreateTimelineModal, setShowCreateTimelineModal] = useState(false);
@@ -112,6 +122,63 @@ export default function TimelinePage() {
     setTimeout(() => setSuccess(null), 3000);
   };
 
+  // Create Parallel Timeline Branch (UC-076)
+  const handleCreateParallelBranch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeTimeline || !branchTimelineName.trim() || !activeProject) return;
+
+    const newBranchTl: Timeline = {
+      id: `tl_branch_${Date.now()}`,
+      projectId: activeProject.id,
+      name: branchTimelineName.trim(),
+      description: `Linha paralela bifurcada de "${activeTimeline.name}"`,
+      calendarType: activeTimeline.calendarType,
+      parentTimelineId: activeTimeline.id,
+      bifurcationEventId: bifurcationEventId || undefined,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    await db.timelines.put(newBranchTl);
+
+    // Clone events up to bifurcation event or all if not specified
+    let eventsToClone = [...events];
+    if (bifurcationEventId) {
+      const bifEvent = events.find(e => e.id === bifurcationEventId);
+      if (bifEvent) {
+        eventsToClone = events.filter(e => e.sortOrder <= bifEvent.sortOrder);
+      }
+    }
+
+    const clonedEvents: TimelineEvent[] = eventsToClone.map(ev => ({
+      ...ev,
+      id: `ev_cloned_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      timelineId: newBranchTl.id
+    }));
+
+    await db.timelineEvents.bulkPut(clonedEvents);
+    setBranchTimelineName('');
+    setBifurcationEventId('');
+    setShowBranchModal(false);
+    setActiveTimeline(newBranchTl);
+    await loadTimelines();
+    setSuccess(`Linha paralela "${newBranchTl.name}" criada com ${clonedEvents.length} eventos clonados!`);
+    setTimeout(() => setSuccess(null), 3500);
+  };
+
+  // Compare Two Timelines (UC-079)
+  const handleCompareTimelines = async () => {
+    if (!activeTimeline || !compareTimelineIdB) return;
+    const targetTlB = timelines.find(t => t.id === compareTimelineIdB);
+    if (!targetTlB) return;
+
+    const eventsBList = await db.timelineEvents.where('timelineId').equals(targetTlB.id).toArray();
+    eventsBList.sort((a, b) => a.sortOrder - b.sortOrder);
+
+    const res = compareTimelines(activeTimeline, events, targetTlB, eventsBList);
+    setComparisonResult(res);
+  };
+
   return (
     <div className="timeline-page-container" style={{ padding: '2rem', color: '#f3f4f6' }}>
       {/* Header */}
@@ -125,13 +192,28 @@ export default function TimelinePage() {
           </p>
         </div>
 
-        <button 
-          onClick={() => setShowCreateTimelineModal(true)}
-          className="btn-portal-logout"
-          style={{ background: '#3b82f6', border: 'none', padding: '0.6rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
-        >
-          ➕ Criar Nova Linha do Tempo
-        </button>
+        <div style={{ display: 'flex', gap: '0.6rem' }}>
+          <button 
+            onClick={() => setShowBranchModal(true)}
+            disabled={!activeTimeline}
+            style={{ background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.15)', color: 'white', padding: '0.6rem 1rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
+          >
+            🌿 Bifurcar Linha Paralela (UC-076)
+          </button>
+          <button 
+            onClick={() => { setShowCompareModal(true); setComparisonResult(null); }}
+            disabled={timelines.length < 2}
+            style={{ background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.15)', color: 'white', padding: '0.6rem 1rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
+          >
+            ⚖️ Comparar Timelines (UC-079)
+          </button>
+          <button 
+            onClick={() => setShowCreateTimelineModal(true)}
+            style={{ background: '#3b82f6', border: 'none', color: 'white', padding: '0.6rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
+          >
+            ➕ Criar Linha do Tempo
+          </button>
+        </div>
       </header>
 
       {/* Messages */}
@@ -341,6 +423,132 @@ export default function TimelinePage() {
                 <button type="submit" style={{ background: '#3b82f6', border: 'none', color: 'white', padding: '0.5rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>Salvar Evento</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Bifurcar Linha Paralela (UC-076) */}
+      {showBranchModal && activeTimeline && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px', padding: '1.8rem', width: '100%', maxWidth: '480px' }}>
+            <h3 style={{ margin: '0 0 0.5rem 0' }}>🌿 Criar Linha Paralela / Universo Alternativo (UC-076)</h3>
+            <p style={{ fontSize: '0.85rem', opacity: 0.7, margin: '0 0 1.2rem 0' }}>
+              Bifurca a linha <strong>"{activeTimeline.name}"</strong> clonando todos os eventos até o ponto de ramificação.
+            </p>
+            <form onSubmit={handleCreateParallelBranch}>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Nome da Nova Linha Paralela:</label>
+                <input 
+                  type="text"
+                  required
+                  placeholder="Ex: Realidade B, O que aconteceria se..."
+                  value={branchTimelineName}
+                  onChange={e => setBranchTimelineName(e.target.value)}
+                  style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Ponto de Bifurcação (Clonar eventos até):</label>
+                <select 
+                  value={bifurcationEventId}
+                  onChange={e => setBifurcationEventId(e.target.value)}
+                  style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                >
+                  <option value="">-- Clonar todos os eventos da linha base --</option>
+                  {events.map(ev => (
+                    <option key={ev.id} value={ev.id}>{ev.title} ({ev.dateStr})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+                <button type="button" onClick={() => setShowBranchModal(false)} style={{ background: 'transparent', border: 'none', color: '#9ca3af', padding: '0.5rem 1rem', cursor: 'pointer' }}>Cancelar</button>
+                <button type="submit" style={{ background: '#10b981', border: 'none', color: 'white', padding: '0.5rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>Criar Linha Paralela</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Comparar Duas Linhas do Tempo (UC-079) */}
+      {showCompareModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px', padding: '1.8rem', width: '100%', maxWidth: '640px', maxHeight: '85vh', overflowY: 'auto' }}>
+            <h3 style={{ margin: '0 0 0.5rem 0' }}>⚖️ Comparar Duas Linhas do Tempo (UC-079)</h3>
+            <p style={{ fontSize: '0.85rem', opacity: 0.7, margin: '0 0 1.2rem 0' }}>
+              Compare eventos equivalentes e identifique pontos de divergência entre duas cronologias.
+            </p>
+
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.2rem' }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Linha A (Base):</label>
+                <input 
+                  type="text" 
+                  disabled 
+                  value={activeTimeline?.name || ''} 
+                  style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#9ca3af' }}
+                />
+              </div>
+
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Linha B (Para Comparação):</label>
+                <select 
+                  value={compareTimelineIdB}
+                  onChange={e => setCompareTimelineIdB(e.target.value)}
+                  style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                >
+                  <option value="">-- Selecione a segunda linha --</option>
+                  {timelines.filter(t => t.id !== activeTimeline?.id).map(t => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <button 
+              type="button" 
+              onClick={handleCompareTimelines} 
+              disabled={!compareTimelineIdB}
+              style={{ width: '100%', background: '#3b82f6', border: 'none', color: 'white', padding: '0.6rem', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', marginBottom: '1.5rem' }}
+            >
+              Executar Comparação Cronológica
+            </button>
+
+            {/* Comparison Results */}
+            {comparisonResult && (
+              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '1rem' }}>
+                <h4 style={{ margin: '0 0 0.8rem 0', fontSize: '1rem' }}>Resultado da Análise de Divergências:</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                  {comparisonResult.divergentEvents.map((item, idx) => (
+                    <div 
+                      key={idx}
+                      style={{
+                        padding: '0.6rem 0.8rem',
+                        borderRadius: '6px',
+                        background: item.type === 'COMMON' ? 'rgba(16, 185, 129, 0.1)' : item.type === 'DATE_MISMATCH' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        fontSize: '0.85rem',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <div>
+                        {item.type === 'COMMON' && <span>🟢 <strong>{item.eventA?.title}</strong> — Ocorre em ambas as linhas ({item.eventA?.dateStr})</span>}
+                        {item.type === 'DATE_MISMATCH' && <span>⚠️ <strong>{item.eventA?.title}</strong> — Conflito de Data: Em A ({item.eventA?.dateStr}) vs Em B ({item.eventB?.dateStr})</span>}
+                        {item.type === 'ONLY_IN_A' && <span>🔹 <strong>{item.eventA?.title}</strong> ({item.eventA?.dateStr}) — Exclusivo da Linha A</span>}
+                        {item.type === 'ONLY_IN_B' && <span>🔸 <strong>{item.eventB?.title}</strong> ({item.eventB?.dateStr}) — Exclusivo da Linha B</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+              <button type="button" onClick={() => setShowCompareModal(false)} style={{ background: 'transparent', border: 'none', color: '#9ca3af', padding: '0.5rem 1rem', cursor: 'pointer' }}>Fechar</button>
+            </div>
           </div>
         </div>
       )}

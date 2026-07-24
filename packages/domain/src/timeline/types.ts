@@ -18,8 +18,20 @@ export interface Timeline {
   name: string;
   description?: string;
   calendarType: 'gregorian' | 'custom';
+  parentTimelineId?: string; // UC-076
+  bifurcationEventId?: string; // UC-076
   createdAt: string;
   updatedAt: string;
+}
+
+export interface TimelineComparisonResult {
+  timelineA: Timeline;
+  timelineB: Timeline;
+  divergentEvents: {
+    eventA?: TimelineEvent;
+    eventB?: TimelineEvent;
+    type: 'ONLY_IN_A' | 'ONLY_IN_B' | 'COMMON' | 'DATE_MISMATCH';
+  }[];
 }
 
 /**
@@ -52,5 +64,48 @@ export function validateTimelineConsistency(events: TimelineEvent[]): {
   return {
     isValid: warnings.length === 0,
     warnings
+  };
+}
+
+/**
+ * Compara duas linhas do tempo e identifica eventos divergentes e equivalentes (UC-079).
+ */
+export function compareTimelines(
+  timelineA: Timeline,
+  eventsA: TimelineEvent[],
+  timelineB: Timeline,
+  eventsB: TimelineEvent[]
+): TimelineComparisonResult {
+  const divergentEvents: TimelineComparisonResult['divergentEvents'] = [];
+
+  const mapB = new Map<string, TimelineEvent>();
+  eventsB.forEach(e => mapB.set(e.title.toLowerCase(), e));
+
+  const matchedBIds = new Set<string>();
+
+  eventsA.forEach(evA => {
+    const evB = mapB.get(evA.title.toLowerCase());
+    if (evB) {
+      matchedBIds.add(evB.id);
+      if (evA.dateStr !== evB.dateStr) {
+        divergentEvents.push({ eventA: evA, eventB: evB, type: 'DATE_MISMATCH' });
+      } else {
+        divergentEvents.push({ eventA: evA, eventB: evB, type: 'COMMON' });
+      }
+    } else {
+      divergentEvents.push({ eventA: evA, type: 'ONLY_IN_A' });
+    }
+  });
+
+  eventsB.forEach(evB => {
+    if (!matchedBIds.has(evB.id)) {
+      divergentEvents.push({ eventB: evB, type: 'ONLY_IN_B' });
+    }
+  });
+
+  return {
+    timelineA,
+    timelineB,
+    divergentEvents
   };
 }

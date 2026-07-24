@@ -17,8 +17,19 @@ export interface Timeline {
     name: string;
     description?: string;
     calendarType: 'gregorian' | 'custom';
+    parentTimelineId?: string;
+    bifurcationEventId?: string;
     createdAt: string;
     updatedAt: string;
+}
+export interface TimelineComparisonResult {
+    timelineA: Timeline;
+    timelineB: Timeline;
+    divergentEvents: {
+        eventA?: TimelineEvent;
+        eventB?: TimelineEvent;
+        type: 'ONLY_IN_A' | 'ONLY_IN_B' | 'COMMON' | 'DATE_MISMATCH';
+    }[];
 }
 /**
  * Valida conexões causais de eventos em uma timeline.
@@ -28,3 +39,7 @@ export declare function validateTimelineConsistency(events: TimelineEvent[]): {
     isValid: boolean;
     warnings: string[];
 };
+/**
+ * Compara duas linhas do tempo e identifica eventos divergentes e equivalentes (UC-079).
+ */
+export declare function compareTimelines(timelineA: Timeline, eventsA: TimelineEvent[], timelineB: Timeline, eventsB: TimelineEvent[]): TimelineComparisonResult;

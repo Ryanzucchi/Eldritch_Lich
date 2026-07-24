@@ -589,7 +589,7 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-069** — Colocar imagens e texto como capa de pastas e texto (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
   - Depende de: UC-011, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-076** — Permitir múltiplas linhas do tempo paralelas (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-076** — Permitir múltiplas linhas do tempo paralelas (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-055, UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-077** — Permitir universos alternativos (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
@@ -598,7 +598,7 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-078** — Comparar duas versões do universo (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-079** — Comparar duas linhas do tempo (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-079** — Comparar duas linhas do tempo (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-055, UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-080** — Fazer ramificacoes temporárias (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
