@@ -2,7 +2,12 @@
 
 Este registro lista em ordem cronológica todas as atualizações de desenvolvimento integradas a esta base de conhecimento.
 
-## [2026-07-24] (Core Editor: Notas de Rodapé, Referências Cruzadas e Playlist de Áudio IA) - UC-393, UC-394 & UC-412
+## [2026-07-24] (Core Editor & Galeria: Notas de Rodapé, Referências Cruzadas, Playlist IA e Colar Imagens) - UC-393, UC-394, UC-412 & UC-065
+
+### 🖼️ Colar Imagens Diretamente no Texto (UC-065)
+*   **Clipboard API & Inserção Inline:** Configurada a propriedade `handlePaste` no ProseMirror/TipTap do [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx) para interceptar o evento `Ctrl+V` / `Cmd+V`.
+*   **Conversão DataURL/Base64 & Validação:** Imagens copiadas para a área de transferência (`.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`) são convertidas de forma transparente sem congelar a tela.
+*   **Controle de Exceção:** Imagens superiores a 8MB são barradas com mensagem de aviso dedicada.
 
 ### 📝 Notas de Rodapé Renumeradas (UC-393)
 *   **Processamento & Renumeração Automática:** Implementada função `processFootnotes` em `@eldritch/domain` para extrair, ordenar e renumerar automaticamente sobrescritos de notas de rodapé no formato `[1]`, `[2]`, preservando atribuição de conteúdo sem órfãos.
@@ -21,8 +26,8 @@ Este registro lista em ordem cronológica todas as atualizações de desenvolvim
 ### Código Adicionado/Modificado
 *   [footnotes.ts](file:///home/zucchi/Projetos/Eldritch_Lich/packages/domain/src/editor/footnotes.ts) (Módulo de parsing e validação de notas e referências)
 *   [playlist.ts](file:///home/zucchi/Projetos/Eldritch_Lich/packages/domain/src/editor/playlist.ts) (Motor de classificação de humor e geração de playlists por capítulo)
-*   [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx) (Modais, Handlers, Audio Player e botões de interface para UC-393, UC-394 e UC-412)
-*   [ROADMAP.md](file:///home/zucchi/Projetos/Eldritch_Lich/ROADMAP.md) (Casos UC-393, UC-394 e UC-412 atualizados para concluído)
+*   [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx) (Paste handler para imagens, Modais, Handlers, Audio Player e botões de interface para UC-393, UC-394, UC-412 e UC-065)
+*   [ROADMAP.md](file:///home/zucchi/Projetos/Eldritch_Lich/ROADMAP.md) (Casos UC-393, UC-394, UC-412 e UC-065 atualizados para concluído)
 
 ## [2026-07-22] (Correção de Navegação e Autenticação) - Correção de Fluxo e Interface do Usuário
 

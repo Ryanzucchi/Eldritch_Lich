@@ -574,7 +574,7 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-058** — Ter visualização cronológica (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-055, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-065** — Colar imagens em textos (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
+- [x] **UC-065** — Colar imagens em textos (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-066** — Desenhar a capa das pastas (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)

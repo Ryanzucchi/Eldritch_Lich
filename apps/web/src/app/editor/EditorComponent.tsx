@@ -2628,6 +2628,37 @@ export default function EditorComponent() {
       typingTimeoutRef.current = setTimeout(() => {
         runMMSAnalysis(currentText);
       }, 3000);
+    },
+    editorProps: {
+      handlePaste: (view, event) => {
+        const items = Array.from(event.clipboardData?.items || []);
+        const imageItem = items.find(item => item.type.startsWith('image/'));
+
+        if (imageItem) {
+          const file = imageItem.getAsFile();
+          if (!file) return false;
+
+          if (file.size > 8 * 1024 * 1024) {
+            setSuccess('Erro: A imagem excede o tamanho máximo de 8MB.');
+            setTimeout(() => setSuccess(null), 4000);
+            return true;
+          }
+
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const base64Src = e.target?.result as string;
+            if (base64Src && editor) {
+              const imgHtml = `<img src="${base64Src}" alt="Imagem colada" style="max-width: 100%; height: auto; border-radius: 8px; margin: 0.5rem 0;" />`;
+              editor.commands.insertContent(imgHtml);
+              setSuccess('Imagem colada com sucesso!');
+              setTimeout(() => setSuccess(null), 3000);
+            }
+          };
+          reader.readAsDataURL(file);
+          return true; // prevent default paste behavior
+        }
+        return false;
+      }
     }
   });
 
