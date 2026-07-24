@@ -173,12 +173,22 @@ export default function GalleryPage() {
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.6rem' }}>
                 <span style={{ fontSize: '0.72rem', opacity: 0.5 }}>{(asset.fileSizeBytes / 1024).toFixed(0)} KB</span>
-                <button 
-                  onClick={(e) => { e.stopPropagation(); handleDeleteAsset(asset.id, asset.title); }}
-                  style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.8rem' }}
-                >
-                  🗑️ Excluir (UC-272)
-                </button>
+                <div style={{ display: 'flex', gap: '0.4rem' }}>
+                  <a 
+                    href={asset.url}
+                    download={`midia_${asset.title.toLowerCase().replace(/\s+/g, '_')}.png`}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ color: '#3b82f6', textDecoration: 'none', fontSize: '0.8rem', fontWeight: 600 }}
+                  >
+                    📥 Baixar (UC-274)
+                  </a>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleDeleteAsset(asset.id, asset.title); }}
+                    style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.8rem' }}
+                  >
+                    🗑️ Excluir (UC-272)
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -204,10 +214,20 @@ export default function GalleryPage() {
               <img src={activeLightboxAsset.url} alt={activeLightboxAsset.title} style={{ maxWidth: '100%', maxHeight: '480px', borderRadius: '6px' }} />
             </div>
 
-            <div style={{ display: 'flex', gap: '2rem', fontSize: '0.85rem', color: '#9ca3af' }}>
-              <div>Categoria: <strong style={{ color: 'white' }}>{activeLightboxAsset.category}</strong></div>
-              {activeLightboxAsset.entityName && <div>Vinculado a: <strong style={{ color: '#93c5fd' }}>{activeLightboxAsset.entityName}</strong></div>}
-              <div>Tamanho: <strong style={{ color: 'white' }}>{(activeLightboxAsset.fileSizeBytes / 1024).toFixed(1)} KB</strong></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', color: '#9ca3af', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+              <div style={{ display: 'flex', gap: '2rem' }}>
+                <div>Categoria: <strong style={{ color: 'white' }}>{activeLightboxAsset.category}</strong></div>
+                {activeLightboxAsset.entityName && <div>Vinculado a: <strong style={{ color: '#93c5fd' }}>{activeLightboxAsset.entityName}</strong></div>}
+                <div>Tamanho: <strong style={{ color: 'white' }}>{(activeLightboxAsset.fileSizeBytes / 1024).toFixed(1)} KB</strong></div>
+              </div>
+
+              <a 
+                href={activeLightboxAsset.url} 
+                download={`midia_${activeLightboxAsset.title.toLowerCase().replace(/\s+/g, '_')}.png`}
+                style={{ background: '#3b82f6', color: 'white', padding: '0.5rem 1rem', borderRadius: '6px', textDecoration: 'none', fontWeight: 600 }}
+              >
+                📥 Baixar Imagem (UC-274)
+              </a>
             </div>
           </div>
         </div>

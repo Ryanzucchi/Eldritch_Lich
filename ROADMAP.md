@@ -679,7 +679,7 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-273** — Compactar imagens automaticamente no upload (otimização) (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-274** — Baixar imagens individuais da galeria (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
+- [x] **UC-274** — Baixar imagens individuais da galeria (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-275** — Exportar todas as imagens do projeto (.zip) (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
