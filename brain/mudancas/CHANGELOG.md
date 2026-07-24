@@ -2,13 +2,12 @@
 
 Este registro lista em ordem cronológica todas as atualizações de desenvolvimento integradas a esta base de conhecimento.
 
-## [2026-07-24] (Colaboração em Equipe, Sandbox Experimental e Core Editor) - UC-082, UC-083, UC-135, UC-136, UC-403, UC-404, UC-405, UC-406, UC-395, UC-396, UC-397, UC-398, UC-270, UC-271, UC-272, UC-274, UC-267, UC-268, UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
+## [2026-07-24] (Colaboração em Equipe, Transferência de Propriedade e Core Editor) - UC-206, UC-207, UC-208, UC-209, UC-210, UC-082, UC-083, UC-135, UC-136, UC-403, UC-404, UC-405, UC-406, UC-395, UC-396, UC-397, UC-398, UC-270, UC-271, UC-272, UC-274, UC-267, UC-268, UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
 
-### 👥 Colaboração em Equipe, Gestão de Membros, Permissões e Auditoria (UC-082, UC-083, UC-135, UC-136)
-*   **Compartilhar Textos por Link Seguro (UC-082):** Geração de hash criptográfico para visualização isolada de capítulos com bloqueio automático de edição.
-*   **Controlar Permissões de Acesso (UC-083):** Seletor de permissões por membro (`OWNER`, `ADMIN`, `EDITOR`, `VIEWER`) com regra de proteção impedindo rebaixar o único Dono.
-*   **Convidar Colaboradores por Link (UC-135):** Função `generateShareToken` em `@eldritch/domain` com links criptografados e suporte a revogação.
-*   **Log de Auditoria Imutável (UC-136):** Tabela `collaborationAuditLogs` em IndexedDB (Versão 19) com registros append-only contendo usuário, timestamp UTC e detalhes de cada alteração.
+### 👑 Transferência de Propriedade, Promoção, Rebaixamento e Remoção de Colaboradores (UC-206, UC-207, UC-208, UC-209, UC-210)
+*   **Transferência de Propriedade (UC-206):** Botão `👑 Transferir` em `/team` para troca transacional do Owner do projeto e rebaixamento automático do dono anterior a Administrador.
+*   **Remoção e Saída de Colaboradores (UC-207, UC-208):** Ações de exclusão de membros com registro auditado no log imutável.
+*   **Promoção e Rebaixamento de Nível (UC-209, UC-210):** Seletor de níveis `EDITOR` ⇄ `VIEWER` com aplicação imediata de regras de escrita.
 
 ### ⏳ Linhas do Tempo, Vínculo com Lore e Exportação (UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264)
 *   **Exportação Multiformato e HTML Interativo (UC-171, UC-264):** Módulo `exportTimeline` em `@eldritch/domain` (.html, .md, .json).

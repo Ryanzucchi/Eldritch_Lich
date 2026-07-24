@@ -745,19 +745,19 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-205** — Alternar permissão de escrita de pasta (bloquear/liberar) (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-206** — Transferir propriedade do projeto (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-206** — Transferir propriedade do projeto (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-207** — Remover colaboradores do projeto (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-207** — Remover colaboradores do projeto (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-081, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-208** — Sair do projeto colaborativo (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-208** — Sair do projeto colaborativo (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-081, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-209** — Rebaixar permissão de colaborador para leitor (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-209** — Rebaixar permissão de colaborador para leitor (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-081, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-210** — Promover permissão de leitor para colaborador (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-210** — Promover permissão de leitor para colaborador (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-081, UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-211** — Visualizar lista de colaboradores online no projeto (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)

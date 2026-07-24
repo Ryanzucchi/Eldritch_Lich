@@ -160,6 +160,68 @@ export default function TeamPage() {
     await loadTeamData();
   };
 
+  // Remove Member (UC-207)
+  const handleRemoveMember = async (memberId: string, name: string) => {
+    const targetMember = members.find(m => m.id === memberId);
+    if (targetMember?.role === 'OWNER') {
+      const ownersCount = members.filter(m => m.role === 'OWNER').length;
+      if (ownersCount <= 1) {
+        alert('Não é possível remover o único Dono (Owner) do projeto.');
+        return;
+      }
+    }
+
+    if (!confirm(`Deseja remover o colaborador "${name}" do projeto?`)) return;
+
+    await db.projectMembers.delete(memberId);
+    await logAudit('MEMBER_REMOVED', memberId, `Removido colaborador ${name}`);
+    await loadTeamData();
+    setSuccess(`Colaborador "${name}" removido do projeto (UC-207)!`);
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  // Transfer Ownership (UC-206)
+  const handleTransferOwnership = async (targetMemberId: string, name: string) => {
+    const currentOwner = members.find(m => m.role === 'OWNER');
+    if (!currentOwner) return;
+
+    if (!confirm(`ATENÇÃO: Deseja transferir a propriedade DEFINITIVA do projeto para "${name}"? Você se tornará Administrador.`)) {
+      return;
+    }
+
+    await db.transaction('rw', db.projectMembers, db.collaborationAuditLogs, async () => {
+      // Rebaixar o dono antigo para ADMIN
+      await db.projectMembers.update(currentOwner.id, { role: 'ADMIN' });
+      // Promover o novo membro para OWNER
+      await db.projectMembers.update(targetMemberId, { role: 'OWNER' });
+    });
+
+    await logAudit('OWNERSHIP_TRANSFERRED', targetMemberId, `Propriedade transferida para ${name} (UC-206)`);
+    await loadTeamData();
+    setSuccess(`Propriedade do projeto transferida com sucesso para "${name}" (UC-206)!`);
+    setTimeout(() => setSuccess(null), 4000);
+  };
+
+  // Leave Project (UC-208)
+  const handleLeaveProject = async () => {
+    const currentMember = members[0]; // simulação do membro logado
+    if (currentMember?.role === 'OWNER') {
+      const ownersCount = members.filter(m => m.role === 'OWNER').length;
+      if (ownersCount <= 1) {
+        alert('Você é o único Dono. Transfira a propriedade antes de sair do projeto.');
+        return;
+      }
+    }
+
+    if (!confirm('Deseja realmente sair deste projeto colaborativo (UC-208)?')) return;
+
+    await db.projectMembers.delete(currentMember.id);
+    await logAudit('MEMBER_LEFT', currentMember.id, 'Usuário saiu do projeto (UC-208)');
+    await loadTeamData();
+    setSuccess('Você saiu do projeto colaborativo (UC-208).');
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
   // Share Document via Hash Link (UC-082)
   const handleShareDocument = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -270,6 +332,7 @@ export default function TeamPage() {
                   <th style={{ padding: '0.8rem 1rem' }}>E-mail</th>
                   <th style={{ padding: '0.8rem 1rem' }}>Data de Entrada</th>
                   <th style={{ padding: '0.8rem 1rem' }}>Função / Permissão (UC-083)</th>
+                  <th style={{ padding: '0.8rem 1rem' }}>Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -289,6 +352,24 @@ export default function TeamPage() {
                         <option value="EDITOR">✏️ Editor</option>
                         <option value="VIEWER">👁️ Leitor</option>
                       </select>
+                    </td>
+                    <td style={{ padding: '0.8rem 1rem' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        {m.role !== 'OWNER' && (
+                          <button 
+                            onClick={() => handleTransferOwnership(m.id, m.userName)}
+                            style={{ background: 'rgba(245, 158, 11, 0.15)', border: '1px solid #f59e0b', color: '#f59e0b', borderRadius: '4px', padding: '0.2rem 0.5rem', cursor: 'pointer', fontSize: '0.78rem' }}
+                          >
+                            👑 Transferir (UC-206)
+                          </button>
+                        )}
+                        <button 
+                          onClick={() => handleRemoveMember(m.id, m.userName)}
+                          style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', color: '#ef4444', borderRadius: '4px', padding: '0.2rem 0.5rem', cursor: 'pointer', fontSize: '0.78rem' }}
+                        >
+                          🗑️ Remover (UC-207)
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
