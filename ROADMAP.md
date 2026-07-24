@@ -667,13 +667,13 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-268** — Exportar mapas geográficos (imagem com pinos) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-099, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-270** — Visualizar galeria de imagens do projeto (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
+- [x] **UC-270** — Visualizar galeria de imagens do projeto (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-271** — Pesquisar imagens por tag/entidade (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
+- [x] **UC-271** — Pesquisar imagens por tag/entidade (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-272** — Excluir imagens da galeria (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
+- [x] **UC-272** — Excluir imagens da galeria (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-273** — Compactar imagens automaticamente no upload (otimização) (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)

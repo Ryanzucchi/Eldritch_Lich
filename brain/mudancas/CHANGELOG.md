@@ -2,11 +2,12 @@
 
 Este registro lista em ordem cronológica todas as atualizações de desenvolvimento integradas a esta base de conhecimento.
 
-## [2026-07-24] (Cartografia, Mapas Mentais, Linhas do Tempo e Core Editor) - UC-267, UC-268, UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
+## [2026-07-24] (Galeria de Mídias, Cartografia, Mapas Mentais e Core Editor) - UC-270, UC-271, UC-272, UC-267, UC-268, UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
 
-### 🗺️ Importação e Exportação de Mapas Geográficos (UC-267, UC-268)
-*   **Importação de Mapas Geográficos (UC-267):** Modal de upload com suporte a múltiplos formatos de imagem (.png, .jpg, .webp) com limite de 20MB e renderização responsiva.
-*   **Exportação de Mapa com Pinos (UC-268):** Botão `📥 Exportar Mapa (UC-268)` em `/maps` permitindo download direto da imagem com preservação de escala.
+### 🖼️ Galeria de Mídias, Pesquisa por Tags e Exclusão (UC-270, UC-271, UC-272)
+*   **Visualização de Galeria & Lightbox (UC-270):** Criada a página `/gallery` com visualização em grade responsiva de mídias do projeto, ordenação por data e modal Lightbox em alta definição com exibições de metadados.
+*   **Pesquisa por Tag e Entidades (UC-271):** Função `filterMediaAssets` em `@eldritch/domain` com resposta em tempo real (< 100ms) para buscas combinadas por tags, título, categoria ou nome de personagem/local.
+*   **Exclusão Síncrona da Galeria (UC-272):** Remoção síncrona do registro e liberação de armazenamento local no IndexedDB Dexie (Versão 15).
 
 ### ⏳ Linhas do Tempo, Vínculo com Lore e Exportação (UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264)
 *   **Exportação Multiformato e HTML Interativo (UC-171, UC-264):** Módulo `exportTimeline` em `@eldritch/domain` (.html, .md, .json).

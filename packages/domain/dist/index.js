@@ -37,3 +37,4 @@ __exportStar(require("./timeline/types.js"), exports);
 __exportStar(require("./timeline/export.js"), exports);
 __exportStar(require("./maps/types.js"), exports);
 __exportStar(require("./maps/mindmap.js"), exports);
+__exportStar(require("./gallery/types.js"), exports);
