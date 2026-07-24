@@ -784,19 +784,19 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-218** — Fixar mensagens importantes no chat (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-219** — Notificar sobre novas mensagens no chat (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-219** — Notificar sobre novas mensagens no chat (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-220** — Configurar notificações de e-mail (frequência) (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-220** — Configurar notificações de e-mail (frequência) (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-221** — Configurar notificações push (sistema) (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-221** — Configurar notificações push (sistema) (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-229** — Enviar notificações por e-mail (comentários/menções) (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-229** — Enviar notificações por e-mail (comentários/menções) (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-230** — Ativar/desativar notificações por e-mail no perfil (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-230** — Ativar/desativar notificações por e-mail no perfil (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-298** — Habilitar modo de coautor (bloqueio de capítulo por usuário) (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)

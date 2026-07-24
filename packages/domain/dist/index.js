@@ -42,3 +42,4 @@ __exportStar(require("./story/acts.js"), exports);
 __exportStar(require("./sandbox/types.js"), exports);
 __exportStar(require("./collaboration/types.js"), exports);
 __exportStar(require("./collaboration/chat.js"), exports);
+__exportStar(require("./collaboration/notifications.js"), exports);

@@ -26,3 +26,4 @@ export * from './story/acts.js';
 export * from './sandbox/types.js';
 export * from './collaboration/types.js';
 export * from './collaboration/chat.js';
+export * from './collaboration/notifications.js';
