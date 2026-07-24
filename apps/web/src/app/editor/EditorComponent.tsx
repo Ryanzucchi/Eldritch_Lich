@@ -4556,6 +4556,29 @@ export default function EditorComponent() {
                             alt="Capa do Manuscrito" 
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                           />
+                          {/* Dark Backdrop Overlay & Typography Overlay for Readability (UC-069) */}
+                          <div style={{
+                            position: 'absolute',
+                            bottom: '0',
+                            left: '0',
+                            right: '0',
+                            padding: '1.2rem 1.5rem',
+                            background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)',
+                            display: 'flex',
+                            alignItems: 'flex-end',
+                            justifyContent: 'space-between'
+                          }}>
+                            <h2 style={{ 
+                              margin: 0, 
+                              color: '#ffffff', 
+                              fontSize: '1.6rem', 
+                              fontWeight: 700, 
+                              textShadow: '0 2px 4px rgba(0,0,0,0.8)',
+                              letterSpacing: '0.02em'
+                            }}>
+                              {activeManuscript.title || 'Manuscrito Sem Título'}
+                            </h2>
+                          </div>
                           <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', gap: '0.5rem', background: 'rgba(0,0,0,0.6)', padding: '0.3rem 0.6rem', borderRadius: '6px', backdropFilter: 'blur(4px)' }}>
                             <label className="btn-cover-action" style={{ color: 'white', cursor: 'pointer', fontSize: '0.8rem' }}>
                               🖼️ Alterar Capa

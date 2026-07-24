@@ -586,7 +586,7 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-068** — Colocar imagens como capa de textos (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-069** — Colocar imagens e texto como capa de pastas e texto (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
+- [x] **UC-069** — Colocar imagens e texto como capa de pastas e texto (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
   - Depende de: UC-011, UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-076** — Permitir múltiplas linhas do tempo paralelas (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
