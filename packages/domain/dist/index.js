@@ -33,3 +33,4 @@ __exportStar(require("./editor/categories.js"), exports);
 __exportStar(require("./editor/audit.js"), exports);
 __exportStar(require("./auth/types.js"), exports);
 __exportStar(require("./project/types.js"), exports);
+__exportStar(require("./timeline/types.js"), exports);

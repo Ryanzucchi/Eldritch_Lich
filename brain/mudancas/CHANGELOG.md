@@ -2,12 +2,12 @@
 
 Este registro lista em ordem cronológica todas as atualizações de desenvolvimento integradas a esta base de conhecimento.
 
-## [2026-07-24] (Core Editor & Galeria: Notas de Rodapé, Referências Cruzadas, Playlist IA e Capas Compostas de Mídia) - UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
+## [2026-07-24] (Linhas do Tempo, Mídia e Core Editor) - UC-055, UC-056, UC-058, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
 
-### 🖼️ Capas Personalizadas e Sobreposição de Título (UC-067, UC-068, UC-069)
-*   **Composição de Capa com Texto e Overlay (UC-069):** Implementado um efeito de *dark backdrop overlay* com gradiente escurecido e sombra projetada (`text-shadow`) para renderizar a tipografia do título do documento sobre a imagem de capa, garantindo contraste e legibilidade perfeita.
-*   **Banner de Capa no Editor (UC-068):** Funcionalidade de upload e exibição de capa banner estilizada no topo do papel do documento, com opções de alteração e remoção direta. Limite de 5MB por arquivo.
-*   **Miniaturas de Capa em Pastas (UC-067):** Upload de imagem de capa para pastas na árvore do Explorer com renderização de miniaturas no cabeçalho.
+### ⏳ Linhas do Tempo e Relações Causais (UC-055, UC-056, UC-058)
+*   **Criação de Timelines (UC-055):** Módulo e formulários para criação de múltiplas linhas do tempo paralelas no projeto ativo, com suporte a tipos de calendário.
+*   **Relacionamento Causal entre Eventos (UC-056):** Vínculo lógico de eventos como precursores/causas de outros eventos. Função `validateTimelineConsistency` em `@eldritch/domain` detecta inconsistências cronológicas.
+*   **Visualização Cronológica Interativa (UC-058):** Página dedicada `/timeline` com renderização horizontal interativa de marcadores de tempo, cards de eventos e sinalização visual de dependências.
 
 ### 🖼️ Colar Imagens Diretamente no Texto (UC-065)
 *   **Clipboard API & Inserção Inline:** Configurada a propriedade `handlePaste` no ProseMirror/TipTap do [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx) para interceptar o evento `Ctrl+V` / `Cmd+V`.

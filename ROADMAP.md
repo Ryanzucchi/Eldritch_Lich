@@ -565,13 +565,13 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 
 ## Fase 4 — Linhas de Tempo, Mapas e Planejamento de Enredo
 
-- [ ] **UC-055** — Criar linha do tempo (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-055** — Criar linha do tempo (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-129
   - Desbloqueia: UC-056, UC-058, UC-076, UC-079, UC-080 e mais 13 UCs
-- [ ] **UC-056** — Relacionar eventos na linha do tempo (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-056** — Relacionar eventos na linha do tempo (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-055, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-058** — Ter visualização cronológica (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-058** — Ter visualização cronológica (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-055, UC-129
   - Desbloqueia: nenhum
 - [x] **UC-065** — Colar imagens em textos (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)

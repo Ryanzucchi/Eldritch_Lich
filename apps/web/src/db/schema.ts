@@ -39,6 +39,8 @@ export class EldritchDatabase extends Dexie {
   auditLogs!: Table<SystemActivity, string>;
   reminders!: Table<Reminder, string>;
   wikiEntities!: Table<WikiEntity, string>;
+  timelines!: Table<import('@eldritch/domain').Timeline, string>;
+  timelineEvents!: Table<import('@eldritch/domain').TimelineEvent, string>;
 
   constructor() {
     const isBrowser = typeof window !== 'undefined';
@@ -166,6 +168,24 @@ export class EldritchDatabase extends Dexie {
       auditLogs: 'id, type, timestamp',
       reminders: 'id, projectId, alertTime, isRead',
       wikiEntities: 'id, projectId, name, type, isConfidential'
+    });
+    this.version(12).stores({
+      metaNodes: 'id, type, status, title',
+      metaEdges: 'id, fromId, toId',
+      writingGoals: 'id, type, targetWords, deadline',
+      writingLogs: 'id, date',
+      writingStreak: 'id',
+      keyboardShortcuts: 'command',
+      manuscripts: 'id, status, title, folderId, category, isArchived',
+      manuscriptVersions: 'id, manuscriptId, versionNumber, createdAt',
+      pendingSaves: 'id, manuscriptId, timestamp',
+      folders: 'id, projectId, parentFolderId',
+      comments: 'id, manuscriptId, isResolved, createdAt',
+      auditLogs: 'id, type, timestamp',
+      reminders: 'id, projectId, alertTime, isRead',
+      wikiEntities: 'id, projectId, name, type, isConfidential',
+      timelines: 'id, projectId, name',
+      timelineEvents: 'id, timelineId, sortOrder'
     });
   }
 }
