@@ -808,22 +808,22 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-300** — Visualizar histórico de alterações por coautor (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-081, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-340** — Criar pauta de reunião (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-340** — Criar pauta de reunião (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-341** — Registrar ata de reunião (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-341** — Registrar ata de reunião (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-342** — Vincular decisões de reunião a tarefas geradas (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-342** — Vincular decisões de reunião a tarefas geradas (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-343** — Registrar participantes e responsabilidades definidas (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-343** — Registrar participantes e responsabilidades definidas (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-344** — Rastrear pendências (action items) até conclusão (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-344** — Rastrear pendências (action items) até conclusão (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-345** — Gerar resumo automático de reunião (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-345** — Gerar resumo automático de reunião (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-360** — Criar canal de comunicação direta por projeto (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)

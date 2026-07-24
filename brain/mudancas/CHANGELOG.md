@@ -2,12 +2,13 @@
 
 Este registro lista em ordem cronológica todas as atualizações de desenvolvimento integradas a esta base de conhecimento.
 
-## [2026-07-24] (Configurações de Notificação por E-mail e Push, Chat e Core Editor) - UC-219, UC-220, UC-221, UC-229, UC-230, UC-217, UC-218, UC-214, UC-215, UC-216, UC-206, UC-207, UC-208, UC-209, UC-210, UC-082, UC-083, UC-135, UC-136, UC-403, UC-404, UC-405, UC-406, UC-395, UC-396, UC-397, UC-398, UC-270, UC-271, UC-272, UC-274, UC-267, UC-268, UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
+## [2026-07-24] (Reuniões de Equipe, Pautas, Atas, Action Items e Resumos) - UC-340, UC-341, UC-342, UC-343, UC-344, UC-345, UC-219, UC-220, UC-221, UC-229, UC-230, UC-217, UC-218, UC-214, UC-215, UC-216, UC-206, UC-207, UC-208, UC-209, UC-210, UC-082, UC-083, UC-135, UC-136, UC-403, UC-404, UC-405, UC-406, UC-395, UC-396, UC-397, UC-398, UC-270, UC-271, UC-272, UC-274, UC-267, UC-268, UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
 
-### 🔔 Configurações de Notificações, Frequência de E-mail e Web Push (UC-219, UC-220, UC-221, UC-229, UC-230)
-*   **Frequência de E-mails e Ativação no Perfil (UC-220, UC-230):** Página `/settings/notifications` com seletores de periocidade (`IMMEDIATE`, `DAILY`, `WEEKLY`, `OFF`) e chave geral de habilitação.
-*   **Integração com Web Push API (UC-221):** Solicitação e associação de permissões nativas de notificação push no navegador.
-*   **Alertas de Menções e Chat (UC-219, UC-229):** Função `shouldSendEmailNotification` em `@eldritch/domain` para filtro dinâmico de disparos por menções ou mensagens no chat. Tabela `notificationSettings` no Dexie (Versão 21).
+### 📅 Reuniões de Equipe, Pautas, Atas, Action Items e Resumos Automáticos (UC-340, UC-341, UC-342, UC-343, UC-344, UC-345)
+*   **Agendamento & Pauta (UC-340, UC-343):** Página `/meetings` para criação de reuniões com convite de colaboradores e estrutura de pauta em Markdown.
+*   **Ata da Reunião (UC-341):** Editor de ata lado a lado com a pauta de referência para registro de deliberações.
+*   **Action Items & Rastreamento (UC-342, UC-344):** Vínculo de tarefas derivadas a responsáveis por e-mail com caixa de marcação de conclusão e alteração de status.
+*   **Resumo Automático de Reunião (UC-345):** Função `generateMeetingSummary` em `@eldritch/domain` compilando tópicos, ata e progresso de pendências. Tabela `teamMeetings` no Dexie (Versão 22).
 
 ### ⏳ Linhas do Tempo, Vínculo com Lore e Exportação (UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264)
 *   **Exportação Multiformato e HTML Interativo (UC-171, UC-264):** Módulo `exportTimeline` em `@eldritch/domain` (.html, .md, .json).
