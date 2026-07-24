@@ -13,6 +13,7 @@ export interface ChatMessage {
     senderName: string;
     content: string;
     attachmentUrl?: string;
+    isPinned?: boolean;
     createdAt: string;
 }
 /**

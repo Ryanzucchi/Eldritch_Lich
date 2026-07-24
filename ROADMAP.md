@@ -778,10 +778,10 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-216** — Arquivar mensagens do chat (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-217** — Limpar histórico de chat (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-217** — Limpar histórico de chat (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-218** — Fixar mensagens importantes no chat (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-218** — Fixar mensagens importantes no chat (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-219** — Notificar sobre novas mensagens no chat (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)

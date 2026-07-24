@@ -104,6 +104,29 @@ export default function ChatPage() {
     await loadMessages();
   };
 
+  // Clear Chat History (UC-217)
+  const handleClearChatHistory = async () => {
+    if (!activeChannel) return;
+    if (!confirm(`Deseja realmente limpar todo o histórico de mensagens do canal #${activeChannel.name} (UC-217)?`)) return;
+
+    const channelMsgs = await db.chatMessages.where('channelId').equals(activeChannel.id).toArray();
+    for (const m of channelMsgs) {
+      await db.chatMessages.delete(m.id);
+    }
+
+    await loadMessages();
+    setSuccess(`Histórico de mensagens do canal #${activeChannel.name} limpo (UC-217)!`);
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  // Toggle Pin Message (UC-218)
+  const handleTogglePinMessage = async (messageId: string, currentPinned?: boolean) => {
+    await db.chatMessages.update(messageId, { isPinned: !currentPinned });
+    await loadMessages();
+    setSuccess(!currentPinned ? 'Mensagem fixada no canal (UC-218)!' : 'Mensagem desfixada.');
+    setTimeout(() => setSuccess(null), 2500);
+  };
+
   // Archive Channel (UC-216)
   const handleToggleArchiveChannel = async () => {
     if (!activeChannel) return;
@@ -195,6 +218,12 @@ export default function ChatPage() {
                   style={{ padding: '0.4rem 0.8rem', borderRadius: '6px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.85rem' }}
                 />
                 <button 
+                  onClick={handleClearChatHistory}
+                  style={{ background: 'transparent', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.82rem' }}
+                >
+                  🗑️ Limpar Histórico (UC-217)
+                </button>
+                <button 
                   onClick={handleToggleArchiveChannel}
                   style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: '#9ca3af', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.82rem' }}
                 >
@@ -206,10 +235,21 @@ export default function ChatPage() {
             {/* Messages Feed */}
             <div style={{ flex: 1, padding: '1.5rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {filteredMessages.map(msg => (
-                <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,0.03)', padding: '0.8rem 1rem', borderRadius: '8px', borderLeft: '3px solid #3b82f6' }}>
+                <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', background: msg.isPinned ? 'rgba(245, 158, 11, 0.08)' : 'rgba(255,255,255,0.03)', padding: '0.8rem 1rem', borderRadius: '8px', borderLeft: msg.isPinned ? '3px solid #f59e0b' : '3px solid #3b82f6' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem', fontSize: '0.82rem' }}>
-                    <strong style={{ color: '#93c5fd' }}>{msg.senderName} ({msg.senderEmail})</strong>
-                    <span style={{ opacity: 0.5 }}>{new Date(msg.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <strong style={{ color: '#93c5fd' }}>{msg.senderName} ({msg.senderEmail})</strong>
+                      {msg.isPinned && <span style={{ background: '#f59e0b', color: '#000', fontSize: '0.7rem', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 700 }}>📌 Fixada (UC-218)</span>}
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+                      <span style={{ opacity: 0.5 }}>{new Date(msg.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                      <button 
+                        onClick={() => handleTogglePinMessage(msg.id, msg.isPinned)}
+                        style={{ background: 'none', border: 'none', color: msg.isPinned ? '#f59e0b' : '#9ca3af', cursor: 'pointer', fontSize: '0.8rem' }}
+                      >
+                        📌 {msg.isPinned ? 'Desfixar' : 'Fixar'}
+                      </button>
+                    </div>
                   </div>
                   <div style={{ fontSize: '0.92rem', lineHeight: '1.4' }}>{msg.content}</div>
                 </div>

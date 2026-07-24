@@ -2,12 +2,11 @@
 
 Este registro lista em ordem cronológica todas as atualizações de desenvolvimento integradas a esta base de conhecimento.
 
-## [2026-07-24] (Chat Interno de Equipe, Canais por Assunto e Core Editor) - UC-214, UC-215, UC-216, UC-206, UC-207, UC-208, UC-209, UC-210, UC-082, UC-083, UC-135, UC-136, UC-403, UC-404, UC-405, UC-406, UC-395, UC-396, UC-397, UC-398, UC-270, UC-271, UC-272, UC-274, UC-267, UC-268, UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
+## [2026-07-24] (Chat Interno de Equipe, Canais, Fixação e Limpeza) - UC-217, UC-218, UC-214, UC-215, UC-216, UC-206, UC-207, UC-208, UC-209, UC-210, UC-082, UC-083, UC-135, UC-136, UC-403, UC-404, UC-405, UC-406, UC-395, UC-396, UC-397, UC-398, UC-270, UC-271, UC-272, UC-274, UC-267, UC-268, UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
 
-### 💬 Chat Interno de Equipe, Canais por Assunto e Arquivamento (UC-214, UC-215, UC-216)
-*   **Enviar Mensagens no Chat Interno (UC-214):** Página `/chat` com feed de mensagens em tempo real, suporte a busca por texto e remetentes com timestamps.
-*   **Criar Canais por Assunto/Pasta (UC-215):** Modal de criação de canais de discussão (ex: `#worldbuilding`, `#revisao`).
-*   **Arquivar Canais de Chat (UC-216):** Função de arquivamento de canais com bloqueio de envio de novas mensagens em canais arquivados. Tabelas `chatChannels` e `chatMessages` no Dexie (Versão 20).
+### 💬 Limpeza de Histórico e Fixação de Mensagens no Chat (UC-217, UC-218)
+*   **Limpar Histórico do Chat (UC-217):** Botão `🗑️ Limpar Histórico` na barra superior do chat para remoção de mensagens do canal ativo.
+*   **Fixar Mensagens Importantes (UC-218):** Botão `📌 Fixar` em cada mensagem, destacando o item com um selo dourado e background diferenciado na conversa. Atributo `isPinned` adicionado em `ChatMessage`.
 
 ### ⏳ Linhas do Tempo, Vínculo com Lore e Exportação (UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264)
 *   **Exportação Multiformato e HTML Interativo (UC-171, UC-264):** Módulo `exportTimeline` em `@eldritch/domain` (.html, .md, .json).
