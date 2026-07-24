@@ -2,14 +2,16 @@
 
 Este registro lista em ordem cronológica todas as atualizações de desenvolvimento integradas a esta base de conhecimento.
 
-## [2026-07-24] (Linhas do Tempo, Mídia e Core Editor) - UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
+## [2026-07-24] (Cartografia, Linhas do Tempo, Mídia e Core Editor) - UC-099, UC-100, UC-101, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
+
+### 🗺️ Atlas Geográfico e Cartografia do Universo (UC-099, UC-100, UC-101)
+*   **Criação de Mapas Geográficos & Régua de Distâncias (UC-099):** Módulo e tela `/maps` para upload de imagens de mapas (.png, .jpg, .webp até 20MB) ou grids neutros, com ferramentas de medição de distâncias fictícias baseadas em taxa de proporção `scaleKmPerPixel`.
+*   **Relacionar Locais e Posicionar Entidades (UC-100, UC-101):** Marcação de locais, personagens e facções sobre as coordenadas percentuais `(xPercent, yPercent)` do mapa, com popover de informações e suporte a timestamps cronológicos de presença.
 
 ### ⏳ Linhas do Tempo, Vínculo com Lore e Exportação (UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264)
-*   **Exportação Multiformato e HTML Interativo (UC-171, UC-264):** Implementado o módulo `exportTimeline` em `@eldritch/domain` permitindo exportar a cronologia ativa nos formatos `.html` (página standalone interativa estilizada com CSS dark mode), `.md` (Markdown estruturado) e `.json` (dados estruturados brutos).
-*   **Vínculo com Locais e Personagens (UC-167):** Atributos `locationId` e `characterIds` em `TimelineEvent` permitindo associar cada acontecimento a fichas de lore. Cards renderizam badges azuis (locais) e roxas (personagens).
-*   **Filtros de Busca por Personagem e Local (UC-169, UC-170):** Barra de filtro instantânea em `/timeline` permitindo isolar acontecimentos restritos a um determinado personagem ou ambiente em menos de 100ms.
-*   **Ramificação Paralela / Universos Alternativos (UC-076):** Bifurcação de timelines a partir de eventos de inflexão com eventos clonados até a bifurcação.
-*   **Comparação entre Cronologias (UC-079):** Comparação visual e categorização de desvios entre duas linhas do tempo.
+*   **Exportação Multiformato e HTML Interativo (UC-171, UC-264):** Módulo `exportTimeline` em `@eldritch/domain` (.html, .md, .json).
+*   **Vínculo com Locais e Personagens (UC-167):** Atributos `locationId` e `characterIds` em `TimelineEvent`.
+*   **Filtros de Busca por Personagem e Local (UC-169, UC-170):** Filtro instantâneo em `/timeline` (< 100ms).
 
 ### 🖼️ Colar Imagens Diretamente no Texto (UC-065)
 *   **Clipboard API & Inserção Inline:** Configurada a propriedade `handlePaste` no ProseMirror/TipTap do [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx) para interceptar o evento `Ctrl+V` / `Cmd+V`.

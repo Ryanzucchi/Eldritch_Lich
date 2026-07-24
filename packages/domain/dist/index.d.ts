@@ -19,3 +19,4 @@ export * from './auth/types.js';
 export * from './project/types.js';
 export * from './timeline/types.js';
 export * from './timeline/export.js';
+export * from './maps/types.js';

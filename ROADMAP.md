@@ -604,13 +604,13 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-080** — Fazer ramificacoes temporárias (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-055, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-099** — Criar mapas geográficos (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-099** — Criar mapas geográficos (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-129
   - Desbloqueia: UC-100, UC-101, UC-168, UC-265, UC-266 e mais 3 UCs
-- [ ] **UC-100** — Relacionar locais ao mapa (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-100** — Relacionar locais ao mapa (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-099, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-101** — Posicionar entidades no mapa (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-101** — Posicionar entidades no mapa (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-099, UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-102** — Criar mapas mentais (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)

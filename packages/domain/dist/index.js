@@ -35,3 +35,4 @@ __exportStar(require("./auth/types.js"), exports);
 __exportStar(require("./project/types.js"), exports);
 __exportStar(require("./timeline/types.js"), exports);
 __exportStar(require("./timeline/export.js"), exports);
+__exportStar(require("./maps/types.js"), exports);
