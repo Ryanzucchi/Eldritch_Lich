@@ -628,16 +628,16 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-166** — Alternar entre cronologias (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-055, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-167** — Associar eventos da cronologia a locais específicos (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-167** — Associar eventos da cronologia a locais específicos (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-055, UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-168** — Visualizar eventos no mapa geográfico (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-055, UC-099, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-169** — Filtrar eventos por personagem (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-169** — Filtrar eventos por personagem (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-055, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-170** — Filtrar eventos por local (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-170** — Filtrar eventos por local (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-055, UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-171** — Exportar cronologia (PDF/imagem) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)

@@ -33,6 +33,12 @@ export default function TimelinePage() {
   const [eventDateStr, setEventDateStr] = useState('');
   const [eventDesc, setEventDesc] = useState('');
   const [selectedPrecursorId, setSelectedPrecursorId] = useState<string>('');
+  const [eventLocationName, setEventLocationName] = useState<string>(''); // UC-167
+  const [eventCharacterName, setEventCharacterName] = useState<string>(''); // UC-167
+
+  // Filtering States (UC-169, UC-170)
+  const [filterCharacter, setFilterCharacter] = useState<string>('');
+  const [filterLocation, setFilterLocation] = useState<string>('');
 
   const [warnings, setWarnings] = useState<string[]>([]);
   const [success, setSuccess] = useState<string | null>(null);
@@ -106,6 +112,8 @@ export default function TimelinePage() {
       title: eventTitle.trim(),
       dateStr: eventDateStr.trim() || 'Sem Data',
       description: eventDesc.trim(),
+      locationId: eventLocationName.trim() || undefined,
+      characterIds: eventCharacterName.trim() ? [eventCharacterName.trim()] : undefined,
       sortOrder: events.length + 1,
       precursorEventIds: selectedPrecursorId ? [selectedPrecursorId] : [],
       createdAt: new Date().toISOString()
@@ -115,6 +123,8 @@ export default function TimelinePage() {
     setEventTitle('');
     setEventDateStr('');
     setEventDesc('');
+    setEventLocationName('');
+    setEventCharacterName('');
     setSelectedPrecursorId('');
     setShowEventModal(false);
     await loadEvents();
@@ -274,12 +284,54 @@ export default function TimelinePage() {
             </button>
           </div>
 
+          {/* Filtering Controls Bar (UC-169, UC-170) */}
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.2rem', background: 'rgba(255, 255, 255, 0.03)', padding: '0.8rem 1rem', borderRadius: '8px', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#9ca3af' }}>🔎 Filtrar Cronologia:</span>
+            <input 
+              type="text" 
+              placeholder="Filtrar por Personagem (UC-169)..." 
+              value={filterCharacter}
+              onChange={e => setFilterCharacter(e.target.value)}
+              style={{ flex: 1, padding: '0.4rem 0.8rem', borderRadius: '6px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.85rem' }}
+            />
+            <input 
+              type="text" 
+              placeholder="Filtrar por Local (UC-170)..." 
+              value={filterLocation}
+              onChange={e => setFilterLocation(e.target.value)}
+              style={{ flex: 1, padding: '0.4rem 0.8rem', borderRadius: '6px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.85rem' }}
+            />
+            {(filterCharacter || filterLocation) && (
+              <button 
+                type="button" 
+                onClick={() => { setFilterCharacter(''); setFilterLocation(''); }}
+                style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}
+              >
+                ✖️ Limpar Filtros
+              </button>
+            )}
+          </div>
+
           {/* Interactive Horizontal Timeline View (UC-058) */}
           <div style={{ display: 'flex', gap: '1.5rem', overflowX: 'auto', padding: '1rem 0 2rem 0', position: 'relative' }}>
             {/* Timeline Axis Line */}
             <div style={{ position: 'absolute', top: '50px', left: 0, right: 0, height: '4px', background: '#3b82f6', zIndex: 0 }} />
 
-            {events.map((ev, index) => (
+            {events
+              .filter(ev => {
+                if (filterCharacter.trim()) {
+                  const query = filterCharacter.toLowerCase();
+                  const matchesChar = ev.characterIds?.some(c => c.toLowerCase().includes(query)) || ev.title.toLowerCase().includes(query);
+                  if (!matchesChar) return false;
+                }
+                if (filterLocation.trim()) {
+                  const query = filterLocation.toLowerCase();
+                  const matchesLoc = ev.locationId?.toLowerCase().includes(query);
+                  if (!matchesLoc) return false;
+                }
+                return true;
+              })
+              .map((ev, index) => (
               <div 
                 key={ev.id}
                 style={{
@@ -303,6 +355,24 @@ export default function TimelinePage() {
 
                 <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.05rem' }}>{ev.title}</h4>
                 {ev.description && <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.7, lineHeight: 1.4 }}>{ev.description}</p>}
+
+                {/* Location Badge (UC-167) */}
+                {ev.locationId && (
+                  <div style={{ marginTop: '0.6rem', fontSize: '0.75rem', display: 'inline-block', background: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6', color: '#93c5fd', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>
+                    📍 {ev.locationId}
+                  </div>
+                )}
+
+                {/* Character Badges (UC-169) */}
+                {ev.characterIds && ev.characterIds.length > 0 && (
+                  <div style={{ marginTop: '0.4rem', display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
+                    {ev.characterIds.map((char, cIdx) => (
+                      <span key={cIdx} style={{ fontSize: '0.72rem', background: 'rgba(168, 85, 247, 0.2)', border: '1px solid #a855f7', color: '#e9d5ff', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
+                        👤 {char}
+                      </span>
+                    ))}
+                  </div>
+                )}
 
                 {/* Precursor Connections (UC-056) */}
                 {ev.precursorEventIds && ev.precursorEventIds.length > 0 && (
@@ -389,6 +459,28 @@ export default function TimelinePage() {
                   placeholder="Ex: Ano 1042, Dia 14 da Lua Cheia..."
                   value={eventDateStr}
                   onChange={e => setEventDateStr(e.target.value)}
+                  style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Local do Evento (UC-167):</label>
+                <input 
+                  type="text"
+                  placeholder="Ex: Castelo Sombrio, Floresta dos Sussurros..."
+                  value={eventLocationName}
+                  onChange={e => setEventLocationName(e.target.value)}
+                  style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Personagem Participante (UC-167):</label>
+                <input 
+                  type="text"
+                  placeholder="Ex: Kael, Elara..."
+                  value={eventCharacterName}
+                  onChange={e => setEventCharacterName(e.target.value)}
                   style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                 />
               </div>

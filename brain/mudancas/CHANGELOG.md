@@ -2,14 +2,13 @@
 
 Este registro lista em ordem cronológica todas as atualizações de desenvolvimento integradas a esta base de conhecimento.
 
-## [2026-07-24] (Linhas do Tempo, Mídia e Core Editor) - UC-055, UC-056, UC-058, UC-076, UC-079, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
+## [2026-07-24] (Linhas do Tempo, Mídia e Core Editor) - UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
 
-### ⏳ Linhas do Tempo, Bifurcação Paralela e Comparação (UC-055, UC-056, UC-058, UC-076, UC-079)
-*   **Ramificação Paralela / Universos Alternativos (UC-076):** Adicionado suporte para bifurcar uma linha do tempo base a partir de um evento de ponto de inflexão. Os eventos anteriores são clonados e isolados na nova timeline.
-*   **Comparação entre Cronologias (UC-079):** Implementada a função `compareTimelines` em `@eldritch/domain` e modal de contraste visual que alinha eventos equivalentes e categoriza divergências (`ONLY_IN_A`, `ONLY_IN_B`, `DATE_MISMATCH`, `COMMON`).
-*   **Criação de Timelines (UC-055):** Módulo e formulários para criação de múltiplas linhas do tempo paralelas no projeto ativo, com suporte a tipos de calendário.
-*   **Relacionamento Causal entre Eventos (UC-056):** Vínculo lógico de eventos como precursores/causas de outros eventos com detecção de inconsistências.
-*   **Visualização Cronológica Interativa (UC-058):** Página dedicada `/timeline` com renderização horizontal interativa de marcadores de tempo e cards de eventos.
+### ⏳ Linhas do Tempo, Vínculo com Lore e Filtros (UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170)
+*   **Vínculo com Locais e Personagens (UC-167):** Atributos `locationId` e `characterIds` em `TimelineEvent` permitindo associar cada acontecimento a fichas de lore. Cards renderizam badges azuis (locais) e roxas (personagens).
+*   **Filtros de Busca por Personagem e Local (UC-169, UC-170):** Barra de filtro instantânea em `/timeline` permitindo isolar acontecimentos restritos a um determinado personagem ou ambiente em menos de 100ms.
+*   **Ramificação Paralela / Universos Alternativos (UC-076):** Bifurcação de timelines a partir de eventos de inflexão com eventos clonados até a bifurcação.
+*   **Comparação entre Cronologias (UC-079):** Comparação visual e categorização de desvios entre duas linhas do tempo.
 
 ### 🖼️ Colar Imagens Diretamente no Texto (UC-065)
 *   **Clipboard API & Inserção Inline:** Configurada a propriedade `handlePaste` no ProseMirror/TipTap do [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx) para interceptar o evento `Ctrl+V` / `Cmd+V`.
