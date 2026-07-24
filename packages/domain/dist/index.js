@@ -44,3 +44,4 @@ __exportStar(require("./collaboration/types.js"), exports);
 __exportStar(require("./collaboration/chat.js"), exports);
 __exportStar(require("./collaboration/notifications.js"), exports);
 __exportStar(require("./collaboration/meetings.js"), exports);
+__exportStar(require("./collaboration/calls.js"), exports);
