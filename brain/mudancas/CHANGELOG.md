@@ -2,11 +2,13 @@
 
 Este registro lista em ordem cronológica todas as atualizações de desenvolvimento integradas a esta base de conhecimento.
 
-## [2026-07-24] (Arquitetura da História, Galeria, Cartografia, Mapas Mentais e Core Editor) - UC-395, UC-396, UC-397, UC-398, UC-270, UC-271, UC-272, UC-274, UC-267, UC-268, UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
+## [2026-07-24] (Sandbox Experimental, Arquitetura da História, Galeria e Core Editor) - UC-403, UC-404, UC-405, UC-406, UC-395, UC-396, UC-397, UC-398, UC-270, UC-271, UC-272, UC-274, UC-267, UC-268, UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
 
-### 📈 Arcos Dramáticos & Gráfico de Tensão/Ritmo da História (UC-397, UC-398)
-*   **Gerenciamento de Arcos Dramáticos por Personagem (UC-397):** Registro de pontos de tensão e estados emocionais por capítulo na aba `📈 Arcos & Tensão` em `/story`.
-*   **Gráfico de Tensão & Cálculo de Ritmo (UC-398):** Função `calculateDramaticPacing` em `@eldritch/domain` com gráfico de barras vertical animado apresentando tensão média, pico e tendência do ritmo (crescente/decrescente). Tabela `characterArcPoints` no Dexie (Versão 17).
+### 🧪 Sandbox Experimental "E Se?" (UC-403, UC-404, UC-405, UC-406)
+*   **Criar Sandbox Isolado (UC-403):** Módulo e tela `/sandbox` para clonagem e isolamento do universo canônico com insígnia visual proeminente de aviso no cabeçalho.
+*   **Testar Alterações Hipotéticas (UC-404):** Permite simular transformações em personagens, cenários e eventos sem alterar os dados canônicos originais.
+*   **Comparativo Side-by-Side (UC-405):** Função `compareSandboxWithCanonical` em `@eldritch/domain` e tabela comparativa destacando alterações e pendências de mesclagem.
+*   **Promover para Universo Canônico (UC-406):** Botão `🚀 Promover para Universo Canônico` com mesclagem transacional e encerramento do ambiente experimental. Tabelas `sandboxes` e `sandboxChanges` no Dexie (Versão 18).
 
 ### ⏳ Linhas do Tempo, Vínculo com Lore e Exportação (UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264)
 *   **Exportação Multiformato e HTML Interativo (UC-171, UC-264):** Módulo `exportTimeline` em `@eldritch/domain` (.html, .md, .json).

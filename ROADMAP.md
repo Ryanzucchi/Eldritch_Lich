@@ -697,16 +697,16 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-398** — Visualizar tensão/ritmo dramático da história (gráfico) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-403** — Criar sandbox de teste isolado do universo canônico (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-403** — Criar sandbox de teste isolado do universo canônico (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-404** — Testar alteração hipotética sem afetar dados originais (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-404** — Testar alteração hipotética sem afetar dados originais (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-405** — Comparar resultado do "e se" com o universo canônico (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-405** — Comparar resultado do "e se" com o universo canônico (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-406** — Promover resultado do sandbox para o universo real (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-406** — Promover resultado do sandbox para o universo real (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [x] **UC-454** — Criar e editar Grafo de Metas Narrativas (GMN) (Prioridade: Alta | Complexidade: Alta | Módulo: `gestao_projetos`)
