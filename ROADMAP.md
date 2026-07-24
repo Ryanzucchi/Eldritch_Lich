@@ -613,13 +613,13 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-101** — Posicionar entidades no mapa (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-099, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-102** — Criar mapas mentais (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-102** — Criar mapas mentais (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-103** — Converter grafo em mapa mental (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-103** — Converter grafo em mapa mental (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-104** — Converter mapa mental em grafo (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-104** — Converter mapa mental em grafo (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-165** — Criar cronologia alternativa (linha do tempo paralela) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)

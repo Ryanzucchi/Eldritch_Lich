@@ -2,12 +2,11 @@
 
 Este registro lista em ordem cronológica todas as atualizações de desenvolvimento integradas a esta base de conhecimento.
 
-## [2026-07-24] (Cartografia, Linhas do Tempo, Mídia e Core Editor) - UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
+## [2026-07-24] (Mapas Mentais, Cartografia, Linhas do Tempo e Core Editor) - UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
 
-### 🗺️ Atlas Geográfico e Camada Temporal de Eventos (UC-099, UC-100, UC-101, UC-168)
-*   **Visualização de Eventos no Mapa & Time Slider (UC-168):** Adicionado o botão "Exibir Camada de Eventos" e controle deslizante de linha do tempo (*Time Slider*) no atlas geográfico. Inclui o **Modo História Animado** com reprodução contínua (1.5s/passo) destacando marcadores de pulso vermelho nos locais onde os acontecimentos ocorrem em tempo real.
-*   **Criação de Mapas Geográficos & Régua de Distâncias (UC-099):** Módulo e tela `/maps` para upload de imagens de mapas (.png, .jpg, .webp até 20MB) ou grids neutros com medição de distâncias.
-*   **Relacionar Locais e Posicionar Entidades (UC-100, UC-101):** Marcação de locais, personagens e facções sobre coordenadas percentuais do mapa.
+### 🧠 Mapas Mentais Radiais e Conversão com Grafo de Conhecimento (UC-102, UC-103, UC-104)
+*   **Criação de Mapas Mentais Radiais (UC-102):** Módulo e tela `/mindmaps` para criação de árvores conceituais radiais com nós centrais e filhos. Salvamento automático no IndexedDB Dexie (Versão 14).
+*   **Conversão Bi-direcional Grafo ⇄ Mapa Mental (UC-103, UC-104):** Funções `convertGraphToMindMap` e `convertMindMapToGraph` em `@eldritch/domain` permitindo transformar redes do grafo em mapas mentais radiais a partir de uma raiz e converter árvores de mapas mentais diretamente em nós/arestas no Grafo de Entidades.
 
 ### ⏳ Linhas do Tempo, Vínculo com Lore e Exportação (UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264)
 *   **Exportação Multiformato e HTML Interativo (UC-171, UC-264):** Módulo `exportTimeline` em `@eldritch/domain` (.html, .md, .json).
