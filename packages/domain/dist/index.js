@@ -40,3 +40,4 @@ __exportStar(require("./maps/mindmap.js"), exports);
 __exportStar(require("./gallery/types.js"), exports);
 __exportStar(require("./story/acts.js"), exports);
 __exportStar(require("./sandbox/types.js"), exports);
+__exportStar(require("./collaboration/types.js"), exports);

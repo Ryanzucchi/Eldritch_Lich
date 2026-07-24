@@ -718,10 +718,10 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 
 ## Fase 5 — Colaboração em Tempo Real, Chat e Comunicação de Equipe
 
-- [ ] **UC-082** — Compartilhar textos (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-082** — Compartilhar textos (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-083** — Controlar permissões de acesso (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-083** — Controlar permissões de acesso (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-132** — Edição colaborativa em tempo real (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
@@ -733,10 +733,10 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-134** — Notificar usuários sobre alterações relevantes (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-081, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-135** — Convidar colaboradores por link (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-135** — Convidar colaboradores por link (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-136** — Registrar log de quem editou o quê e quando (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-136** — Registrar log de quem editou o quê e quando (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-081, UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-153** — Criar fluxo de aprovação/revisão entre colaboradores (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)

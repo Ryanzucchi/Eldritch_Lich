@@ -2,13 +2,13 @@
 
 Este registro lista em ordem cronológica todas as atualizações de desenvolvimento integradas a esta base de conhecimento.
 
-## [2026-07-24] (Sandbox Experimental, Arquitetura da História, Galeria e Core Editor) - UC-403, UC-404, UC-405, UC-406, UC-395, UC-396, UC-397, UC-398, UC-270, UC-271, UC-272, UC-274, UC-267, UC-268, UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
+## [2026-07-24] (Colaboração em Equipe, Sandbox Experimental e Core Editor) - UC-082, UC-083, UC-135, UC-136, UC-403, UC-404, UC-405, UC-406, UC-395, UC-396, UC-397, UC-398, UC-270, UC-271, UC-272, UC-274, UC-267, UC-268, UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
 
-### 🧪 Sandbox Experimental "E Se?" (UC-403, UC-404, UC-405, UC-406)
-*   **Criar Sandbox Isolado (UC-403):** Módulo e tela `/sandbox` para clonagem e isolamento do universo canônico com insígnia visual proeminente de aviso no cabeçalho.
-*   **Testar Alterações Hipotéticas (UC-404):** Permite simular transformações em personagens, cenários e eventos sem alterar os dados canônicos originais.
-*   **Comparativo Side-by-Side (UC-405):** Função `compareSandboxWithCanonical` em `@eldritch/domain` e tabela comparativa destacando alterações e pendências de mesclagem.
-*   **Promover para Universo Canônico (UC-406):** Botão `🚀 Promover para Universo Canônico` com mesclagem transacional e encerramento do ambiente experimental. Tabelas `sandboxes` e `sandboxChanges` no Dexie (Versão 18).
+### 👥 Colaboração em Equipe, Gestão de Membros, Permissões e Auditoria (UC-082, UC-083, UC-135, UC-136)
+*   **Compartilhar Textos por Link Seguro (UC-082):** Geração de hash criptográfico para visualização isolada de capítulos com bloqueio automático de edição.
+*   **Controlar Permissões de Acesso (UC-083):** Seletor de permissões por membro (`OWNER`, `ADMIN`, `EDITOR`, `VIEWER`) com regra de proteção impedindo rebaixar o único Dono.
+*   **Convidar Colaboradores por Link (UC-135):** Função `generateShareToken` em `@eldritch/domain` com links criptografados e suporte a revogação.
+*   **Log de Auditoria Imutável (UC-136):** Tabela `collaborationAuditLogs` em IndexedDB (Versão 19) com registros append-only contendo usuário, timestamp UTC e detalhes de cada alteração.
 
 ### ⏳ Linhas do Tempo, Vínculo com Lore e Exportação (UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264)
 *   **Exportação Multiformato e HTML Interativo (UC-171, UC-264):** Módulo `exportTimeline` em `@eldritch/domain` (.html, .md, .json).
