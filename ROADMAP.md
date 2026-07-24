@@ -580,10 +580,10 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-066** — Desenhar a capa das pastas (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
   - Depende de: UC-011, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-067** — Colocar imagens como capa de pastas (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
+- [x] **UC-067** — Colocar imagens como capa de pastas (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
   - Depende de: UC-011, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-068** — Colocar imagens como capa de textos (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
+- [x] **UC-068** — Colocar imagens como capa de textos (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-069** — Colocar imagens e texto como capa de pastas e texto (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)

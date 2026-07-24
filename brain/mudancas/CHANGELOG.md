@@ -2,7 +2,11 @@
 
 Este registro lista em ordem cronológica todas as atualizações de desenvolvimento integradas a esta base de conhecimento.
 
-## [2026-07-24] (Core Editor & Galeria: Notas de Rodapé, Referências Cruzadas, Playlist IA e Colar Imagens) - UC-393, UC-394, UC-412 & UC-065
+## [2026-07-24] (Core Editor & Galeria: Notas de Rodapé, Referências Cruzadas, Playlist IA e Capas de Mídia) - UC-393, UC-394, UC-412, UC-065, UC-067 & UC-068
+
+### 🖼️ Capas Personalizadas para Documentos e Pastas (UC-067, UC-068)
+*   **Banner de Capa no Editor (UC-068):** Adicionada funcionalidade de upload e exibição de imagem de capa em formato banner estilizado no topo do papel do documento, com opções de alteração e remoção direta. Limite de 5MB por arquivo.
+*   **Miniaturas de Capa em Pastas (UC-067):** Adicionada opção de upload de imagem de capa para pastas na árvore de arquivos do Explorer, renderizando miniaturas de atalho visual de alta performance.
 
 ### 🖼️ Colar Imagens Diretamente no Texto (UC-065)
 *   **Clipboard API & Inserção Inline:** Configurada a propriedade `handlePaste` no ProseMirror/TipTap do [EditorComponent.tsx](file:///home/zucchi/Projetos/Eldritch_Lich/apps/web/src/app/editor/EditorComponent.tsx) para interceptar o evento `Ctrl+V` / `Cmd+V`.

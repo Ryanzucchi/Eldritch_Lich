@@ -5,6 +5,7 @@ export interface Folder {
     parentFolderId?: string;
     createdAt: string;
     updatedAt: string;
+    coverUrl?: string;
 }
 export interface Manuscript {
     id: string;
@@ -21,4 +22,5 @@ export interface Manuscript {
     tags?: string[];
     category?: string;
     isArchived?: boolean;
+    coverUrl?: string;
 }

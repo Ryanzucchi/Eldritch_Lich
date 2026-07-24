@@ -591,6 +591,60 @@ export default function EditorComponent() {
     }
   };
 
+  // Cover Image Handlers for Manuscripts & Folders (UC-067, UC-068)
+  const handleUploadManuscriptCover = (file: File) => {
+    if (!activeManuscript) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setSuccess('Erro: A imagem de capa não pode exceder 5MB (UC-068).');
+      setTimeout(() => setSuccess(null), 4000);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const coverUrl = e.target?.result as string;
+      const updated = { ...activeManuscript, coverUrl, updatedAt: new Date().toISOString() };
+      await db.manuscripts.put(updated);
+      setActiveManuscript(updated);
+      await loadManuscripts();
+      setSuccess('Imagem de capa do documento atualizada com sucesso!');
+      setTimeout(() => setSuccess(null), 3000);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveManuscriptCover = async () => {
+    if (!activeManuscript) return;
+    const updated = { ...activeManuscript, coverUrl: undefined, updatedAt: new Date().toISOString() };
+    await db.manuscripts.put(updated);
+    setActiveManuscript(updated);
+    await loadManuscripts();
+    setSuccess('Capa do documento removida.');
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  const handleUploadFolderCover = (folderId: string, file: File) => {
+    if (file.size > 5 * 1024 * 1024) {
+      setSuccess('Erro: A imagem de capa da pasta não pode exceder 5MB (UC-067).');
+      setTimeout(() => setSuccess(null), 4000);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const coverUrl = e.target?.result as string;
+      const folder = folders.find(f => f.id === folderId);
+      if (folder) {
+        const updated = { ...folder, coverUrl, updatedAt: new Date().toISOString() };
+        await db.folders.put(updated);
+        await loadManuscripts();
+        setSuccess('Capa da pasta atualizada!');
+        setTimeout(() => setSuccess(null), 3000);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   // Theme state (Google Docs Light / Dark mode - UC-159)
   const [docsTheme, setDocsTheme] = useState<'light' | 'dark'>('dark');
 
@@ -3127,6 +3181,13 @@ export default function EditorComponent() {
           }}
         >
           <div className="folder-title">
+            {folder.coverUrl ? (
+              <img 
+                src={folder.coverUrl} 
+                alt={`Capa da pasta ${folder.name}`} 
+                style={{ width: '20px', height: '20px', objectFit: 'cover', borderRadius: '4px', marginRight: '0.4rem' }} 
+              />
+            ) : null}
             <span className="folder-icon">
               {(folder as any).icon ? (
                 (folder as any).icon.startsWith('<svg') ? (
@@ -3194,6 +3255,22 @@ export default function EditorComponent() {
             >
               🎨
             </button>
+            <label 
+              title="Definir/Alterar Imagem de Capa da Pasta (UC-067)"
+              className="action-btn"
+              style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}
+            >
+              🖼️
+              <input 
+                type="file" 
+                accept="image/*" 
+                style={{ display: 'none' }} 
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleUploadFolderCover(folder.id, file);
+                }}
+              />
+            </label>
             <button 
               onClick={() => setShowAddFolderInput(prev => ({ ...prev, [folder.id]: !prev[folder.id] }))}
               title="Nova subpasta"
@@ -4469,6 +4546,56 @@ export default function EditorComponent() {
                     textAlign: textAlign
                   }}
                 >
+                  {/* Manuscript Cover Image Banner (UC-068) */}
+                  {activeManuscript && (
+                    <div className="manuscript-cover-container" style={{ marginBottom: '1.5rem', position: 'relative' }}>
+                      {activeManuscript.coverUrl ? (
+                        <div style={{ position: 'relative', width: '100%', height: '180px', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                          <img 
+                            src={activeManuscript.coverUrl} 
+                            alt="Capa do Manuscrito" 
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                          />
+                          <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', gap: '0.5rem', background: 'rgba(0,0,0,0.6)', padding: '0.3rem 0.6rem', borderRadius: '6px', backdropFilter: 'blur(4px)' }}>
+                            <label className="btn-cover-action" style={{ color: 'white', cursor: 'pointer', fontSize: '0.8rem' }}>
+                              🖼️ Alterar Capa
+                              <input 
+                                type="file" 
+                                accept="image/*" 
+                                style={{ display: 'none' }} 
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleUploadManuscriptCover(file);
+                                }}
+                              />
+                            </label>
+                            <button 
+                              type="button" 
+                              onClick={handleRemoveManuscriptCover} 
+                              style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.8rem' }}
+                            >
+                              🗑️ Remover
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{ textAlign: 'right' }}>
+                          <label style={{ fontSize: '0.8rem', color: '#9ca3af', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.6rem', borderRadius: '4px', border: '1px dashed rgba(255, 255, 255, 0.2)' }}>
+                            🖼️ Adicionar Capa ao Documento (UC-068)
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              style={{ display: 'none' }} 
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleUploadManuscriptCover(file);
+                              }}
+                            />
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   {activeCollaboratorHighlight && (
                     <div className="collab-highlight-banner" style={{ background: '#7c3aed', color: 'white', padding: '0.5rem 1rem', borderRadius: '4px', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
                       <span>👁️ Visualizando contribuições de <strong>{MOCK_COLLABORATORS.find(c => c.id === activeCollaboratorHighlight)?.name}</strong>. Editor travado para edição.</span>
