@@ -640,7 +640,7 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-170** — Filtrar eventos por local (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-055, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-171** — Exportar cronologia (PDF/imagem) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-171** — Exportar cronologia (PDF/imagem) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-055, UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-261** — Cadastrar eventos de timeline com múltiplos finais (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
@@ -652,7 +652,7 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-263** — Mesclar ramos alternativos na cronologia (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-055, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-264** — Exportar cronologia interativa em formato HTML/JS (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-264** — Exportar cronologia interativa em formato HTML/JS (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-055, UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-265** — Criar conexões entre mapas geográficos (mapas aninhados/regiões) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)

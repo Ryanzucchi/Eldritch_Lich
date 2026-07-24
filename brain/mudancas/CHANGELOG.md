@@ -2,9 +2,10 @@
 
 Este registro lista em ordem cronológica todas as atualizações de desenvolvimento integradas a esta base de conhecimento.
 
-## [2026-07-24] (Linhas do Tempo, Mídia e Core Editor) - UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
+## [2026-07-24] (Linhas do Tempo, Mídia e Core Editor) - UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
 
-### ⏳ Linhas do Tempo, Vínculo com Lore e Filtros (UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170)
+### ⏳ Linhas do Tempo, Vínculo com Lore e Exportação (UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264)
+*   **Exportação Multiformato e HTML Interativo (UC-171, UC-264):** Implementado o módulo `exportTimeline` em `@eldritch/domain` permitindo exportar a cronologia ativa nos formatos `.html` (página standalone interativa estilizada com CSS dark mode), `.md` (Markdown estruturado) e `.json` (dados estruturados brutos).
 *   **Vínculo com Locais e Personagens (UC-167):** Atributos `locationId` e `characterIds` em `TimelineEvent` permitindo associar cada acontecimento a fichas de lore. Cards renderizam badges azuis (locais) e roxas (personagens).
 *   **Filtros de Busca por Personagem e Local (UC-169, UC-170):** Barra de filtro instantânea em `/timeline` permitindo isolar acontecimentos restritos a um determinado personagem ou ambiente em menos de 100ms.
 *   **Ramificação Paralela / Universos Alternativos (UC-076):** Bifurcação de timelines a partir de eventos de inflexão com eventos clonados até a bifurcação.

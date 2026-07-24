@@ -3,13 +3,17 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { db } from '../../db/schema';
-import { Timeline, TimelineEvent, validateTimelineConsistency, compareTimelines, TimelineComparisonResult } from '@eldritch/domain';
+import { Timeline, TimelineEvent, validateTimelineConsistency, compareTimelines, TimelineComparisonResult, exportTimeline } from '@eldritch/domain';
 
 export default function TimelinePage() {
   const { activeProject } = useApp();
   const [timelines, setTimelines] = useState<Timeline[]>([]);
   const [activeTimeline, setActiveTimeline] = useState<Timeline | null>(null);
   const [events, setEvents] = useState<TimelineEvent[]>([]);
+  
+  // Export State (UC-171, UC-264)
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportFormat, setExportFormat] = useState<'html' | 'markdown' | 'json'>('html');
   
   // Parallel Branch States (UC-076)
   const [showBranchModal, setShowBranchModal] = useState(false);
@@ -189,6 +193,29 @@ export default function TimelinePage() {
     setComparisonResult(res);
   };
 
+  // Download Export File (UC-171, UC-264)
+  const handleDownloadExport = () => {
+    if (!activeTimeline) return;
+    const content = exportTimeline(activeTimeline, events, { format: exportFormat });
+
+    let mimeType = 'text/plain';
+    let ext = 'txt';
+    if (exportFormat === 'json') { mimeType = 'application/json'; ext = 'json'; }
+    if (exportFormat === 'html') { mimeType = 'text/html'; ext = 'html'; }
+    if (exportFormat === 'markdown') { mimeType = 'text/markdown'; ext = 'md'; }
+
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `cronologia_${activeTimeline.name.toLowerCase().replace(/\s+/g, '_')}.${ext}`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setShowExportModal(false);
+    setSuccess(`Cronologia exportada com sucesso em .${ext}!`);
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
   return (
     <div className="timeline-page-container" style={{ padding: '2rem', color: '#f3f4f6' }}>
       {/* Header */}
@@ -203,6 +230,13 @@ export default function TimelinePage() {
         </div>
 
         <div style={{ display: 'flex', gap: '0.6rem' }}>
+          <button 
+            onClick={() => setShowExportModal(true)}
+            disabled={!activeTimeline}
+            style={{ background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.15)', color: 'white', padding: '0.6rem 1rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
+          >
+            📥 Exportar (UC-171, UC-264)
+          </button>
           <button 
             onClick={() => setShowBranchModal(true)}
             disabled={!activeTimeline}
@@ -640,6 +674,36 @@ export default function TimelinePage() {
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
               <button type="button" onClick={() => setShowCompareModal(false)} style={{ background: 'transparent', border: 'none', color: '#9ca3af', padding: '0.5rem 1rem', cursor: 'pointer' }}>Fechar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Exportar Cronologia (UC-171, UC-264) */}
+      {showExportModal && activeTimeline && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px', padding: '1.8rem', width: '100%', maxWidth: '460px' }}>
+            <h3 style={{ margin: '0 0 0.5rem 0' }}>📥 Exportar Cronologia (UC-171, UC-264)</h3>
+            <p style={{ fontSize: '0.85rem', opacity: 0.7, margin: '0 0 1.2rem 0' }}>
+              Exporte a linha do tempo <strong>"{activeTimeline.name}"</strong> para relatórios ou visualização interativa.
+            </p>
+
+            <div style={{ marginBottom: '1.2rem' }}>
+              <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.4rem' }}>Formato de Saída:</label>
+              <select 
+                value={exportFormat}
+                onChange={e => setExportFormat(e.target.value as any)}
+                style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+              >
+                <option value="html">🌐 HTML Interativo (UC-264)</option>
+                <option value="markdown">📝 Documento Markdown (UC-171)</option>
+                <option value="json">📦 Dados Estruturados JSON (UC-171)</option>
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+              <button type="button" onClick={() => setShowExportModal(false)} style={{ background: 'transparent', border: 'none', color: '#9ca3af', padding: '0.5rem 1rem', cursor: 'pointer' }}>Cancelar</button>
+              <button type="button" onClick={handleDownloadExport} style={{ background: '#3b82f6', border: 'none', color: 'white', padding: '0.5rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>Baixar Arquivo</button>
             </div>
           </div>
         </div>
