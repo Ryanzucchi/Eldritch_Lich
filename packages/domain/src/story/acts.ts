@@ -17,6 +17,17 @@ export interface HeroJourneyStage {
   stepNumber: number;
 }
 
+export interface CharacterArcPoint {
+  id: string;
+  projectId: string;
+  characterName: string;
+  chapterTitle: string;
+  tensionLevel: number; // 0 to 100 (UC-398)
+  emotionalState: string; // e.g. "Esperança", "Desespero", "Triunfo"
+  notes?: string;
+  sortOrder: number;
+}
+
 export const CLASSIC_HERO_JOURNEY_STAGES = [
   '1. Mundo Comum',
   '2. Chamado à Aventura',
@@ -42,3 +53,40 @@ export const DAN_HARMON_STORY_CIRCLE = [
   '7. Retorna à situação familiar (RETURN)',
   '8. Mudou/transformou-se (CHANGE)'
 ];
+
+/**
+ * Calcula o ritmo e tensão média do enredo a partir dos pontos de arco dramático (UC-398).
+ */
+export function calculateDramaticPacing(points: CharacterArcPoint[]): {
+  averageTension: number;
+  peakPoint?: CharacterArcPoint;
+  pacingTrend: 'CRESCENTE' | 'DECRESCENTE' | 'ESTAVEL';
+} {
+  if (points.length === 0) {
+    return { averageTension: 0, pacingTrend: 'ESTAVEL' };
+  }
+
+  const sum = points.reduce((acc, p) => acc + p.tensionLevel, 0);
+  const avg = sum / points.length;
+
+  let peak = points[0];
+  points.forEach(p => {
+    if (p.tensionLevel > peak.tensionLevel) peak = p;
+  });
+
+  const firstHalf = points.slice(0, Math.ceil(points.length / 2));
+  const secondHalf = points.slice(Math.ceil(points.length / 2));
+
+  const avgFirst = firstHalf.reduce((acc, p) => acc + p.tensionLevel, 0) / (firstHalf.length || 1);
+  const avgSecond = secondHalf.reduce((acc, p) => acc + p.tensionLevel, 0) / (secondHalf.length || 1);
+
+  let trend: 'CRESCENTE' | 'DECRESCENTE' | 'ESTAVEL' = 'ESTAVEL';
+  if (avgSecond - avgFirst > 10) trend = 'CRESCENTE';
+  else if (avgFirst - avgSecond > 10) trend = 'DECRESCENTE';
+
+  return {
+    averageTension: Math.round(avg),
+    peakPoint: peak,
+    pacingTrend: trend
+  };
+}

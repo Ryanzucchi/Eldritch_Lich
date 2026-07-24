@@ -691,10 +691,10 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-396** — Definir jornada do herói (etapas) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-397** — Gerenciar arcos dramáticos por personagem (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-397** — Gerenciar arcos dramáticos por personagem (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-398** — Visualizar tensão/ritmo dramático da história (gráfico) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-398** — Visualizar tensão/ritmo dramático da história (gráfico) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-403** — Criar sandbox de teste isolado do universo canônico (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)

@@ -3,11 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { db } from '../../db/schema';
-import { StoryAct, HeroJourneyStage, CLASSIC_HERO_JOURNEY_STAGES } from '@eldritch/domain';
+import { StoryAct, HeroJourneyStage, CharacterArcPoint, CLASSIC_HERO_JOURNEY_STAGES, calculateDramaticPacing } from '@eldritch/domain';
 
 export default function StoryArchitecturePage() {
   const { activeProject } = useApp();
-  const [activeTab, setActiveTab] = useState<'acts' | 'journey'>('acts');
+  const [activeTab, setActiveTab] = useState<'acts' | 'journey' | 'arcs'>('acts');
 
   // 3-Acts State (UC-395)
   const [acts, setActs] = useState<StoryAct[]>([]);
@@ -16,6 +16,12 @@ export default function StoryArchitecturePage() {
   // Hero's Journey State (UC-396)
   const [characterName, setCharacterName] = useState('Protagonista');
   const [journeyStages, setJourneyStages] = useState<HeroJourneyStage[]>([]);
+
+  // Character Arcs & Tension State (UC-397, UC-398)
+  const [arcPoints, setArcPoints] = useState<CharacterArcPoint[]>([]);
+  const [newArcChapter, setNewArcChapter] = useState('');
+  const [newArcTension, setNewArcTension] = useState(50);
+  const [newArcEmotion, setNewArcEmotion] = useState('');
 
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -55,6 +61,11 @@ export default function StoryArchitecturePage() {
     }
     stagesList.sort((a, b) => a.stepNumber - b.stepNumber);
     setJourneyStages(stagesList);
+
+    // Load Character Arc Points (UC-397, UC-398)
+    const aList = await db.characterArcPoints.where('projectId').equals(activeProject.id).toArray();
+    aList.sort((a, b) => a.sortOrder - b.sortOrder);
+    setArcPoints(aList);
   };
 
   useEffect(() => {
@@ -95,16 +106,42 @@ export default function StoryArchitecturePage() {
     await loadData();
   };
 
+  // Add Character Arc Point (UC-397, UC-398)
+  const handleAddArcPoint = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newArcChapter.trim() || !activeProject) return;
+
+    const newPoint: CharacterArcPoint = {
+      id: `cap_${Date.now()}`,
+      projectId: activeProject.id,
+      characterName,
+      chapterTitle: newArcChapter.trim(),
+      tensionLevel: newArcTension,
+      emotionalState: newArcEmotion.trim() || 'Neutro',
+      sortOrder: arcPoints.length + 1
+    };
+
+    await db.characterArcPoints.put(newPoint);
+    setNewArcChapter('');
+    setNewArcEmotion('');
+    setNewArcTension(50);
+    await loadData();
+    setSuccess(`Ponto de tensão dramática adicionado ao capítulo "${newPoint.chapterTitle}"!`);
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  const pacing = calculateDramaticPacing(arcPoints);
+
   return (
     <div className="story-architecture-page" style={{ padding: '2rem', color: '#f3f4f6' }}>
       {/* Header */}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
           <h1 style={{ margin: 0, fontSize: '1.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            🏛️ Arquitetura da História & Atos (UC-395, UC-396)
+            🏛️ Arquitetura da História & Atos (UC-395, UC-396, UC-397, UC-398)
           </h1>
           <p style={{ margin: '0.4rem 0 0 0', opacity: 0.7 }}>
-            Estruture seu enredo em 3 atos e mapeie a transformação do protagonista na Jornada do Herói.
+            Estruture seu enredo em 3 atos, mapeie a Jornada do Herói e acompanhe a curva de tensão dramática.
           </p>
         </div>
 
@@ -121,6 +158,12 @@ export default function StoryArchitecturePage() {
             style={{ padding: '0.5rem 1.2rem', borderRadius: '6px', border: 'none', background: activeTab === 'journey' ? '#3b82f6' : 'transparent', color: 'white', fontWeight: 600, cursor: 'pointer' }}
           >
             🦸 Jornada do Herói (UC-396)
+          </button>
+          <button 
+            onClick={() => setActiveTab('arcs')}
+            style={{ padding: '0.5rem 1.2rem', borderRadius: '6px', border: 'none', background: activeTab === 'arcs' ? '#3b82f6' : 'transparent', color: 'white', fontWeight: 600, cursor: 'pointer' }}
+          >
+            📈 Arcos & Tensão (UC-397, UC-398)
           </button>
         </div>
       </header>
@@ -219,6 +262,95 @@ export default function StoryArchitecturePage() {
                 />
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Tab 3: Character Arcs & Tension Graph (UC-397, UC-398) */}
+      {activeTab === 'arcs' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          {/* Add Tension Point Form */}
+          <div style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '12px', padding: '1.5rem' }}>
+            <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.2rem' }}>➕ Cadastrar Ponto de Tensão Dramática (UC-397)</h3>
+            <form onSubmit={handleAddArcPoint} style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr auto', gap: '1rem', alignItems: 'end' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Capítulo / Evento:</label>
+                <input 
+                  type="text"
+                  required
+                  placeholder="Ex: Capítulo 4 — O Duelo no Abismo"
+                  value={newArcChapter}
+                  onChange={e => setNewArcChapter(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Estado Emocional:</label>
+                <input 
+                  type="text"
+                  placeholder="Ex: Medo, Esperança, Triunfo..."
+                  value={newArcEmotion}
+                  onChange={e => setNewArcEmotion(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Tensão (0 a 100): {newArcTension}</label>
+                <input 
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={newArcTension}
+                  onChange={e => setNewArcTension(Number(e.target.value))}
+                  style={{ width: '100%' }}
+                />
+              </div>
+
+              <button type="submit" style={{ background: '#3b82f6', border: 'none', color: 'white', padding: '0.6rem 1.2rem', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}>
+                Adicionar Ponto
+              </button>
+            </form>
+          </div>
+
+          {/* Dramatic Tension Graph (UC-398) */}
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.3rem' }}>📈 Gráfico de Tensão & Ritmo Dramático (UC-398)</h3>
+              <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.9rem' }}>
+                <div>Tensão Média: <strong style={{ color: '#60a5fa' }}>{pacing.averageTension}%</strong></div>
+                <div>Tendência do Ritmo: <strong style={{ color: '#10b981' }}>{pacing.pacingTrend}</strong></div>
+              </div>
+            </div>
+
+            {/* Visual Bar Graph */}
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', height: '220px', padding: '1rem 0', borderBottom: '2px solid rgba(255,255,255,0.1)' }}>
+              {arcPoints.map(p => (
+                <div key={p.id} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
+                  <span style={{ fontSize: '0.75rem', marginBottom: '0.4rem', color: '#f59e0b', fontWeight: 700 }}>{p.tensionLevel}%</span>
+                  <div 
+                    style={{
+                      width: '100%',
+                      maxWidth: '40px',
+                      height: `${p.tensionLevel}%`,
+                      background: `linear-gradient(to top, #3b82f6, ${p.tensionLevel > 75 ? '#ef4444' : '#a855f7'})`,
+                      borderRadius: '4px 4px 0 0',
+                      transition: 'height 0.3s ease'
+                    }}
+                  />
+                  <span style={{ fontSize: '0.72rem', marginTop: '0.6rem', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%', opacity: 0.8 }}>
+                    {p.chapterTitle}
+                  </span>
+                </div>
+              ))}
+
+              {arcPoints.length === 0 && (
+                <div style={{ width: '100%', textAlign: 'center', opacity: 0.5, paddingTop: '4rem' }}>
+                  Nenhum ponto de tensão cadastrado. Preencha o formulário acima para gerar a curva dramática.
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

@@ -2,11 +2,11 @@
 
 Este registro lista em ordem cronológica todas as atualizações de desenvolvimento integradas a esta base de conhecimento.
 
-## [2026-07-24] (Arquitetura da História, Galeria, Cartografia, Mapas Mentais e Core Editor) - UC-395, UC-396, UC-270, UC-271, UC-272, UC-274, UC-267, UC-268, UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
+## [2026-07-24] (Arquitetura da História, Galeria, Cartografia, Mapas Mentais e Core Editor) - UC-395, UC-396, UC-397, UC-398, UC-270, UC-271, UC-272, UC-274, UC-267, UC-268, UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
 
-### 🏛️ Arquitetura da História, Estrutura em Atos e Jornada do Herói (UC-395, UC-396)
-*   **Estrutura do Enredo em 3 Atos (UC-395):** Página `/story` para alocação visual de cenas e capítulos em colunas correspondentes a Ato I (Apresentação), Ato II (Confrontação) e Ato III (Resolução).
-*   **Mapeamento da Jornada do Herói (UC-396):** Mapeamento gráfico das 12 etapas clássicas da Jornada do Herói para o protagonista, permitindo anotações de transformação psicológica. Tabelas `storyActs` e `heroJourneyStages` persistidas no IndexedDB (Versão 16).
+### 📈 Arcos Dramáticos & Gráfico de Tensão/Ritmo da História (UC-397, UC-398)
+*   **Gerenciamento de Arcos Dramáticos por Personagem (UC-397):** Registro de pontos de tensão e estados emocionais por capítulo na aba `📈 Arcos & Tensão` em `/story`.
+*   **Gráfico de Tensão & Cálculo de Ritmo (UC-398):** Função `calculateDramaticPacing` em `@eldritch/domain` com gráfico de barras vertical animado apresentando tensão média, pico e tendência do ritmo (crescente/decrescente). Tabela `characterArcPoints` no Dexie (Versão 17).
 
 ### ⏳ Linhas do Tempo, Vínculo com Lore e Exportação (UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264)
 *   **Exportação Multiformato e HTML Interativo (UC-171, UC-264):** Módulo `exportTimeline` em `@eldritch/domain` (.html, .md, .json).

@@ -48,6 +48,7 @@ export class EldritchDatabase extends Dexie {
   mediaAssets!: Table<import('@eldritch/domain').MediaAsset, string>;
   storyActs!: Table<import('@eldritch/domain').StoryAct, string>;
   heroJourneyStages!: Table<import('@eldritch/domain').HeroJourneyStage, string>;
+  characterArcPoints!: Table<import('@eldritch/domain').CharacterArcPoint, string>;
 
   constructor() {
     const isBrowser = typeof window !== 'undefined';
@@ -283,6 +284,32 @@ export class EldritchDatabase extends Dexie {
       mediaAssets: 'id, projectId, category, entityName',
       storyActs: 'id, projectId, sortOrder',
       heroJourneyStages: 'id, projectId, characterName, stepNumber'
+    });
+    this.version(17).stores({
+      metaNodes: 'id, type, status, title',
+      metaEdges: 'id, fromId, toId',
+      writingGoals: 'id, type, targetWords, deadline',
+      writingLogs: 'id, date',
+      writingStreak: 'id',
+      keyboardShortcuts: 'command',
+      manuscripts: 'id, status, title, folderId, category, isArchived',
+      manuscriptVersions: 'id, manuscriptId, versionNumber, createdAt',
+      pendingSaves: 'id, manuscriptId, timestamp',
+      folders: 'id, projectId, parentFolderId',
+      comments: 'id, manuscriptId, isResolved, createdAt',
+      auditLogs: 'id, type, timestamp',
+      reminders: 'id, projectId, alertTime, isRead',
+      wikiEntities: 'id, projectId, name, type, isConfidential',
+      timelines: 'id, projectId, name',
+      timelineEvents: 'id, timelineId, sortOrder',
+      geoMaps: 'id, projectId, name',
+      geoMapMarkers: 'id, mapId, type',
+      mindMaps: 'id, projectId, title',
+      mindMapNodes: 'id, mindMapId, parentId',
+      mediaAssets: 'id, projectId, category, entityName',
+      storyActs: 'id, projectId, sortOrder',
+      heroJourneyStages: 'id, projectId, characterName, stepNumber',
+      characterArcPoints: 'id, projectId, characterName, sortOrder'
     });
   }
 }
