@@ -2,13 +2,11 @@
 
 Este registro lista em ordem cronológica todas as atualizações de desenvolvimento integradas a esta base de conhecimento.
 
-## [2026-07-24] (Galeria de Mídias, Cartografia, Mapas Mentais e Core Editor) - UC-270, UC-271, UC-272, UC-274, UC-267, UC-268, UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
+## [2026-07-24] (Arquitetura da História, Galeria, Cartografia, Mapas Mentais e Core Editor) - UC-395, UC-396, UC-270, UC-271, UC-272, UC-274, UC-267, UC-268, UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
 
-### 🖼️ Galeria de Mídias, Pesquisa por Tags, Download e Exclusão (UC-270, UC-271, UC-272, UC-274)
-*   **Download de Imagens Individuais (UC-274):** Botão `📥 Baixar` adicionado no footer de cada card e dentro da modal Lightbox na página `/gallery`, ativando download automático dos arquivos com nomenclatura higienizada.
-*   **Visualização de Galeria & Lightbox (UC-270):** Criada a página `/gallery` com visualização em grade responsiva de mídias do projeto, ordenação por data e modal Lightbox em alta definição com exibições de metadados.
-*   **Pesquisa por Tag e Entidades (UC-271):** Função `filterMediaAssets` em `@eldritch/domain` com resposta em tempo real (< 100ms) para buscas combinadas por tags, título, categoria ou nome de personagem/local.
-*   **Exclusão Síncrona da Galeria (UC-272):** Remoção síncrona do registro e liberação de armazenamento local no IndexedDB Dexie (Versão 15).
+### 🏛️ Arquitetura da História, Estrutura em Atos e Jornada do Herói (UC-395, UC-396)
+*   **Estrutura do Enredo em 3 Atos (UC-395):** Página `/story` para alocação visual de cenas e capítulos em colunas correspondentes a Ato I (Apresentação), Ato II (Confrontação) e Ato III (Resolução).
+*   **Mapeamento da Jornada do Herói (UC-396):** Mapeamento gráfico das 12 etapas clássicas da Jornada do Herói para o protagonista, permitindo anotações de transformação psicológica. Tabelas `storyActs` e `heroJourneyStages` persistidas no IndexedDB (Versão 16).
 
 ### ⏳ Linhas do Tempo, Vínculo com Lore e Exportação (UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264)
 *   **Exportação Multiformato e HTML Interativo (UC-171, UC-264):** Módulo `exportTimeline` em `@eldritch/domain` (.html, .md, .json).

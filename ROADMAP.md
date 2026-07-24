@@ -685,10 +685,10 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-275** — Exportar todas as imagens do projeto (.zip) (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-395** — Estruturar enredo em atos (estrutura de 3 atos, etc.) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-395** — Estruturar enredo em atos (estrutura de 3 atos, etc.) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-396** — Definir jornada do herói (etapas) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-396** — Definir jornada do herói (etapas) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-397** — Gerenciar arcos dramáticos por personagem (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)

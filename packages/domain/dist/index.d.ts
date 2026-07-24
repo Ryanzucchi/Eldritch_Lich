@@ -22,3 +22,4 @@ export * from './timeline/export.js';
 export * from './maps/types.js';
 export * from './maps/mindmap.js';
 export * from './gallery/types.js';
+export * from './story/acts.js';
