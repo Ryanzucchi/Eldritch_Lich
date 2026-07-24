@@ -55,6 +55,8 @@ export class EldritchDatabase extends Dexie {
   sharedDocLinks!: Table<import('@eldritch/domain').SharedDocumentLink, string>;
   projectInviteLinks!: Table<import('@eldritch/domain').ProjectInviteLink, string>;
   collaborationAuditLogs!: Table<import('@eldritch/domain').CollaborationAuditLog, string>;
+  chatChannels!: Table<import('@eldritch/domain').ChatChannel, string>;
+  chatMessages!: Table<import('@eldritch/domain').ChatMessage, string>;
 
   constructor() {
     const isBrowser = typeof window !== 'undefined';
@@ -376,6 +378,40 @@ export class EldritchDatabase extends Dexie {
       sharedDocLinks: 'id, manuscriptId, token',
       projectInviteLinks: 'id, projectId, token, isRevoked',
       collaborationAuditLogs: 'id, projectId, userId, timestamp'
+    });
+    this.version(20).stores({
+      metaNodes: 'id, type, status, title',
+      metaEdges: 'id, fromId, toId',
+      writingGoals: 'id, type, targetWords, deadline',
+      writingLogs: 'id, date',
+      writingStreak: 'id',
+      keyboardShortcuts: 'command',
+      manuscripts: 'id, status, title, folderId, category, isArchived',
+      manuscriptVersions: 'id, manuscriptId, versionNumber, createdAt',
+      pendingSaves: 'id, manuscriptId, timestamp',
+      folders: 'id, projectId, parentFolderId',
+      comments: 'id, manuscriptId, isResolved, createdAt',
+      auditLogs: 'id, type, timestamp',
+      reminders: 'id, projectId, alertTime, isRead',
+      wikiEntities: 'id, projectId, name, type, isConfidential',
+      timelines: 'id, projectId, name',
+      timelineEvents: 'id, timelineId, sortOrder',
+      geoMaps: 'id, projectId, name',
+      geoMapMarkers: 'id, mapId, type',
+      mindMaps: 'id, projectId, title',
+      mindMapNodes: 'id, mindMapId, parentId',
+      mediaAssets: 'id, projectId, category, entityName',
+      storyActs: 'id, projectId, sortOrder',
+      heroJourneyStages: 'id, projectId, characterName, stepNumber',
+      characterArcPoints: 'id, projectId, characterName, sortOrder',
+      sandboxes: 'id, projectId, name, isPromoted',
+      sandboxChanges: 'id, sandboxId, entityType',
+      projectMembers: 'id, projectId, userEmail, role',
+      sharedDocLinks: 'id, manuscriptId, token',
+      projectInviteLinks: 'id, projectId, token, isRevoked',
+      collaborationAuditLogs: 'id, projectId, userId, timestamp',
+      chatChannels: 'id, projectId, isArchived',
+      chatMessages: 'id, channelId, createdAt'
     });
   }
 }

@@ -769,13 +769,13 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-213** — Visualizar quem está editando qual arquivo/campo (cursor) (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-081, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-214** — Enviar mensagens de chat internas no projeto (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-214** — Enviar mensagens de chat internas no projeto (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-215** — Criar canais de chat por assunto/pasta (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-215** — Criar canais de chat por assunto/pasta (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-216** — Arquivar mensagens do chat (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-216** — Arquivar mensagens do chat (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-217** — Limpar histórico de chat (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
