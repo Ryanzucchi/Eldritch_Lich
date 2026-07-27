@@ -2,12 +2,11 @@
 
 Este registro lista em ordem cronológica todas as atualizações de desenvolvimento integradas a esta base de conhecimento.
 
-## [2026-07-27] (Calendário de Equipe, Agendamento, Exportação iCal, Disponibilidade e Fusos Horários) - UC-376, UC-377, UC-378, UC-379, UC-380, UC-360, UC-361, UC-362, UC-363, UC-364, UC-365, UC-367, UC-368, UC-369, UC-370, UC-340, UC-341, UC-342, UC-343, UC-344, UC-345, UC-219, UC-220, UC-221, UC-229, UC-230, UC-217, UC-218, UC-214, UC-215, UC-216, UC-206, UC-207, UC-208, UC-209, UC-210, UC-082, UC-083, UC-135, UC-136, UC-403, UC-404, UC-405, UC-406, UC-395, UC-396, UC-397, UC-398, UC-270, UC-271, UC-272, UC-274, UC-267, UC-268, UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
+## [2026-07-27] (Recursos Humanos, Validação de CPF, Cargos e Folha de Pagamento) - UC-301, UC-302, UC-303, UC-376, UC-377, UC-378, UC-379, UC-380, UC-360, UC-361, UC-362, UC-363, UC-364, UC-365, UC-367, UC-368, UC-369, UC-370, UC-340, UC-341, UC-342, UC-343, UC-344, UC-345, UC-219, UC-220, UC-221, UC-229, UC-230, UC-217, UC-218, UC-214, UC-215, UC-216, UC-206, UC-207, UC-208, UC-209, UC-210, UC-082, UC-083, UC-135, UC-136, UC-403, UC-404, UC-405, UC-406, UC-395, UC-396, UC-397, UC-398, UC-270, UC-271, UC-272, UC-274, UC-267, UC-268, UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
 
-### 📆 Calendário de Equipe, Agendamento, Exportação iCal e Fusos Horários (UC-376 a UC-380)
-*   **Gestão de Calendário & Prazos (UC-376, UC-377):** Interface `/calendar` para acompanhamento de sprints, datas de entregas e reuniões com marcação de categorias e cores.
-*   **Exportação Externa iCal / Google Calendar (UC-378):** Função `exportToICalendar` em `@eldritch/domain` gerando arquivos `.ics` padronizados.
-*   **Disponibilidade & Fusos Horários (UC-379, UC-380):** Painel de disponibilidade de membros e seletores de fuso horário (`UTC-3`, `UTC+0`, `UTC+1`, `UTC-5`). Tabelas `calendarEvents` e `memberAvailabilities` no Dexie (Versão 24).
+### 👥 Recursos Humanos, Validação de CPF, Cargos e Folha de Pagamento (UC-301, UC-302, UC-303)
+*   **Cadastro de Funcionários & Validação (UC-301, UC-302):** Interface `/hr` com formulário de registro, cargos, salários e validação algorítmica de CPF com verificação de duplicidade.
+*   **Cálculo da Folha de Pagamento (UC-303):** Função `calculatePayroll` em `@eldritch/domain` com retenção automática de INSS (8%), IRRF (5%) e salário líquido final. Tabelas `employees` e `payrollRecords` no Dexie (Versão 25).
 
 ### ⏳ Linhas do Tempo, Vínculo com Lore e Exportação (UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264)
 *   **Exportação Multiformato e HTML Interativo (UC-171, UC-264):** Módulo `exportTimeline` em `@eldritch/domain` (.html, .md, .json).

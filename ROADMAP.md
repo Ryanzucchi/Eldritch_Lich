@@ -904,13 +904,13 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-204** — Acompanhar progresso da equipe (meta coletiva) (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-301** — Cadastrar funcionários (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
+- [x] **UC-301** — Cadastrar funcionários (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
   - Depende de: UC-129
   - Desbloqueia: UC-302, UC-303, UC-304, UC-305, UC-306 e mais 6 UCs
-- [ ] **UC-302** — Gerenciar cargos e níveis salariais (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
+- [x] **UC-302** — Gerenciar cargos e níveis salariais (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
   - Depende de: UC-129, UC-301
   - Desbloqueia: nenhum
-- [ ] **UC-303** — Calcular folha de pagamento (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
+- [x] **UC-303** — Calcular folha de pagamento (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
   - Depende de: UC-129, UC-301
   - Desbloqueia: nenhum
 - [ ] **UC-304** — Gerenciar benefícios (vale, plano de saúde, etc.) (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)

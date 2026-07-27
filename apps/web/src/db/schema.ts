@@ -63,6 +63,8 @@ export class EldritchDatabase extends Dexie {
   callSessions!: Table<import('@eldritch/domain').CallSession, string>;
   calendarEvents!: Table<import('@eldritch/domain').CalendarEvent, string>;
   memberAvailabilities!: Table<import('@eldritch/domain').MemberAvailability, string>;
+  employees!: Table<import('@eldritch/domain').Employee, string>;
+  payrollRecords!: Table<import('@eldritch/domain').PayrollRecord, string>;
 
   constructor() {
     const isBrowser = typeof window !== 'undefined';
@@ -567,6 +569,48 @@ export class EldritchDatabase extends Dexie {
       callSessions: 'id, projectId, roomName, status',
       calendarEvents: 'id, projectId, startDate, category',
       memberAvailabilities: 'email, timezone, status'
+    });
+    this.version(25).stores({
+      metaNodes: 'id, type, status, title',
+      metaEdges: 'id, fromId, toId',
+      writingGoals: 'id, type, targetWords, deadline',
+      writingLogs: 'id, date',
+      writingStreak: 'id',
+      keyboardShortcuts: 'command',
+      manuscripts: 'id, status, title, folderId, category, isArchived',
+      manuscriptVersions: 'id, manuscriptId, versionNumber, createdAt',
+      pendingSaves: 'id, manuscriptId, timestamp',
+      folders: 'id, projectId, parentFolderId',
+      comments: 'id, manuscriptId, isResolved, createdAt',
+      auditLogs: 'id, type, timestamp',
+      reminders: 'id, projectId, alertTime, isRead',
+      wikiEntities: 'id, projectId, name, type, isConfidential',
+      timelines: 'id, projectId, name',
+      timelineEvents: 'id, timelineId, sortOrder',
+      geoMaps: 'id, projectId, name',
+      geoMapMarkers: 'id, mapId, type',
+      mindMaps: 'id, projectId, title',
+      mindMapNodes: 'id, mindMapId, parentId',
+      mediaAssets: 'id, projectId, category, entityName',
+      storyActs: 'id, projectId, sortOrder',
+      heroJourneyStages: 'id, projectId, characterName, stepNumber',
+      characterArcPoints: 'id, projectId, characterName, sortOrder',
+      sandboxes: 'id, projectId, name, isPromoted',
+      sandboxChanges: 'id, sandboxId, entityType',
+      projectMembers: 'id, projectId, userEmail, role',
+      sharedDocLinks: 'id, manuscriptId, token',
+      projectInviteLinks: 'id, projectId, token, isRevoked',
+      collaborationAuditLogs: 'id, projectId, userId, timestamp',
+      chatChannels: 'id, projectId, isArchived',
+      chatMessages: 'id, channelId, createdAt',
+      notificationSettings: 'id, userId, emailFrequency',
+      teamMeetings: 'id, projectId, date',
+      voiceMessages: 'id, channelId, createdAt',
+      callSessions: 'id, projectId, roomName, status',
+      calendarEvents: 'id, projectId, startDate, category',
+      memberAvailabilities: 'email, timezone, status',
+      employees: 'id, projectId, cpf, email',
+      payrollRecords: 'id, projectId, monthYear, employeeId'
     });
   }
 }

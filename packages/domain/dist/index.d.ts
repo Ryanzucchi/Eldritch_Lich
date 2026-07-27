@@ -30,3 +30,4 @@ export * from './collaboration/notifications.js';
 export * from './collaboration/meetings.js';
 export * from './collaboration/calls.js';
 export * from './collaboration/calendar.js';
+export * from './hr/types.js';
