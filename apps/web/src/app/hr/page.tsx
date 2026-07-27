@@ -99,7 +99,8 @@ export default function HRPage() {
     if (!activeProject || employees.length === 0) return;
 
     for (const emp of employees) {
-      const calc = calculatePayroll(emp.baseSalary);
+      const benefits = emp.benefitsAllowance || 600; // R$ 600 de VR/VA padrão (UC-304)
+      const calc = calculatePayroll(emp.baseSalary, benefits);
       const record: PayrollRecord = {
         id: `pr_${emp.id}_${monthYear}`,
         projectId: activeProject.id,
@@ -107,8 +108,10 @@ export default function HRPage() {
         employeeId: emp.id,
         employeeName: emp.name,
         baseSalary: emp.baseSalary,
+        benefitsAllowance: benefits,
         inssDeduction: calc.inss,
         irrfDeduction: calc.irrf,
+        fgtsEmployerTax: calc.fgts,
         netSalary: calc.net,
         status: 'CALCULATED',
         createdAt: new Date().toISOString()
@@ -328,25 +331,48 @@ export default function HRPage() {
                 <tr style={{ background: 'rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                   <th style={{ padding: '0.8rem 1rem' }}>Funcionário</th>
                   <th style={{ padding: '0.8rem 1rem' }}>Salário Bruto</th>
-                  <th style={{ padding: '0.8rem 1rem' }}>Desconto INSS (8%)</th>
-                  <th style={{ padding: '0.8rem 1rem' }}>Desconto IRRF (5%)</th>
+                  <th style={{ padding: '0.8rem 1rem' }}>Benefícios (VR/VA - UC-304)</th>
+                  <th style={{ padding: '0.8rem 1rem' }}>INSS / IRRF (UC-312)</th>
+                  <th style={{ padding: '0.8rem 1rem' }}>FGTS Patronal (UC-312)</th>
                   <th style={{ padding: '0.8rem 1rem' }}>Salário Líquido</th>
+                  <th style={{ padding: '0.8rem 1rem' }}>Holerite (UC-310)</th>
                 </tr>
               </thead>
               <tbody>
-                {activePayrolls.map(pr => (
-                  <tr key={pr.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                    <td style={{ padding: '0.8rem 1rem', fontWeight: 600 }}>{pr.employeeName}</td>
-                    <td style={{ padding: '0.8rem 1rem', opacity: 0.8 }}>R$ {pr.baseSalary.toFixed(2)}</td>
-                    <td style={{ padding: '0.8rem 1rem', color: '#ef4444' }}>- R$ {pr.inssDeduction.toFixed(2)}</td>
-                    <td style={{ padding: '0.8rem 1rem', color: '#ef4444' }}>- R$ {pr.irrfDeduction.toFixed(2)}</td>
-                    <td style={{ padding: '0.8rem 1rem', color: '#10b981', fontWeight: 700 }}>R$ {pr.netSalary.toFixed(2)}</td>
-                  </tr>
-                ))}
+                {activePayrolls.map(pr => {
+                  const emp = employees.find(e => e.id === pr.employeeId);
+                  return (
+                    <tr key={pr.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                      <td style={{ padding: '0.8rem 1rem', fontWeight: 600 }}>{pr.employeeName}</td>
+                      <td style={{ padding: '0.8rem 1rem', opacity: 0.8 }}>R$ {pr.baseSalary.toFixed(2)}</td>
+                      <td style={{ padding: '0.8rem 1rem', color: '#60a5fa' }}>+ R$ {pr.benefitsAllowance.toFixed(2)}</td>
+                      <td style={{ padding: '0.8rem 1rem', color: '#ef4444' }}>
+                        - R$ {(pr.inssDeduction + pr.irrfDeduction).toFixed(2)}
+                      </td>
+                      <td style={{ padding: '0.8rem 1rem', color: '#f59e0b' }}>R$ {pr.fgtsEmployerTax.toFixed(2)}</td>
+                      <td style={{ padding: '0.8rem 1rem', color: '#10b981', fontWeight: 700 }}>R$ {pr.netSalary.toFixed(2)}</td>
+                      <td style={{ padding: '0.8rem 1rem' }}>
+                        {emp && (
+                          <button 
+                            onClick={() => {
+                              const payslipText = import('@eldritch/domain').then(mod => {
+                                const txt = mod.generatePayslip(emp, pr);
+                                alert(txt);
+                              });
+                            }}
+                            style={{ background: 'rgba(59, 130, 246, 0.15)', border: '1px solid #3b82f6', color: '#60a5fa', borderRadius: '4px', padding: '0.2rem 0.6rem', cursor: 'pointer', fontSize: '0.78rem' }}
+                          >
+                            📄 Holerite (UC-310)
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
 
                 {activePayrolls.length === 0 && (
                   <tr>
-                    <td colSpan={5} style={{ textAlign: 'center', opacity: 0.5, padding: '3rem 0' }}>
+                    <td colSpan={7} style={{ textAlign: 'center', opacity: 0.5, padding: '3rem 0' }}>
                       Nenhuma folha calculada para a competência selecionada. Clique em "Calcular Folha".
                     </td>
                   </tr>

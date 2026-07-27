@@ -9,6 +9,7 @@ export interface Employee {
   admissionDate: string;
   baseSalary: number; // Salário base bruto
   vacationDaysBalance?: number; // UC-305: Saldo de dias de férias acumulados
+  benefitsAllowance?: number; // UC-304: Vale Alimentação / Refeição / Saúde
   createdAt: string;
 }
 
@@ -19,8 +20,10 @@ export interface PayrollRecord {
   employeeId: string;
   employeeName: string;
   baseSalary: number;
-  inssDeduction: number; // UC-303
-  irrfDeduction: number; // UC-303
+  benefitsAllowance: number; // UC-304
+  inssDeduction: number; // UC-303, UC-312
+  irrfDeduction: number; // UC-303, UC-312
+  fgtsEmployerTax: number; // UC-312: FGTS (8% pago pela empresa)
   netSalary: number; // Salário Líquido (UC-303)
   status: 'DRAFT' | 'CALCULATED' | 'APPROVED';
   createdAt: string;
@@ -71,12 +74,40 @@ export function validateCPF(cpf: string): boolean {
 }
 
 /**
- * Calcula os impostos trabalhistas e salário líquido de um funcionário (UC-303).
+ * Calcula os impostos trabalhistas, FGTS patronal e salário líquido de um funcionário (UC-303, UC-304, UC-312).
  */
-export function calculatePayroll(baseSalary: number): { inss: number; irrf: number; net: number } {
+export function calculatePayroll(baseSalary: number, benefits: number = 0): { inss: number; irrf: number; fgts: number; net: number } {
   const inss = Math.round(baseSalary * 0.08 * 100) / 100;
   const irrf = Math.round((baseSalary - inss) * 0.05 * 100) / 100;
-  const net = Math.round((baseSalary - inss - irrf) * 100) / 100;
+  const fgts = Math.round(baseSalary * 0.08 * 100) / 100; // 8% FGTS Patronal (UC-312)
+  const net = Math.round((baseSalary + benefits - inss - irrf) * 100) / 100;
 
-  return { inss, irrf, net };
+  return { inss, irrf, fgts, net };
+}
+
+/**
+ * Gera o documento estruturado de Holerite / Contracheque individual (UC-310).
+ */
+export function generatePayslip(employee: Employee, payroll: PayrollRecord): string {
+  return `================================================
+HOLERITE / CONTRACHEQUE DEMONSTRATIVO (UC-310)
+Competência: ${payroll.monthYear}
+================================================
+Colaborador: ${employee.name} | CPF: ${employee.cpf}
+Cargo: ${employee.roleTitle} | Depto: ${employee.department}
+
+VENCIMENTOS (PROVENTOS):
+- Salário Base: R$ ${payroll.baseSalary.toFixed(2)}
+- Benefícios (VR/VA/VT): R$ ${payroll.benefitsAllowance.toFixed(2)}
+
+DESCONTOS TRABALHISTAS (UC-312):
+- INSS Retido (8%): R$ ${payroll.inssDeduction.toFixed(2)}
+- IRRF Retido (5%): R$ ${payroll.irrfDeduction.toFixed(2)}
+
+ENCARGOS PATRONAIS (INFORMATIVO):
+- FGTS Depositado (8%): R$ ${payroll.fgtsEmployerTax.toFixed(2)}
+
+------------------------------------------------
+VALOR LÍQUIDO A RECEBER: R$ ${payroll.netSalary.toFixed(2)}
+================================================`;
 }

@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.validateCPF = validateCPF;
 exports.calculatePayroll = calculatePayroll;
+exports.generatePayslip = generatePayslip;
 /**
  * Valida o número de CPF (Algoritmo padrão de dígitos verificadores) (UC-301).
  */
@@ -28,11 +29,38 @@ function validateCPF(cpf) {
     return true;
 }
 /**
- * Calcula os impostos trabalhistas e salário líquido de um funcionário (UC-303).
+ * Calcula os impostos trabalhistas, FGTS patronal e salário líquido de um funcionário (UC-303, UC-304, UC-312).
  */
-function calculatePayroll(baseSalary) {
+function calculatePayroll(baseSalary, benefits = 0) {
     const inss = Math.round(baseSalary * 0.08 * 100) / 100;
     const irrf = Math.round((baseSalary - inss) * 0.05 * 100) / 100;
-    const net = Math.round((baseSalary - inss - irrf) * 100) / 100;
-    return { inss, irrf, net };
+    const fgts = Math.round(baseSalary * 0.08 * 100) / 100; // 8% FGTS Patronal (UC-312)
+    const net = Math.round((baseSalary + benefits - inss - irrf) * 100) / 100;
+    return { inss, irrf, fgts, net };
+}
+/**
+ * Gera o documento estruturado de Holerite / Contracheque individual (UC-310).
+ */
+function generatePayslip(employee, payroll) {
+    return `================================================
+HOLERITE / CONTRACHEQUE DEMONSTRATIVO (UC-310)
+Competência: ${payroll.monthYear}
+================================================
+Colaborador: ${employee.name} | CPF: ${employee.cpf}
+Cargo: ${employee.roleTitle} | Depto: ${employee.department}
+
+VENCIMENTOS (PROVENTOS):
+- Salário Base: R$ ${payroll.baseSalary.toFixed(2)}
+- Benefícios (VR/VA/VT): R$ ${payroll.benefitsAllowance.toFixed(2)}
+
+DESCONTOS TRABALHISTAS (UC-312):
+- INSS Retido (8%): R$ ${payroll.inssDeduction.toFixed(2)}
+- IRRF Retido (5%): R$ ${payroll.irrfDeduction.toFixed(2)}
+
+ENCARGOS PATRONAIS (INFORMATIVO):
+- FGTS Depositado (8%): R$ ${payroll.fgtsEmployerTax.toFixed(2)}
+
+------------------------------------------------
+VALOR LÍQUIDO A RECEBER: R$ ${payroll.netSalary.toFixed(2)}
+================================================`;
 }

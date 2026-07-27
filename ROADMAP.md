@@ -913,7 +913,7 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-303** — Calcular folha de pagamento (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
   - Depende de: UC-129, UC-301
   - Desbloqueia: nenhum
-- [ ] **UC-304** — Gerenciar benefícios (vale, plano de saúde, etc.) (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
+- [x] **UC-304** — Gerenciar benefícios (vale, plano de saúde, etc.) (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
   - Depende de: UC-129, UC-301
   - Desbloqueia: nenhum
 - [x] **UC-305** — Controlar férias e ausências (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
@@ -931,13 +931,13 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-309** — Avaliar desempenho de funcionários (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
   - Depende de: UC-129, UC-301
   - Desbloqueia: nenhum
-- [ ] **UC-310** — Emitir holerite/contracheque (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
+- [x] **UC-310** — Emitir holerite/contracheque (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
   - Depende de: UC-129, UC-301
   - Desbloqueia: nenhum
 - [ ] **UC-311** — Gerenciar contratos de trabalho (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
   - Depende de: UC-129, UC-301
   - Desbloqueia: nenhum
-- [ ] **UC-312** — Calcular impostos e encargos trabalhistas (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
+- [x] **UC-312** — Calcular impostos e encargos trabalhistas (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
   - Depende de: UC-129, UC-301
   - Desbloqueia: nenhum
 - [ ] **UC-313** — Gerenciar referências bibliográficas (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)

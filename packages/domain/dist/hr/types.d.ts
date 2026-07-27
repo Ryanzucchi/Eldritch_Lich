@@ -9,6 +9,7 @@ export interface Employee {
     admissionDate: string;
     baseSalary: number;
     vacationDaysBalance?: number;
+    benefitsAllowance?: number;
     createdAt: string;
 }
 export interface PayrollRecord {
@@ -18,8 +19,10 @@ export interface PayrollRecord {
     employeeId: string;
     employeeName: string;
     baseSalary: number;
+    benefitsAllowance: number;
     inssDeduction: number;
     irrfDeduction: number;
+    fgtsEmployerTax: number;
     netSalary: number;
     status: 'DRAFT' | 'CALCULATED' | 'APPROVED';
     createdAt: string;
@@ -49,10 +52,15 @@ export interface TimeClockPunch {
  */
 export declare function validateCPF(cpf: string): boolean;
 /**
- * Calcula os impostos trabalhistas e salário líquido de um funcionário (UC-303).
+ * Calcula os impostos trabalhistas, FGTS patronal e salário líquido de um funcionário (UC-303, UC-304, UC-312).
  */
-export declare function calculatePayroll(baseSalary: number): {
+export declare function calculatePayroll(baseSalary: number, benefits?: number): {
     inss: number;
     irrf: number;
+    fgts: number;
     net: number;
 };
+/**
+ * Gera o documento estruturado de Holerite / Contracheque individual (UC-310).
+ */
+export declare function generatePayslip(employee: Employee, payroll: PayrollRecord): string;

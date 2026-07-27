@@ -2,11 +2,12 @@
 
 Este registro lista em ordem cronológica todas as atualizações de desenvolvimento integradas a esta base de conhecimento.
 
-## [2026-07-27] (Recursos Humanos, Férias, Ausências Médicas e Ponto Eletrônico) - UC-305, UC-306, UC-301, UC-302, UC-303, UC-376, UC-377, UC-378, UC-379, UC-380, UC-360, UC-361, UC-362, UC-363, UC-364, UC-365, UC-367, UC-368, UC-369, UC-370, UC-340, UC-341, UC-342, UC-343, UC-344, UC-345, UC-219, UC-220, UC-221, UC-229, UC-230, UC-217, UC-218, UC-214, UC-215, UC-216, UC-206, UC-207, UC-208, UC-209, UC-210, UC-082, UC-083, UC-135, UC-136, UC-403, UC-404, UC-405, UC-406, UC-395, UC-396, UC-397, UC-398, UC-270, UC-271, UC-272, UC-274, UC-267, UC-268, UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
+## [2026-07-27] (Benefícios, Holerite e Encargos Trabalhistas) - UC-304, UC-310, UC-312, UC-305, UC-306, UC-301, UC-302, UC-303, UC-376, UC-377, UC-378, UC-379, UC-380, UC-360, UC-361, UC-362, UC-363, UC-364, UC-365, UC-367, UC-368, UC-369, UC-370, UC-340, UC-341, UC-342, UC-343, UC-344, UC-345, UC-219, UC-220, UC-221, UC-229, UC-230, UC-217, UC-218, UC-214, UC-215, UC-216, UC-206, UC-207, UC-208, UC-209, UC-210, UC-082, UC-083, UC-135, UC-136, UC-403, UC-404, UC-405, UC-406, UC-395, UC-396, UC-397, UC-398, UC-270, UC-271, UC-272, UC-274, UC-267, UC-268, UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
 
-### 🌴 Controle de Férias, Ausências e Ponto Eletrônico (UC-305, UC-306)
-*   **Controle de Férias & Atestados (UC-305):** Abas dedicadas na página `/hr` para solicitação e aprovação de férias e lançamento de faltas médicas justificadas.
-*   **Ponto Eletrônico (UC-306):** Botões de batida de ponto de `ENTRADA` e `SAÍDA` com validação de tempo mínimo de 2 minutos para prevenção de batidas duplicadas e registro com horário oficial do servidor. Tabelas `vacationRequests` e `timeClockPunches` no Dexie (Versão 26).
+### 📄 Benefícios, Holerite e Encargos Trabalhistas (UC-304, UC-310, UC-312)
+*   **Gestão de Benefícios (UC-304):** Adicionada atribuição de auxílio VR/VA ao demonstrativo de pagamentos dos colaboradores.
+*   **Encargos Trabalhistas Patronais (UC-312):** Cálculo de FGTS patronal (8%) e retidos (INSS e IRRF) na função `calculatePayroll`.
+*   **Emissão de Holerite / Contracheque (UC-310):** Função `generatePayslip` em `@eldritch/domain` gerando o documento individual estruturado de proventos e descontos.
 
 ### ⏳ Linhas do Tempo, Vínculo com Lore e Exportação (UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264)
 *   **Exportação Multiformato e HTML Interativo (UC-171, UC-264):** Módulo `exportTimeline` em `@eldritch/domain` (.html, .md, .json).
