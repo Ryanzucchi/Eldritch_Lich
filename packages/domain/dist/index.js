@@ -49,3 +49,4 @@ __exportStar(require("./collaboration/calendar.js"), exports);
 __exportStar(require("./hr/types.js"), exports);
 __exportStar(require("./research/types.js"), exports);
 __exportStar(require("./gdd/types.js"), exports);
+__exportStar(require("./projects/okrs.js"), exports);

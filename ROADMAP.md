@@ -1021,22 +1021,22 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-339** — Documentar economia interna do jogo (itens, moedas, trocas) (Prioridade: Média | Complexidade: Média | Módulo: `game_design`)
   - Depende de: UC-129, UC-333
   - Desbloqueia: nenhum
-- [ ] **UC-346** — Definir objetivos (OKRs) por time ou projeto (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
+- [x] **UC-346** — Definir objetivos (OKRs) por time ou projeto (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-347** — Vincular tarefas/sprints a objetivos estratégicos (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
+- [x] **UC-347** — Vincular tarefas/sprints a objetivos estratégicos (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-348** — Acompanhar progresso de metas ao longo do tempo (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
+- [x] **UC-348** — Acompanhar progresso de metas ao longo do tempo (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-349** — Gerar relatório de atingimento de metas (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
+- [x] **UC-349** — Gerar relatório de atingimento de metas (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-350** — Revisar metas periodicamente (check-in) (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
+- [x] **UC-350** — Revisar metas periodicamente (check-in) (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-351** — Integrar metas com avaliação de desempenho (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
+- [x] **UC-351** — Integrar metas com avaliação de desempenho (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-352** — Gerenciar portfólio de projetos (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
