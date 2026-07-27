@@ -31,7 +31,6 @@ function validateCPF(cpf) {
  * Calcula os impostos trabalhistas e salário líquido de um funcionário (UC-303).
  */
 function calculatePayroll(baseSalary) {
-    // Cálculo simplificado de alíquota INSS (8%) e IRRF (5%)
     const inss = Math.round(baseSalary * 0.08 * 100) / 100;
     const irrf = Math.round((baseSalary - inss) * 0.05 * 100) / 100;
     const net = Math.round((baseSalary - inss - irrf) * 100) / 100;

@@ -8,6 +8,7 @@ export interface Employee {
     department: string;
     admissionDate: string;
     baseSalary: number;
+    vacationDaysBalance?: number;
     createdAt: string;
 }
 export interface PayrollRecord {
@@ -21,6 +22,26 @@ export interface PayrollRecord {
     irrfDeduction: number;
     netSalary: number;
     status: 'DRAFT' | 'CALCULATED' | 'APPROVED';
+    createdAt: string;
+}
+export interface VacationRequest {
+    id: string;
+    employeeId: string;
+    employeeName: string;
+    startDate: string;
+    endDate: string;
+    daysRequested: number;
+    type: 'VACATION' | 'MEDICAL_ABSENCE';
+    status: 'PENDING' | 'APPROVED' | 'REJECTED';
+    createdAt: string;
+}
+export interface TimeClockPunch {
+    id: string;
+    employeeId: string;
+    employeeName: string;
+    punchTime: string;
+    type: 'ENTRY' | 'EXIT';
+    location?: string;
     createdAt: string;
 }
 /**

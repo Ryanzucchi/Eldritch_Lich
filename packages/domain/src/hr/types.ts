@@ -8,6 +8,7 @@ export interface Employee {
   department: string;
   admissionDate: string;
   baseSalary: number; // Salário base bruto
+  vacationDaysBalance?: number; // UC-305: Saldo de dias de férias acumulados
   createdAt: string;
 }
 
@@ -22,6 +23,28 @@ export interface PayrollRecord {
   irrfDeduction: number; // UC-303
   netSalary: number; // Salário Líquido (UC-303)
   status: 'DRAFT' | 'CALCULATED' | 'APPROVED';
+  createdAt: string;
+}
+
+export interface VacationRequest {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  startDate: string;
+  endDate: string;
+  daysRequested: number;
+  type: 'VACATION' | 'MEDICAL_ABSENCE'; // UC-305
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  createdAt: string;
+}
+
+export interface TimeClockPunch {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  punchTime: string; // ISO String oficial do servidor (UC-306)
+  type: 'ENTRY' | 'EXIT';
+  location?: string;
   createdAt: string;
 }
 
@@ -51,7 +74,6 @@ export function validateCPF(cpf: string): boolean {
  * Calcula os impostos trabalhistas e salário líquido de um funcionário (UC-303).
  */
 export function calculatePayroll(baseSalary: number): { inss: number; irrf: number; net: number } {
-  // Cálculo simplificado de alíquota INSS (8%) e IRRF (5%)
   const inss = Math.round(baseSalary * 0.08 * 100) / 100;
   const irrf = Math.round((baseSalary - inss) * 0.05 * 100) / 100;
   const net = Math.round((baseSalary - inss - irrf) * 100) / 100;

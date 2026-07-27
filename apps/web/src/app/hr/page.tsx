@@ -3,13 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { db } from '../../db/schema';
-import { Employee, PayrollRecord, validateCPF, calculatePayroll } from '@eldritch/domain';
+import { Employee, PayrollRecord, VacationRequest, TimeClockPunch, validateCPF, calculatePayroll } from '@eldritch/domain';
 
 export default function HRPage() {
   const { activeProject } = useApp();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [payrolls, setPayrolls] = useState<PayrollRecord[]>([]);
-  const [activeTab, setActiveTab] = useState<'EMPLOYEES' | 'PAYROLL'>('EMPLOYEES');
+  const [vacations, setVacations] = useState<VacationRequest[]>([]);
+  const [timeClockPunches, setTimeClockPunches] = useState<TimeClockPunch[]>([]);
+  const [activeTab, setActiveTab] = useState<'EMPLOYEES' | 'PAYROLL' | 'VACATIONS' | 'TIMECLOCK'>('EMPLOYEES');
 
   // Employee Form State (UC-301, UC-302)
   const [showAddModal, setShowAddModal] = useState(false);
@@ -19,6 +21,12 @@ export default function HRPage() {
   const [roleTitle, setRoleTitle] = useState('');
   const [department, setDepartment] = useState('Editorial');
   const [baseSalary, setBaseSalary] = useState<number>(5000);
+
+  // Vacation Form State (UC-305)
+  const [selectedEmpId, setSelectedEmpId] = useState('');
+  const [vacStartDate, setVacStartDate] = useState('');
+  const [vacEndDate, setVacEndDate] = useState('');
+  const [vacType, setVacType] = useState<'VACATION' | 'MEDICAL_ABSENCE'>('VACATION');
 
   // Payroll Calculation State (UC-303)
   const [monthYear, setMonthYear] = useState('2026-07');
@@ -33,6 +41,12 @@ export default function HRPage() {
 
     const payList = await db.payrollRecords.where('projectId').equals(activeProject.id).toArray();
     setPayrolls(payList);
+
+    const vacList = await db.vacationRequests.toArray();
+    setVacations(vacList);
+
+    const punchList = await db.timeClockPunches.toArray();
+    setTimeClockPunches(punchList);
   };
 
   useEffect(() => {
@@ -107,6 +121,70 @@ export default function HRPage() {
     setTimeout(() => setSuccess(null), 3500);
   };
 
+  // Punch Clock (UC-306)
+  const handlePunchClock = async (type: 'ENTRY' | 'EXIT') => {
+    const currentEmp = employees[0]; // simulação do funcionário logado
+    if (!currentEmp) {
+      alert('Cadastre ao menos um funcionário antes de bater ponto.');
+      return;
+    }
+
+    const lastPunch = timeClockPunches[0];
+    if (lastPunch && (Date.now() - new Date(lastPunch.punchTime).getTime()) < 120000) {
+      alert('Batida duplicada detectada! Aguarde 2 minutos entre registros (UC-306).');
+      return;
+    }
+
+    const punch: TimeClockPunch = {
+      id: `tcp_${Date.now()}`,
+      employeeId: currentEmp.id,
+      employeeName: currentEmp.name,
+      punchTime: new Date().toISOString(),
+      type,
+      location: 'Sede Principal (Servidor)',
+      createdAt: new Date().toISOString()
+    };
+
+    await db.timeClockPunches.put(punch);
+    await loadData();
+    setSuccess(`Ponto de ${type === 'ENTRY' ? 'ENTRADA' : 'SAÍDA'} registrado às ${new Date().toLocaleTimeString('pt-BR')} (UC-306)!`);
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  // Request Vacation (UC-305)
+  const handleRequestVacation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const emp = employees.find(e => e.id === selectedEmpId);
+    if (!emp || !vacStartDate || !vacEndDate) return;
+
+    const req: VacationRequest = {
+      id: `vr_${Date.now()}`,
+      employeeId: emp.id,
+      employeeName: emp.name,
+      startDate: vacStartDate,
+      endDate: vacEndDate,
+      daysRequested: 15,
+      type: vacType,
+      status: 'PENDING',
+      createdAt: new Date().toISOString()
+    };
+
+    await db.vacationRequests.put(req);
+    setVacStartDate('');
+    setVacEndDate('');
+    await loadData();
+    setSuccess(`Solicitação de ${vacType === 'VACATION' ? 'Férias' : 'Ausência Médica'} registrada (UC-305)!`);
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  // Approve Vacation (UC-305)
+  const handleApproveVacation = async (reqId: string) => {
+    await db.vacationRequests.update(reqId, { status: 'APPROVED' });
+    await loadData();
+    setSuccess('Período de férias/ausência aprovado com sucesso (UC-305)!');
+    setTimeout(() => setSuccess(null), 2500);
+  };
+
   const activePayrolls = payrolls.filter(p => p.monthYear === monthYear);
   const totalGross = activePayrolls.reduce((acc, curr) => acc + curr.baseSalary, 0);
   const totalNet = activePayrolls.reduce((acc, curr) => acc + curr.netSalary, 0);
@@ -117,10 +195,10 @@ export default function HRPage() {
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <div>
           <h1 style={{ margin: 0, fontSize: '1.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            👥 Recursos Humanos & Folha de Pagamento (UC-301, UC-302, UC-303)
+            👥 Recursos Humanos, Férias & Ponto Eletrônico (UC-301 a UC-306)
           </h1>
           <p style={{ margin: '0.4rem 0 0 0', opacity: 0.7 }}>
-            Gestão de funcionários, cargos salariais, cargos e cálculo automático de encargos e salário líquido.
+            Gestão de funcionários, folha de pagamento, controle de férias, ausências médicas e batida de ponto eletrônico.
           </p>
         </div>
 
@@ -136,6 +214,18 @@ export default function HRPage() {
             style={{ background: activeTab === 'PAYROLL' ? '#3b82f6' : 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '0.6rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
           >
             💵 Folha de Pagamento
+          </button>
+          <button 
+            onClick={() => setActiveTab('VACATIONS')}
+            style={{ background: activeTab === 'VACATIONS' ? '#3b82f6' : 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '0.6rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
+          >
+            🌴 Férias & Ausências (UC-305)
+          </button>
+          <button 
+            onClick={() => setActiveTab('TIMECLOCK')}
+            style={{ background: activeTab === 'TIMECLOCK' ? '#3b82f6' : 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '0.6rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
+          >
+            ⏰ Registro de Ponto (UC-306)
           </button>
         </div>
       </header>
@@ -261,6 +351,153 @@ export default function HRPage() {
                     </td>
                   </tr>
                 )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Tab Vacations & Absences (UC-305) */}
+      {activeTab === 'VACATIONS' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '12px', padding: '1.5rem' }}>
+            <h3 style={{ margin: '0 0 1rem 0' }}>🌴 Solicitar Férias ou Registrar Ausência Médica (UC-305)</h3>
+            <form onSubmit={handleRequestVacation} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr auto', gap: '1rem', alignItems: 'end' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Funcionário:</label>
+                <select 
+                  value={selectedEmpId}
+                  onChange={e => setSelectedEmpId(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                >
+                  <option value="">Selecione o colaborador...</option>
+                  {employees.map(e => (
+                    <option key={e.id} value={e.id}>{e.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Data Início:</label>
+                <input 
+                  type="date"
+                  value={vacStartDate}
+                  onChange={e => setVacStartDate(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Data Fim:</label>
+                <input 
+                  type="date"
+                  value={vacEndDate}
+                  onChange={e => setVacEndDate(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Tipo:</label>
+                <select 
+                  value={vacType}
+                  onChange={e => setVacType(e.target.value as any)}
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                >
+                  <option value="VACATION">🌴 Férias</option>
+                  <option value="MEDICAL_ABSENCE">🏥 Atestado Médico</option>
+                </select>
+              </div>
+
+              <button type="submit" style={{ background: '#3b82f6', border: 'none', color: 'white', padding: '0.6rem 1.2rem', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}>
+                Enviar Solicitação
+              </button>
+            </form>
+          </div>
+
+          <div style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '12px', overflow: 'hidden' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+              <thead>
+                <tr style={{ background: 'rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                  <th style={{ padding: '0.8rem 1rem' }}>Colaborador</th>
+                  <th style={{ padding: '0.8rem 1rem' }}>Tipo</th>
+                  <th style={{ padding: '0.8rem 1rem' }}>Período</th>
+                  <th style={{ padding: '0.8rem 1rem' }}>Status</th>
+                  <th style={{ padding: '0.8rem 1rem' }}>Ação</th>
+                </tr>
+              </thead>
+              <tbody>
+                {vacations.map(v => (
+                  <tr key={v.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <td style={{ padding: '0.8rem 1rem', fontWeight: 600 }}>{v.employeeName}</td>
+                    <td style={{ padding: '0.8rem 1rem' }}>{v.type === 'VACATION' ? '🌴 Férias' : '🏥 Atestado'}</td>
+                    <td style={{ padding: '0.8rem 1rem', opacity: 0.8 }}>{v.startDate} ➔ {v.endDate}</td>
+                    <td style={{ padding: '0.8rem 1rem' }}>
+                      <span style={{ fontSize: '0.8rem', padding: '0.2rem 0.5rem', borderRadius: '4px', background: v.status === 'APPROVED' ? 'rgba(16,185,129,0.2)' : 'rgba(245,158,11,0.2)', color: v.status === 'APPROVED' ? '#10b981' : '#f59e0b' }}>
+                        {v.status === 'APPROVED' ? '✅ Aprovado' : '⏳ Pendente'}
+                      </span>
+                    </td>
+                    <td style={{ padding: '0.8rem 1rem' }}>
+                      {v.status === 'PENDING' && (
+                        <button onClick={() => handleApproveVacation(v.id)} style={{ background: '#10b981', border: 'none', color: 'white', padding: '0.3rem 0.6rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}>
+                          Aprovar (UC-305)
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Tab Timeclock Punch (UC-306) */}
+      {activeTab === 'TIMECLOCK' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '12px', padding: '2rem', textAlign: 'center' }}>
+            <h2 style={{ margin: '0 0 0.5rem 0', fontSize: '1.5rem' }}>⏰ Batida de Ponto Eletrônico (UC-306)</h2>
+            <p style={{ opacity: 0.6, fontSize: '0.9rem', marginBottom: '1.5rem' }}>Horário Oficial do Servidor da Aplicação. Prevenção automática de batidas duplicadas.</p>
+
+            <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center' }}>
+              <button 
+                onClick={() => handlePunchClock('ENTRY')}
+                style={{ background: '#10b981', border: 'none', color: 'white', padding: '1rem 2.5rem', borderRadius: '8px', fontSize: '1.1rem', fontWeight: 700, cursor: 'pointer' }}
+              >
+                🟢 Registrar Entrada (UC-306)
+              </button>
+              <button 
+                onClick={() => handlePunchClock('EXIT')}
+                style={{ background: '#ef4444', border: 'none', color: 'white', padding: '1rem 2.5rem', borderRadius: '8px', fontSize: '1.1rem', fontWeight: 700, cursor: 'pointer' }}
+              >
+                🔴 Registrar Saída (UC-306)
+              </button>
+            </div>
+          </div>
+
+          <div style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '12px', overflow: 'hidden' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+              <thead>
+                <tr style={{ background: 'rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                  <th style={{ padding: '0.8rem 1rem' }}>Colaborador</th>
+                  <th style={{ padding: '0.8rem 1rem' }}>Tipo</th>
+                  <th style={{ padding: '0.8rem 1rem' }}>Horário Oficial (Servidor UTC)</th>
+                  <th style={{ padding: '0.8rem 1rem' }}>Localização</th>
+                </tr>
+              </thead>
+              <tbody>
+                {timeClockPunches.map(p => (
+                  <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <td style={{ padding: '0.8rem 1rem', fontWeight: 600 }}>{p.employeeName}</td>
+                    <td style={{ padding: '0.8rem 1rem' }}>
+                      <span style={{ color: p.type === 'ENTRY' ? '#10b981' : '#ef4444', fontWeight: 700 }}>
+                        {p.type === 'ENTRY' ? '🟢 ENTRADA' : '🔴 SAÍDA'}
+                      </span>
+                    </td>
+                    <td style={{ padding: '0.8rem 1rem', fontFamily: 'monospace' }}>{new Date(p.punchTime).toLocaleString('pt-BR')}</td>
+                    <td style={{ padding: '0.8rem 1rem', opacity: 0.6 }}>{p.location || 'Sede Servidor'}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

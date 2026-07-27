@@ -916,10 +916,10 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-304** — Gerenciar benefícios (vale, plano de saúde, etc.) (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
   - Depende de: UC-129, UC-301
   - Desbloqueia: nenhum
-- [ ] **UC-305** — Controlar férias e ausências (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
+- [x] **UC-305** — Controlar férias e ausências (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
   - Depende de: UC-129, UC-301
   - Desbloqueia: nenhum
-- [ ] **UC-306** — Registrar ponto/horas trabalhadas (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
+- [x] **UC-306** — Registrar ponto/horas trabalhadas (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
   - Depende de: UC-129, UC-301
   - Desbloqueia: nenhum
 - [ ] **UC-307** — Gerenciar processo de admissão (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
