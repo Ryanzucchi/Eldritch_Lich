@@ -952,7 +952,7 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-316** — Gerar bibliografia em formatos (ABNT, APA, etc.) (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129, UC-313
   - Desbloqueia: nenhum
-- [ ] **UC-317** — Vincular notas de pesquisa a fontes (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
+- [x] **UC-317** — Vincular notas de pesquisa a fontes (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129, UC-313
   - Desbloqueia: nenhum
 - [ ] **UC-318** — Rastrear hipóteses e experimentos (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
@@ -964,7 +964,7 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-320** — Colaborar em revisão de literatura (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129, UC-313
   - Desbloqueia: nenhum
-- [ ] **UC-321** — Exportar conteúdo para LaTeX (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
+- [x] **UC-321** — Exportar conteúdo para LaTeX (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129, UC-313
   - Desbloqueia: nenhum
 - [ ] **UC-322** — Registrar metodologia de pesquisa (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
@@ -976,13 +976,13 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-324** — Formatar texto em formatos científicos variáveis (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129, UC-313
   - Desbloqueia: nenhum
-- [ ] **UC-325** — Exportar textos em docx / criar notas atômicas (uma ideia por nota) (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
+- [x] **UC-325** — Exportar textos em docx / criar notas atômicas (uma ideia por nota) (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129, UC-313
   - Desbloqueia: nenhum
-- [ ] **UC-326** — Linkar notas bidirecionalmente (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
+- [x] **UC-326** — Linkar notas bidirecionalmente (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129, UC-313
   - Desbloqueia: nenhum
-- [ ] **UC-327** — Criar mapa de conhecimento pessoal (zettelkasten) (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
+- [x] **UC-327** — Criar mapa de conhecimento pessoal (zettelkasten) (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129, UC-313
   - Desbloqueia: nenhum
 - [ ] **UC-328** — Revisar notas periodicamente (spaced repetition) (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
