@@ -108,5 +108,25 @@
     "projectId": "95f71c04-c78b-4642-899e-5c089f155ed6",
     "createdAt": "2026-07-22T16:42:31.894Z",
     "updatedAt": "2026-07-22T16:42:37.176Z"
+  },
+  {
+    "id": "7751f09d-1219-4c99-8ded-bbe57c0f5c85",
+    "title": "Capítulo 1 - A Travessia",
+    "content": "&lt;p&gt;Kael respirou fundo e deu os primeiros passos na Floresta dos Sussurros. As árvores retorcidas pareciam murmurar segredos ao vento frio da noite.&lt;&#x2F;p&gt;&lt;p&gt;Ele caminhou por horas, guiado apenas pelo sussurro das folhas. Sob as raíces massivas de um salgueiro ancião, algo brilhava debilmente sob a terra úmida. Kael cavou freneticamente até que suas mãos tocaram a superfície gélida do Medalhão Antigo. He finalmente o segurou contra o peito, sentindo sua pulsação mística.&lt;&#x2F;p&gt;&lt;p&gt;Ele pensou: &quot;Vou levar o medalhão até a estalagem e amanhã pretendo encontrar a Espada do Eclipse.&quot;&lt;&#x2F;p&gt;",
+    "status": "RASCUNHO",
+    "isLocked": false,
+    "projectId": "08bd76d3-c111-4e32-b2f3-3663f5bf97f5",
+    "createdAt": "2026-07-24T18:55:19.862Z",
+    "updatedAt": "2026-07-24T18:55:22.106Z"
+  },
+  {
+    "id": "d7865112-de51-4c11-8e8e-7dfd202dd229",
+    "title": "Capítulo 1 - A Travessia",
+    "content": "&lt;p&gt;Kael respirou fundo e deu os primeiros passos na Floresta dos Sussurros. As árvores retorcidas pareciam murmurar segredos ao vento frio da noite.&lt;&#x2F;p&gt;&lt;p&gt;Ele caminhou por horas, guiado apenas pelo sussurro das folhas. Sob as raíces massivas de um salgueiro ancião, algo brilhava debilmente sob a terra úmida. Kael cavou freneticamente até que suas mãos tocaram a superfície gélida do Medalhão Antigo. He finalmente o segurou contra o peito, sentindo sua pulsação mística.&lt;&#x2F;p&gt;&lt;p&gt;Ele pensou: &quot;Vou levar o medalhão até a estalagem e amanhã pretendo encontrar a Espada do Eclipse.&quot;&lt;&#x2F;p&gt;",
+    "status": "RASCUNHO",
+    "isLocked": false,
+    "projectId": "08bd76d3-c111-4e32-b2f3-3663f5bf97f5",
+    "createdAt": "2026-07-24T18:55:19.862Z",
+    "updatedAt": "2026-07-24T18:56:32.180Z"
   }
 ]

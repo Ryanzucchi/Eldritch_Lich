@@ -29,3 +29,4 @@ export * from './collaboration/chat.js';
 export * from './collaboration/notifications.js';
 export * from './collaboration/meetings.js';
 export * from './collaboration/calls.js';
+export * from './collaboration/calendar.js';

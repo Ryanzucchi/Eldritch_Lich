@@ -874,19 +874,19 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-375** — Receber notificações de atualização de tarefas no chat (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-376** — Gerenciar calendário de equipe (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-376** — Gerenciar calendário de equipe (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-377** — Agendar reuniões e eventos no calendário (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-377** — Agendar reuniões e eventos no calendário (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-378** — Integrar calendário com ferramentas externas (Google Calendar, Outlook) (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-378** — Integrar calendário com ferramentas externas (Google Calendar, Outlook) (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-379** — Visualizar disponibilidade de membros da equipe (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-379** — Visualizar disponibilidade de membros da equipe (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-380** — Sincronizar fusos horários de membros da equipe (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-380** — Sincronizar fusos horários de membros da equipe (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 

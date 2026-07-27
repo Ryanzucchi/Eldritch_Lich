@@ -2,13 +2,12 @@
 
 Este registro lista em ordem cronológica todas as atualizações de desenvolvimento integradas a esta base de conhecimento.
 
-## [2026-07-24] (Chamadas de Voz/Vídeo, Salas Virtuais, Mensagens de Voz e Transcrição por IA) - UC-360, UC-361, UC-362, UC-363, UC-364, UC-365, UC-367, UC-368, UC-369, UC-370, UC-340, UC-341, UC-342, UC-343, UC-344, UC-345, UC-219, UC-220, UC-221, UC-229, UC-230, UC-217, UC-218, UC-214, UC-215, UC-216, UC-206, UC-207, UC-208, UC-209, UC-210, UC-082, UC-083, UC-135, UC-136, UC-403, UC-404, UC-405, UC-406, UC-395, UC-396, UC-397, UC-398, UC-270, UC-271, UC-272, UC-274, UC-267, UC-268, UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
+## [2026-07-27] (Calendário de Equipe, Agendamento, Exportação iCal, Disponibilidade e Fusos Horários) - UC-376, UC-377, UC-378, UC-379, UC-380, UC-360, UC-361, UC-362, UC-363, UC-364, UC-365, UC-367, UC-368, UC-369, UC-370, UC-340, UC-341, UC-342, UC-343, UC-344, UC-345, UC-219, UC-220, UC-221, UC-229, UC-230, UC-217, UC-218, UC-214, UC-215, UC-216, UC-206, UC-207, UC-208, UC-209, UC-210, UC-082, UC-083, UC-135, UC-136, UC-403, UC-404, UC-405, UC-406, UC-395, UC-396, UC-397, UC-398, UC-270, UC-271, UC-272, UC-274, UC-267, UC-268, UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
 
-### 📞 Chamadas de Voz/Vídeo WebRTC, Mensagens de Voz, Salas Virtuais e Transcrição por IA (UC-360 a UC-370)
-*   **Chamadas & Salas Virtuais (UC-360, UC-363, UC-364, UC-368):** Interface em `/calls` para videoconferências e chamadas de voz ao vivo com moderação e salas por projeto.
-*   **Compartilhamento de Tela & Gravação (UC-365):** Transmissão de tela em tempo real e gravação de chamadas em background.
-*   **Mensagens de Voz (UC-362):** Gravador de notas de voz com player embutido e seletor de velocidade (`1.0x`, `1.5x`, `2.0x`).
-*   **Transcrição Automática por IA (UC-367):** Função `transcribeCallAudio` em `@eldritch/domain` com minutagem e diarização de oradores. Tabelas `voiceMessages` e `callSessions` no Dexie (Versão 23).
+### 📆 Calendário de Equipe, Agendamento, Exportação iCal e Fusos Horários (UC-376 a UC-380)
+*   **Gestão de Calendário & Prazos (UC-376, UC-377):** Interface `/calendar` para acompanhamento de sprints, datas de entregas e reuniões com marcação de categorias e cores.
+*   **Exportação Externa iCal / Google Calendar (UC-378):** Função `exportToICalendar` em `@eldritch/domain` gerando arquivos `.ics` padronizados.
+*   **Disponibilidade & Fusos Horários (UC-379, UC-380):** Painel de disponibilidade de membros e seletores de fuso horário (`UTC-3`, `UTC+0`, `UTC+1`, `UTC-5`). Tabelas `calendarEvents` e `memberAvailabilities` no Dexie (Versão 24).
 
 ### ⏳ Linhas do Tempo, Vínculo com Lore e Exportação (UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264)
 *   **Exportação Multiformato e HTML Interativo (UC-171, UC-264):** Módulo `exportTimeline` em `@eldritch/domain` (.html, .md, .json).
