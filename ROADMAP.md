@@ -1087,16 +1087,16 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-388** — Reconciliação bancária automática (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
   - Depende de: UC-129, UC-381
   - Desbloqueia: nenhum
-- [ ] **UC-389** — Gerar relatórios financeiros (DRE, Balanço, etc.) (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
+- [x] **UC-389** — Gerar relatórios financeiros (DRE, Balanço, etc.) (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
   - Depende de: UC-129, UC-381
   - Desbloqueia: nenhum
 - [x] **UC-390** — Alertar sobre desvios orçamentários (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
   - Depende de: UC-129, UC-381
   - Desbloqueia: nenhum
-- [ ] **UC-391** — Gerenciar contas a pagar e a receber (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
+- [x] **UC-391** — Gerenciar contas a pagar e a receber (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
   - Depende de: UC-129, UC-381
   - Desbloqueia: nenhum
-- [ ] **UC-392** — Prever fluxo de caixa futuro (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
+- [x] **UC-392** — Prever fluxo de caixa futuro (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
   - Depende de: UC-129, UC-381
   - Desbloqueia: nenhum
 - [x] **UC-457** — Quadro Kanban para Escrita Criativa (Prioridade: Alta | Complexidade: Média | Módulo: `gestao_projetos`)
