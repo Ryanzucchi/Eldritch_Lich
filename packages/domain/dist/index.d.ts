@@ -32,3 +32,4 @@ export * from './collaboration/calls.js';
 export * from './collaboration/calendar.js';
 export * from './hr/types.js';
 export * from './research/types.js';
+export * from './gdd/types.js';

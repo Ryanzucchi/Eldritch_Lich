@@ -1000,19 +1000,19 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-332** — Sugerir notas relacionadas ao escrever (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129, UC-313
   - Desbloqueia: nenhum
-- [ ] **UC-333** — Documentar mecânicas de jogo (Prioridade: Média | Complexidade: Média | Módulo: `game_design`)
+- [x] **UC-333** — Documentar mecânicas de jogo (Prioridade: Média | Complexidade: Média | Módulo: `game_design`)
   - Depende de: UC-129
   - Desbloqueia: UC-334, UC-335, UC-336, UC-337, UC-337 e mais 1 UCs
 - [ ] **UC-334** — Documentar sistema de regras (Prioridade: Média | Complexidade: Média | Módulo: `game_design`)
   - Depende de: UC-129, UC-333
   - Desbloqueia: nenhum
-- [ ] **UC-335** — Balancear atributos/estatísticas de personagens jogáveis (Prioridade: Média | Complexidade: Média | Módulo: `game_design`)
+- [x] **UC-335** — Balancear atributos/estatísticas de personagens jogáveis (Prioridade: Média | Complexidade: Média | Módulo: `game_design`)
   - Depende de: UC-129, UC-333
   - Desbloqueia: nenhum
 - [ ] **UC-336** — Documentar níveis/fases do jogo (Prioridade: Média | Complexidade: Média | Módulo: `game_design`)
   - Depende de: UC-129, UC-333
   - Desbloqueia: nenhum
-- [ ] **UC-337** — Simular resultado de combate/interação com base em regras (Prioridade: Média | Complexidade: Média | Módulo: `game_design`)
+- [x] **UC-337** — Simular resultado de combate/interação com base em regras (Prioridade: Média | Complexidade: Média | Módulo: `game_design`)
   - Depende de: UC-129, UC-333
   - Desbloqueia: nenhum
 - [ ] **UC-337** — Versionar regras de jogo (Prioridade: Média | Complexidade: Média | Módulo: `game_design`)
