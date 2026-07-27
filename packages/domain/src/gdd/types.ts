@@ -58,20 +58,34 @@ export interface GameLevel {
   createdAt: string;
 }
 
+export interface ShopItem {
+  id: string;
+  name: string;
+  rarity: 'COMMON' | 'UNCOMMON' | 'RARE' | 'EPIC' | 'LEGENDARY';
+  buyPrice: number; // Preço de Compra (UC-339)
+  sellPrice: number; // Preço de Venda (UC-339)
+  stockLimit: number;
+}
+
+export interface GameShop {
+  id: string;
+  projectId: string;
+  shopName: string; // UC-339
+  items: ShopItem[];
+  createdAt: string;
+}
+
 /**
  * Valida a sintaxe matemática de uma fórmula de regra (UC-334).
  */
 export function validateRuleFormula(formula: string): boolean {
-  // Substitui variáveis fictícias comuns para testar se a expressão é matemática válida
   const cleaned = formula
     .replace(/[a-zA-ZáéíóúÁÉÍÓÚçÇ]+/g, '1')
     .replace(/\s+/g, '');
   
-  // Permite apenas operadores, parênteses e números
   if (/[^\d+\-*/()]/g.test(cleaned)) return false;
   
   try {
-    // eslint-disable-next-line no-eval
     const testEval = Function(`"use strict"; return (${cleaned})`);
     testEval();
     return true;
@@ -141,5 +155,22 @@ export function simulateCombat(
     critChancePercent: critChance,
     winProbabilityPercent: Math.round((attackerWins / rounds) * 100),
     averageRoundsToKill: Math.round((totalRoundsSum / rounds) * 10) / 10
+  };
+}
+
+/**
+ * Calcula estatísticas econômicas médias (UC-339).
+ */
+export function calculateEconomyStats(shops: GameShop[]) {
+  const allItems = shops.flatMap(s => s.items);
+  if (allItems.length === 0) return { averageBuyPrice: 0, averageSellPrice: 0, count: 0 };
+  
+  const totalBuy = allItems.reduce((acc, i) => acc + i.buyPrice, 0);
+  const totalSell = allItems.reduce((acc, i) => acc + i.sellPrice, 0);
+  
+  return {
+    averageBuyPrice: Math.round(totalBuy / allItems.length),
+    averageSellPrice: Math.round(totalSell / allItems.length),
+    count: allItems.length
   };
 }

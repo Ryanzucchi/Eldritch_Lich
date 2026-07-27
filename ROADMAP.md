@@ -1018,7 +1018,7 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-337** — Versionar regras de jogo (Prioridade: Média | Complexidade: Média | Módulo: `game_design`)
   - Depende de: UC-129, UC-333
   - Desbloqueia: nenhum
-- [ ] **UC-339** — Documentar economia interna do jogo (itens, moedas, trocas) (Prioridade: Média | Complexidade: Média | Módulo: `game_design`)
+- [x] **UC-339** — Documentar economia interna do jogo (itens, moedas, trocas) (Prioridade: Média | Complexidade: Média | Módulo: `game_design`)
   - Depende de: UC-129, UC-333
   - Desbloqueia: nenhum
 - [ ] **UC-346** — Definir objetivos (OKRs) por time ou projeto (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)

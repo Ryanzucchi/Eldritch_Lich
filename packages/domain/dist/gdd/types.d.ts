@@ -53,6 +53,21 @@ export interface GameLevel {
     mapLayoutUrl?: string;
     createdAt: string;
 }
+export interface ShopItem {
+    id: string;
+    name: string;
+    rarity: 'COMMON' | 'UNCOMMON' | 'RARE' | 'EPIC' | 'LEGENDARY';
+    buyPrice: number;
+    sellPrice: number;
+    stockLimit: number;
+}
+export interface GameShop {
+    id: string;
+    projectId: string;
+    shopName: string;
+    items: ShopItem[];
+    createdAt: string;
+}
 /**
  * Valida a sintaxe matemática de uma fórmula de regra (UC-334).
  */
@@ -70,3 +85,11 @@ export declare function calculateCharacterStatsAtLevel(char: PlayableCharacterBa
  * Executa simulação estocástica/matemática de combate entre dois personagens (UC-337).
  */
 export declare function simulateCombat(attacker: PlayableCharacterBalance, defender: PlayableCharacterBalance, level?: number, rounds?: number): CombatSimulationResult;
+/**
+ * Calcula estatísticas econômicas médias (UC-339).
+ */
+export declare function calculateEconomyStats(shops: GameShop[]): {
+    averageBuyPrice: number;
+    averageSellPrice: number;
+    count: number;
+};

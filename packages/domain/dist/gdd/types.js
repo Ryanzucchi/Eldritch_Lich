@@ -3,19 +3,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.validateRuleFormula = validateRuleFormula;
 exports.calculateCharacterStatsAtLevel = calculateCharacterStatsAtLevel;
 exports.simulateCombat = simulateCombat;
+exports.calculateEconomyStats = calculateEconomyStats;
 /**
  * Valida a sintaxe matemática de uma fórmula de regra (UC-334).
  */
 function validateRuleFormula(formula) {
-    // Substitui variáveis fictícias comuns para testar se a expressão é matemática válida
     const cleaned = formula
         .replace(/[a-zA-ZáéíóúÁÉÍÓÚçÇ]+/g, '1')
         .replace(/\s+/g, '');
-    // Permite apenas operadores, parênteses e números
     if (/[^\d+\-*/()]/g.test(cleaned))
         return false;
     try {
-        // eslint-disable-next-line no-eval
         const testEval = Function(`"use strict"; return (${cleaned})`);
         testEval();
         return true;
@@ -72,5 +70,20 @@ function simulateCombat(attacker, defender, level = 10, rounds = 100) {
         critChancePercent: critChance,
         winProbabilityPercent: Math.round((attackerWins / rounds) * 100),
         averageRoundsToKill: Math.round((totalRoundsSum / rounds) * 10) / 10
+    };
+}
+/**
+ * Calcula estatísticas econômicas médias (UC-339).
+ */
+function calculateEconomyStats(shops) {
+    const allItems = shops.flatMap(s => s.items);
+    if (allItems.length === 0)
+        return { averageBuyPrice: 0, averageSellPrice: 0, count: 0 };
+    const totalBuy = allItems.reduce((acc, i) => acc + i.buyPrice, 0);
+    const totalSell = allItems.reduce((acc, i) => acc + i.sellPrice, 0);
+    return {
+        averageBuyPrice: Math.round(totalBuy / allItems.length),
+        averageSellPrice: Math.round(totalSell / allItems.length),
+        count: allItems.length
     };
 }

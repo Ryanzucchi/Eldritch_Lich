@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { db } from '../../db/schema';
-import { GameMechanic, PlayableCharacterBalance, CombatSimulationResult, GameRule, GameLevel, calculateCharacterStatsAtLevel, simulateCombat, validateRuleFormula } from '@eldritch/domain';
+import { GameMechanic, PlayableCharacterBalance, CombatSimulationResult, GameRule, GameLevel, GameShop, calculateCharacterStatsAtLevel, simulateCombat, validateRuleFormula, calculateEconomyStats } from '@eldritch/domain';
 
 export default function GameDesignPage() {
   const { activeProject } = useApp();
@@ -11,7 +11,18 @@ export default function GameDesignPage() {
   const [balances, setBalances] = useState<PlayableCharacterBalance[]>([]);
   const [rules, setRules] = useState<GameRule[]>([]);
   const [levels, setLevels] = useState<GameLevel[]>([]);
-  const [activeTab, setActiveTab] = useState<'MECHANICS' | 'BALANCE' | 'RULES' | 'LEVELS' | 'SIMULATOR'>('MECHANICS');
+  const [shops, setShops] = useState<GameShop[]>([]);
+  const [activeTab, setActiveTab] = useState<'MECHANICS' | 'BALANCE' | 'RULES' | 'LEVELS' | 'ECONOMY' | 'SIMULATOR'>('MECHANICS');
+
+  // Economy Form State (UC-339)
+  const [showShopModal, setShowShopModal] = useState(false);
+  const [shopName, setShopName] = useState('');
+  const [shopItemName, setShopItemName] = useState('');
+  const [shopItemRarity, setShopItemRarity] = useState<'COMMON' | 'UNCOMMON' | 'RARE' | 'EPIC' | 'LEGENDARY'>('COMMON');
+  const [shopItemBuy, setShopItemBuy] = useState(100);
+  const [shopItemSell, setShopItemSell] = useState(50);
+  const [shopItemStock, setShopItemStock] = useState(10);
+  const [shopItemsList, setShopItemsList] = useState<GameShop['items']>([]);
 
   // Rules Form State (UC-334, UC-337-regras)
   const [showRuleModal, setShowRuleModal] = useState(false);
@@ -65,11 +76,61 @@ export default function GameDesignPage() {
 
     const lvls = await db.gameLevels.where('projectId').equals(activeProject.id).toArray();
     setLevels(lvls);
+
+    const shps = await db.gameShops.where('projectId').equals(activeProject.id).toArray();
+    setShops(shps);
   };
 
   useEffect(() => {
     loadData();
   }, [activeProject]);
+
+  // Create Shop (UC-339)
+  const handleAddShop = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!shopName.trim() || shopItemsList.length === 0 || !activeProject) return;
+
+    // Alerta se preço de venda > compra (UC-339)
+    const hasArbitrageLoop = shopItemsList.some(i => i.sellPrice > i.buyPrice);
+    if (hasArbitrageLoop) {
+      alert('⚠️ Alerta de Segurança: Um ou mais itens possuem preço de venda superior ao preço de compra. Isso criará um loop infinito de moedas!');
+    }
+
+    const newShop: GameShop = {
+      id: `gs_${Date.now()}`,
+      projectId: activeProject.id,
+      shopName: shopName.trim(),
+      items: shopItemsList,
+      createdAt: new Date().toISOString()
+    };
+
+    await db.gameShops.put(newShop);
+    setShowShopModal(false);
+    setShopName('');
+    setShopItemsList([]);
+    await loadData();
+  };
+
+  const handleAddTempItem = () => {
+    if (!shopItemName.trim()) return;
+    
+    // Alerta preco de venda maior que compra (UC-339)
+    if (shopItemSell > shopItemBuy) {
+      alert('⚠️ Alerta de Segurança Econômica: O preço de venda de um item não deve ser maior que o preço de compra para evitar exploração de ouro infinito.');
+    }
+
+    const newItem = {
+      id: `item_${Date.now()}`,
+      name: shopItemName.trim(),
+      rarity: shopItemRarity,
+      buyPrice: shopItemBuy,
+      sellPrice: shopItemSell,
+      stockLimit: shopItemStock
+    };
+
+    setShopItemsList([...shopItemsList, newItem]);
+    setShopItemName('');
+  };
 
   // Create/Update Rule (UC-334, UC-337-versionar)
   const handleAddRule = async (e: React.FormEvent) => {
@@ -240,6 +301,12 @@ export default function GameDesignPage() {
             🗺️ Níveis (UC-336)
           </button>
           <button 
+            onClick={() => setActiveTab('ECONOMY')}
+            style={{ background: activeTab === 'ECONOMY' ? '#3b82f6' : 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '0.6rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
+          >
+            🪙 Economia (UC-339)
+          </button>
+          <button 
             onClick={() => setActiveTab('BALANCE')}
             style={{ background: activeTab === 'BALANCE' ? '#3b82f6' : 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '0.6rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
           >
@@ -356,7 +423,58 @@ export default function GameDesignPage() {
         </div>
       )}
 
-      {/* Tab MECHANICS (UC-333) */}
+      {/* Tab ECONOMY (UC-339) */}
+      {activeTab === 'ECONOMY' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h2 style={{ margin: 0, fontSize: '1.3rem' }}>🪙 Economia, Lojas & Tabelas de Trocas (UC-339)</h2>
+              <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.82rem', opacity: 0.6 }}>
+                Preços médios calculados de todos os itens:
+                {(() => {
+                  const stats = calculateEconomyStats(shops);
+                  return ` Compra Média: ${stats.averageBuyPrice}g | Venda Média: ${stats.averageSellPrice}g | Total de Itens: ${stats.count}`;
+                })()}
+              </p>
+            </div>
+            <button 
+              onClick={() => setShowShopModal(true)}
+              style={{ background: '#10b981', border: 'none', color: 'white', padding: '0.6rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
+            >
+              ➕ Nova Tabela de Loja
+            </button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.2rem' }}>
+            {shops.map(s => (
+              <div key={s.id} style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '10px', padding: '1.2rem' }}>
+                <h3 style={{ margin: '0 0 0.8rem 0', fontSize: '1.2rem', color: '#f59e0b' }}>🏪 {s.shopName}</h3>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {s.items.map((item, idx) => (
+                    <div key={idx} style={{ background: 'rgba(0,0,0,0.2)', padding: '0.5rem', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
+                      <div>
+                        <strong>{item.name}</strong> 
+                        <span style={{ fontSize: '0.7rem', marginLeft: '0.4rem', opacity: 0.5 }}>({item.rarity})</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.8rem', color: '#10b981', fontWeight: 700 }}>
+                        <span>📥 {item.buyPrice}g</span>
+                        <span>📤 {item.sellPrice}g</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            {shops.length === 0 && (
+              <div style={{ gridColumn: '1 / -1', textAlign: 'center', opacity: 0.5, padding: '4rem 0' }}>
+                Nenhuma loja ou tabela de trocas documentada.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       {activeTab === 'MECHANICS' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -743,6 +861,110 @@ export default function GameDesignPage() {
               <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
                 <button type="button" onClick={() => setShowLevelModal(false)} style={{ background: 'transparent', border: 'none', color: '#9ca3af', padding: '0.5rem 1rem', cursor: 'pointer' }}>Cancelar</button>
                 <button type="submit" style={{ background: '#10b981', border: 'none', color: 'white', padding: '0.5rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>Salvar Nível</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Add Shop (UC-339) */}
+      {showShopModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px', padding: '1.8rem', width: '100%', maxWidth: '480px' }}>
+            <h3 style={{ margin: '0 0 1rem 0' }}>🏪 Nova Loja / Tabela de Trocas (UC-339)</h3>
+            <form onSubmit={handleAddShop} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Nome do Estabelecimento:</label>
+                <input 
+                  type="text"
+                  required
+                  placeholder="Ex: Taverna do Javali Saltitante"
+                  value={shopName}
+                  onChange={e => setShopName(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                />
+              </div>
+
+              {/* Temp Item Add Section */}
+              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '0.8rem', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 700, display: 'block', marginBottom: '0.5rem' }}>Adicionar Item à Loja</span>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem', marginBottom: '0.6rem' }}>
+                  <input 
+                    type="text"
+                    placeholder="Nome do Item"
+                    value={shopItemName}
+                    onChange={e => setShopItemName(e.target.value)}
+                    style={{ padding: '0.4rem', borderRadius: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.8rem' }}
+                  />
+                  <select
+                    value={shopItemRarity}
+                    onChange={e => setShopItemRarity(e.target.value as any)}
+                    style={{ padding: '0.4rem', borderRadius: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.8rem' }}
+                  >
+                    <option value="COMMON">Comum</option>
+                    <option value="UNCOMMON">Incomum</option>
+                    <option value="RARE">Raro</option>
+                    <option value="EPIC">Épico</option>
+                    <option value="LEGENDARY">Lendário</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.6rem', marginBottom: '0.6rem' }}>
+                  <div>
+                    <label style={{ fontSize: '0.7rem', opacity: 0.6 }}>Preço Compra (g):</label>
+                    <input 
+                      type="number"
+                      value={shopItemBuy}
+                      onChange={e => setShopItemBuy(parseInt(e.target.value) || 0)}
+                      style={{ width: '100%', padding: '0.3rem', borderRadius: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.8rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.7rem', opacity: 0.6 }}>Preço Venda (g):</label>
+                    <input 
+                      type="number"
+                      value={shopItemSell}
+                      onChange={e => setShopItemSell(parseInt(e.target.value) || 0)}
+                      style={{ width: '100%', padding: '0.3rem', borderRadius: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.8rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.7rem', opacity: 0.6 }}>Estoque Máx:</label>
+                    <input 
+                      type="number"
+                      value={shopItemStock}
+                      onChange={e => setShopItemStock(parseInt(e.target.value) || 0)}
+                      style={{ width: '100%', padding: '0.3rem', borderRadius: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.8rem' }}
+                    />
+                  </div>
+                </div>
+
+                <button 
+                  type="button"
+                  onClick={handleAddTempItem}
+                  style={{ width: '100%', background: '#3b82f6', border: 'none', color: 'white', padding: '0.4rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}
+                >
+                  Confirmar Item
+                </button>
+              </div>
+
+              {/* Items List Preview */}
+              {shopItemsList.length > 0 && (
+                <div style={{ maxHeight: '100px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)', padding: '0.5rem', borderRadius: '6px' }}>
+                  <span style={{ fontSize: '0.72rem', opacity: 0.6, display: 'block', marginBottom: '0.3rem' }}>Itens adicionados ({shopItemsList.length}):</span>
+                  {shopItemsList.map((item, idx) => (
+                    <div key={idx} style={{ fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between', opacity: 0.8 }}>
+                      <span>• {item.name}</span>
+                      <span>Compra: {item.buyPrice}g | Venda: {item.sellPrice}g</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                <button type="button" onClick={() => setShowShopModal(false)} style={{ background: 'transparent', border: 'none', color: '#9ca3af', padding: '0.5rem 1rem', cursor: 'pointer' }}>Cancelar</button>
+                <button type="submit" style={{ background: '#10b981', border: 'none', color: 'white', padding: '0.5rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>Salvar Estabelecimento</button>
               </div>
             </form>
           </div>
