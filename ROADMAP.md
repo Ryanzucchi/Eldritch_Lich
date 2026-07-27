@@ -1054,13 +1054,13 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-356** — Gerar relatório de rentabilidade/lucratividade de projetos (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-357** — Estimar prazos de entrega baseados em performance histórica (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
+- [x] **UC-357** — Estimar prazos de entrega baseados em performance histórica (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-358** — Gerenciar riscos de projetos (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
+- [x] **UC-358** — Gerenciar risks de projetos (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-359** — Mitigar riscos cadastrados (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
+- [x] **UC-359** — Mitigar riscos cadastrados (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-381** — Gerenciar orçamento financeiro do projeto (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
