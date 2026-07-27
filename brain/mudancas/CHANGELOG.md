@@ -2,12 +2,11 @@
 
 Este registro lista em ordem cronológica todas as atualizações de desenvolvimento integradas a esta base de conhecimento.
 
-## [2026-07-27] (Benefícios, Holerite e Encargos Trabalhistas) - UC-304, UC-310, UC-312, UC-305, UC-306, UC-301, UC-302, UC-303, UC-376, UC-377, UC-378, UC-379, UC-380, UC-360, UC-361, UC-362, UC-363, UC-364, UC-365, UC-367, UC-368, UC-369, UC-370, UC-340, UC-341, UC-342, UC-343, UC-344, UC-345, UC-219, UC-220, UC-221, UC-229, UC-230, UC-217, UC-218, UC-214, UC-215, UC-216, UC-206, UC-207, UC-208, UC-209, UC-210, UC-082, UC-083, UC-135, UC-136, UC-403, UC-404, UC-405, UC-406, UC-395, UC-396, UC-397, UC-398, UC-270, UC-271, UC-272, UC-274, UC-267, UC-268, UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
+## [2026-07-27] (Pesquisa Científica, Referências Bibliográficas, BibTeX e Gerador ABNT/APA/MLA/Vancouver) - UC-313, UC-316, UC-304, UC-310, UC-312, UC-305, UC-306, UC-301, UC-302, UC-303, UC-376, UC-377, UC-378, UC-379, UC-380, UC-360, UC-361, UC-362, UC-363, UC-364, UC-365, UC-367, UC-368, UC-369, UC-370, UC-340, UC-341, UC-342, UC-343, UC-344, UC-345, UC-219, UC-220, UC-221, UC-229, UC-230, UC-217, UC-218, UC-214, UC-215, UC-216, UC-206, UC-207, UC-208, UC-209, UC-210, UC-082, UC-083, UC-135, UC-136, UC-403, UC-404, UC-405, UC-406, UC-395, UC-396, UC-397, UC-398, UC-270, UC-271, UC-272, UC-274, UC-267, UC-268, UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
 
-### 📄 Benefícios, Holerite e Encargos Trabalhistas (UC-304, UC-310, UC-312)
-*   **Gestão de Benefícios (UC-304):** Adicionada atribuição de auxílio VR/VA ao demonstrativo de pagamentos dos colaboradores.
-*   **Encargos Trabalhistas Patronais (UC-312):** Cálculo de FGTS patronal (8%) e retidos (INSS e IRRF) na função `calculatePayroll`.
-*   **Emissão de Holerite / Contracheque (UC-310):** Função `generatePayslip` em `@eldritch/domain` gerando o documento individual estruturado de proventos e descontos.
+### 📚 Pesquisa Científica & Gerenciador Bibliográfico (UC-313, UC-316)
+*   **Gestão de Referências & Parser BibTeX (UC-313):** Interface `/research` com catalogação de referências e importador direto de strings de metadados no padrão BibTeX (`parseBibTeX`).
+*   **Gerador de Formatação Acadêmica (UC-316):** Função `formatReference` em `@eldritch/domain` renderizando e exportando bibliografias completas sob as normas **ABNT NBR 6023**, **APA 7th**, **MLA** e **Vancouver**. Tabela `referenceItems` no Dexie (Versão 27).
 
 ### ⏳ Linhas do Tempo, Vínculo com Lore e Exportação (UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264)
 *   **Exportação Multiformato e HTML Interativo (UC-171, UC-264):** Módulo `exportTimeline` em `@eldritch/domain` (.html, .md, .json).

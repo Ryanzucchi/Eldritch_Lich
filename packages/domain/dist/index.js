@@ -47,3 +47,4 @@ __exportStar(require("./collaboration/meetings.js"), exports);
 __exportStar(require("./collaboration/calls.js"), exports);
 __exportStar(require("./collaboration/calendar.js"), exports);
 __exportStar(require("./hr/types.js"), exports);
+__exportStar(require("./research/types.js"), exports);

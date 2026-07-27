@@ -940,7 +940,7 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-312** — Calcular impostos e encargos trabalhistas (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
   - Depende de: UC-129, UC-301
   - Desbloqueia: nenhum
-- [ ] **UC-313** — Gerenciar referências bibliográficas (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
+- [x] **UC-313** — Gerenciar referências bibliográficas (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129
   - Desbloqueia: UC-314, UC-315, UC-316, UC-317, UC-318 e mais 14 UCs
 - [ ] **UC-314** — Anotar PDFs de artigos científicos (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
@@ -949,7 +949,7 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-315** — Extrair citações automaticamente de PDFs (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129, UC-313
   - Desbloqueia: nenhum
-- [ ] **UC-316** — Gerar bibliografia em formatos (ABNT, APA, etc.) (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
+- [x] **UC-316** — Gerar bibliografia em formatos (ABNT, APA, etc.) (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129, UC-313
   - Desbloqueia: nenhum
 - [ ] **UC-317** — Vincular notas de pesquisa a fontes (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
