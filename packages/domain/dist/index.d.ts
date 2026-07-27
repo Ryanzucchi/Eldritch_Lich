@@ -37,3 +37,4 @@ export * from './projects/okrs.js';
 export * from './projects/portfolio.js';
 export * from './projects/forecasting.js';
 export * from './finance/types.js';
+export * from './finance/automation.js';

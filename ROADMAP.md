@@ -1078,19 +1078,19 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-385** — Fluxo de caixa do projeto (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
   - Depende de: UC-129, UC-381
   - Desbloqueia: nenhum
-- [ ] **UC-386** — Emitir notas fiscais automaticamente (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
+- [x] **UC-386** — Emitir notas fiscais automaticamente (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
   - Depende de: UC-129, UC-381
   - Desbloqueia: nenhum
-- [ ] **UC-387** — Integrar financeiro com contas bancárias (via API / Open Finance) (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
+- [x] **UC-387** — Integrar financeiro com contas bancárias (via API / Open Finance) (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
   - Depende de: UC-129, UC-381
   - Desbloqueia: nenhum
-- [ ] **UC-388** — Reconciliação bancária automática (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
+- [x] **UC-388** — Reconciliação bancária automática (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
   - Depende de: UC-129, UC-381
   - Desbloqueia: nenhum
 - [ ] **UC-389** — Gerar relatórios financeiros (DRE, Balanço, etc.) (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
   - Depende de: UC-129, UC-381
   - Desbloqueia: nenhum
-- [ ] **UC-390** — Alertar sobre desvios orçamentários (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
+- [x] **UC-390** — Alertar sobre desvios orçamentários (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
   - Depende de: UC-129, UC-381
   - Desbloqueia: nenhum
 - [ ] **UC-391** — Gerenciar contas a pagar e a receber (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
