@@ -1039,19 +1039,19 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-351** — Integrar metas com avaliação de desempenho (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-352** — Gerenciar portfólio de projetos (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
+- [x] **UC-352** — Gerenciar portfólio de projetos (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-353** — Visualizar status de múltiplos projetos em painel consolidado (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
+- [x] **UC-353** — Visualizar status de múltiplos projetos em painel consolidado (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-354** — Alocar recursos (pessoas/equipamentos) entre projetos (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
+- [x] **UC-354** — Alocar recursos (pessoas/equipamentos) entre projetos (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-355** — Rastrear custos por projeto (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
+- [x] **UC-355** — Rastrear custos por projeto (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-356** — Gerar relatório de rentabilidade/lucratividade de projetos (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
+- [x] **UC-356** — Gerar relatório de rentabilidade/lucratividade de projetos (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-357** — Estimar prazos de entrega baseados em performance histórica (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)

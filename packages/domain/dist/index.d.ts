@@ -34,3 +34,4 @@ export * from './hr/types.js';
 export * from './research/types.js';
 export * from './gdd/types.js';
 export * from './projects/okrs.js';
+export * from './projects/portfolio.js';
