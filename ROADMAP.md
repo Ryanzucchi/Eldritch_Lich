@@ -1063,19 +1063,19 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-359** — Mitigar riscos cadastrados (Prioridade: Média | Complexidade: Média | Módulo: `gestao_projetos`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-381** — Gerenciar orçamento financeiro do projeto (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
+- [x] **UC-381** — Gerenciar orçamento financeiro do projeto (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
   - Depende de: UC-129
   - Desbloqueia: UC-382, UC-383, UC-384, UC-385, UC-386 e mais 6 UCs
-- [ ] **UC-382** — Registrar receitas/faturamentos (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
+- [x] **UC-382** — Registrar receitas/faturamentos (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
   - Depende de: UC-129, UC-381
   - Desbloqueia: nenhum
-- [ ] **UC-383** — Registrar despesas/custos (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
+- [x] **UC-383** — Registrar despesas/custos (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
   - Depende de: UC-129, UC-381
   - Desbloqueia: nenhum
-- [ ] **UC-384** — Categorizar transações financeiras (DRE) (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
+- [x] **UC-384** — Categorizar transações financeiras (DRE) (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
   - Depende de: UC-129, UC-381
   - Desbloqueia: nenhum
-- [ ] **UC-385** — Fluxo de caixa do projeto (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
+- [x] **UC-385** — Fluxo de caixa do projeto (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)
   - Depende de: UC-129, UC-381
   - Desbloqueia: nenhum
 - [ ] **UC-386** — Emitir notas fiscais automaticamente (Prioridade: Média | Complexidade: Média | Módulo: `financeiro`)

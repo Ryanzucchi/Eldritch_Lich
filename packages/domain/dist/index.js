@@ -52,3 +52,4 @@ __exportStar(require("./gdd/types.js"), exports);
 __exportStar(require("./projects/okrs.js"), exports);
 __exportStar(require("./projects/portfolio.js"), exports);
 __exportStar(require("./projects/forecasting.js"), exports);
+__exportStar(require("./finance/types.js"), exports);
