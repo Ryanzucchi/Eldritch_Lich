@@ -40,3 +40,4 @@ export * from './finance/types.js';
 export * from './finance/automation.js';
 export * from './finance/reporting.js';
 export * from './research/nlp.js';
+export * from './research/semantics.js';

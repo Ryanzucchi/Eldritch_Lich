@@ -56,3 +56,4 @@ __exportStar(require("./finance/types.js"), exports);
 __exportStar(require("./finance/automation.js"), exports);
 __exportStar(require("./finance/reporting.js"), exports);
 __exportStar(require("./research/nlp.js"), exports);
+__exportStar(require("./research/semantics.js"), exports);

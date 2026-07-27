@@ -1120,13 +1120,13 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-019** — Auto subpastear algo (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-020** — Agrupar palavras (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-020** — Agrupar palavras (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-021** — Agrupar textos semelhantes (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-021** — Agrupar textos semelhantes (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-030** — Reconhecer contexto das palavras (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-030** — Reconhecer contexto das palavras (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: UC-033
 - [ ] **UC-031** — Reconhecer temas (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
@@ -1135,7 +1135,7 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [ ] **UC-032** — Reconhecer palavras-chave (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-033** — Linkar palavras a outras baseado no contexto (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-033** — Linkar palavras a outras baseado no contexto (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-030, UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-034** — Linkar textos baseado no contexto (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
