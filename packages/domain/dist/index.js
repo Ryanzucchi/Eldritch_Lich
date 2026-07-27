@@ -55,3 +55,4 @@ __exportStar(require("./projects/forecasting.js"), exports);
 __exportStar(require("./finance/types.js"), exports);
 __exportStar(require("./finance/automation.js"), exports);
 __exportStar(require("./finance/reporting.js"), exports);
+__exportStar(require("./research/nlp.js"), exports);

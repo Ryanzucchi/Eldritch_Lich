@@ -1105,19 +1105,19 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 
 ## Fase 7 — Inteligência Artificial (IA), NLP e Assistência de Escrita
 
-- [ ] **UC-015** — Reconhecer diversas línguas (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-015** — Reconhecer diversas línguas (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-016** — Reconhecer palavras (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-016** — Reconhecer palavras (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-017** — Reconhecer frases (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-017** — Reconhecer frases (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-018** — Reconhecer entidades (personagens, locais, objetos, organizações) (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-018** — Reconhecer entidades (personagens, locais, objetos, organizações) (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-019** — Auto subpastear algo (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-019** — Auto subpastear algo (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [ ] **UC-020** — Agrupar palavras (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
