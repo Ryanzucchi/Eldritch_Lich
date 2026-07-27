@@ -3,13 +3,31 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { db } from '../../db/schema';
-import { GameMechanic, PlayableCharacterBalance, CombatSimulationResult, calculateCharacterStatsAtLevel, simulateCombat } from '@eldritch/domain';
+import { GameMechanic, PlayableCharacterBalance, CombatSimulationResult, GameRule, GameLevel, calculateCharacterStatsAtLevel, simulateCombat, validateRuleFormula } from '@eldritch/domain';
 
 export default function GameDesignPage() {
   const { activeProject } = useApp();
   const [mechanics, setMechanics] = useState<GameMechanic[]>([]);
   const [balances, setBalances] = useState<PlayableCharacterBalance[]>([]);
-  const [activeTab, setActiveTab] = useState<'MECHANICS' | 'BALANCE' | 'SIMULATOR'>('MECHANICS');
+  const [rules, setRules] = useState<GameRule[]>([]);
+  const [levels, setLevels] = useState<GameLevel[]>([]);
+  const [activeTab, setActiveTab] = useState<'MECHANICS' | 'BALANCE' | 'RULES' | 'LEVELS' | 'SIMULATOR'>('MECHANICS');
+
+  // Rules Form State (UC-334, UC-337-regras)
+  const [showRuleModal, setShowRuleModal] = useState(false);
+  const [ruleName, setRuleName] = useState('');
+  const [ruleCategory, setRuleCategory] = useState<GameRule['category']>('COMBAT');
+  const [ruleFormula, setRuleFormula] = useState('');
+  const [reasonForChange, setReasonForChange] = useState('');
+  const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
+
+  // Levels Form State (UC-336)
+  const [showLevelModal, setShowLevelModal] = useState(false);
+  const [levelName, setLevelName] = useState('');
+  const [levelObjective, setLevelObjective] = useState('');
+  const [levelDuration, setLevelDuration] = useState(30);
+  const [levelEnemies, setLevelEnemies] = useState('');
+  const [levelItems, setLevelItems] = useState('');
 
   // Mechanic Form State (UC-333)
   const [showMechanicModal, setShowMechanicModal] = useState(false);
@@ -41,11 +59,87 @@ export default function GameDesignPage() {
 
     const bals = await db.playableCharacterBalances.where('projectId').equals(activeProject.id).toArray();
     setBalances(bals);
+
+    const rls = await db.gameRules.where('projectId').equals(activeProject.id).toArray();
+    setRules(rls);
+
+    const lvls = await db.gameLevels.where('projectId').equals(activeProject.id).toArray();
+    setLevels(lvls);
   };
 
   useEffect(() => {
     loadData();
   }, [activeProject]);
+
+  // Create/Update Rule (UC-334, UC-337-versionar)
+  const handleAddRule = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!ruleName.trim() || !ruleFormula.trim() || !activeProject) return;
+
+    if (!validateRuleFormula(ruleFormula)) {
+      alert('Erro: Sintaxe matemática de fórmula inválida (UC-334). Utilize apenas operadores aritméticos básicos e variáveis textuais.');
+      return;
+    }
+
+    if (editingRuleId) {
+      // Versionar regra (UC-337-versionar)
+      const existing = rules.find(r => r.id === editingRuleId);
+      if (existing) {
+        const updatedRule: GameRule = {
+          ...existing,
+          name: ruleName.trim(),
+          formula: ruleFormula.trim(),
+          version: existing.version + 1,
+          reasonForChange: reasonForChange.trim() || 'Ajuste de balanceamento',
+          createdAt: new Date().toISOString()
+        };
+        await db.gameRules.put(updatedRule);
+      }
+    } else {
+      const newRule: GameRule = {
+        id: `gr_${Date.now()}`,
+        projectId: activeProject.id,
+        name: ruleName.trim(),
+        category: ruleCategory,
+        formula: ruleFormula.trim(),
+        version: 1,
+        createdAt: new Date().toISOString()
+      };
+      await db.gameRules.put(newRule);
+    }
+
+    setShowRuleModal(false);
+    setRuleName('');
+    setRuleFormula('');
+    setReasonForChange('');
+    setEditingRuleId(null);
+    await loadData();
+  };
+
+  // Create Level (UC-336)
+  const handleAddLevel = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!levelName.trim() || !activeProject) return;
+
+    const newLevel: GameLevel = {
+      id: `gl_${Date.now()}`,
+      projectId: activeProject.id,
+      name: levelName.trim(),
+      objective: levelObjective.trim(),
+      durationMinutes: levelDuration,
+      enemies: levelEnemies.split(',').map(item => item.trim()).filter(Boolean),
+      items: levelItems.split(',').map(item => item.trim()).filter(Boolean),
+      createdAt: new Date().toISOString()
+    };
+
+    await db.gameLevels.put(newLevel);
+    setShowLevelModal(false);
+    setLevelName('');
+    setLevelObjective('');
+    setLevelEnemies('');
+    setLevelItems('');
+    await loadData();
+  };
 
   // Create Mechanic (UC-333)
   const handleAddMechanic = async (e: React.FormEvent) => {
@@ -134,6 +228,18 @@ export default function GameDesignPage() {
             ⚙️ Mecânicas (UC-333)
           </button>
           <button 
+            onClick={() => setActiveTab('RULES')}
+            style={{ background: activeTab === 'RULES' ? '#3b82f6' : 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '0.6rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
+          >
+            📜 Regras (UC-334)
+          </button>
+          <button 
+            onClick={() => setActiveTab('LEVELS')}
+            style={{ background: activeTab === 'LEVELS' ? '#3b82f6' : 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '0.6rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
+          >
+            🗺️ Níveis (UC-336)
+          </button>
+          <button 
             onClick={() => setActiveTab('BALANCE')}
             style={{ background: activeTab === 'BALANCE' ? '#3b82f6' : 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '0.6rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
           >
@@ -143,10 +249,112 @@ export default function GameDesignPage() {
             onClick={() => setActiveTab('SIMULATOR')}
             style={{ background: activeTab === 'SIMULATOR' ? '#3b82f6' : 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '0.6rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
           >
-            ⚔️ Simulador de Combate (UC-337)
+            ⚔️ Simulador (UC-337)
           </button>
         </div>
       </header>
+
+      {/* Tab RULES (UC-334, UC-337-versionar) */}
+      {activeTab === 'RULES' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 style={{ margin: 0, fontSize: '1.3rem' }}>📜 Sistema de Regras & Fórmulas (UC-334)</h2>
+            <button 
+              onClick={() => {
+                setEditingRuleId(null);
+                setRuleName('');
+                setRuleFormula('');
+                setShowRuleModal(true);
+              }}
+              style={{ background: '#10b981', border: 'none', color: 'white', padding: '0.6rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
+            >
+              ➕ Nova Regra / Fórmula
+            </button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.2rem' }}>
+            {rules.map(r => (
+              <div key={r.id} style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '10px', padding: '1.2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.72rem', background: 'rgba(245,158,11,0.2)', color: '#f59e0b', padding: '0.1rem 0.4rem', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 700 }}>
+                      {r.category}
+                    </span>
+                    <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>v{r.version} (UC-337)</span>
+                  </div>
+                  <h3 style={{ margin: '0.5rem 0 0.5rem 0', fontSize: '1.15rem' }}>{r.name}</h3>
+                  <code style={{ display: 'block', background: 'rgba(0,0,0,0.3)', padding: '0.5rem', borderRadius: '4px', fontSize: '0.9rem', color: '#10b981', fontFamily: 'monospace', marginBottom: '0.8rem' }}>
+                    {r.formula}
+                  </code>
+                  {r.reasonForChange && (
+                    <p style={{ margin: '0 0 1rem 0', fontSize: '0.8rem', opacity: 0.6, fontStyle: 'italic' }}>
+                      💬 Motivo: {r.reasonForChange}
+                    </p>
+                  )}
+                </div>
+
+                <button 
+                  onClick={() => {
+                    setEditingRuleId(r.id);
+                    setRuleName(r.name);
+                    setRuleFormula(r.formula);
+                    setShowRuleModal(true);
+                  }}
+                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '0.4rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.82rem', width: '100%' }}
+                >
+                  ⚙️ Versionar Fórmula (UC-337)
+                </button>
+              </div>
+            ))}
+
+            {rules.length === 0 && (
+              <div style={{ gridColumn: '1 / -1', textAlign: 'center', opacity: 0.5, padding: '4rem 0' }}>
+                Nenhuma regra ou fórmula cadastrada no sistema.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Tab LEVELS (UC-336) */}
+      {activeTab === 'LEVELS' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 style={{ margin: 0, fontSize: '1.3rem' }}>🗺️ Design de Níveis & Fases (UC-336)</h2>
+            <button 
+              onClick={() => setShowLevelModal(true)}
+              style={{ background: '#10b981', border: 'none', color: 'white', padding: '0.6rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
+            >
+              ➕ Criar Nova Fase
+            </button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.2rem' }}>
+            {levels.map(lvl => (
+              <div key={lvl.id} style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '10px', padding: '1.2rem' }}>
+                <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.2rem', color: '#60a5fa' }}>{lvl.name}</h3>
+                <p style={{ margin: '0 0 0.8rem 0', fontSize: '0.88rem', opacity: 0.8 }}><strong>Objetivo:</strong> {lvl.objective}</p>
+                <div style={{ fontSize: '0.8rem', opacity: 0.6, marginBottom: '0.6rem' }}>⏱️ Duração Estimada: {lvl.durationMinutes} min</div>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '0.6rem' }}>
+                  <div style={{ fontSize: '0.8rem' }}>
+                    <strong>👾 Inimigos:</strong> {lvl.enemies.join(', ') || 'Nenhum'}
+                  </div>
+                  <div style={{ fontSize: '0.8rem' }}>
+                    <strong>💎 Recompensas:</strong> {lvl.items.join(', ') || 'Nenhum'}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {levels.length === 0 && (
+              <div style={{ gridColumn: '1 / -1', textAlign: 'center', opacity: 0.5, padding: '4rem 0' }}>
+                Nenhuma fase de level design documentada.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Tab MECHANICS (UC-333) */}
       {activeTab === 'MECHANICS' && (
@@ -387,69 +595,154 @@ export default function GameDesignPage() {
         </div>
       )}
 
-      {/* Modal Add Balance (UC-335) */}
-      {showBalanceModal && (
+      {/* Modal Add Rule (UC-334, UC-337-regras) */}
+      {showRuleModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px', padding: '1.8rem', width: '100%', maxWidth: '460px' }}>
-            <h3 style={{ margin: '0 0 1rem 0' }}>📊 Nova Classe / Personagem (UC-335)</h3>
-            <form onSubmit={handleAddBalance} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <h3 style={{ margin: '0 0 1rem 0' }}>📜 {editingRuleId ? 'Ajustar & Versionar Regra (UC-337)' : 'Criar Nova Regra (UC-334)'}</h3>
+            <form onSubmit={handleAddRule} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Nome da Classe:</label>
+                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Nome da Regra / Fórmula:</label>
                 <input 
                   type="text"
                   required
-                  placeholder="Ex: Guerreiro, Mago, Arqueiro"
-                  value={charName}
-                  onChange={e => setCharName(e.target.value)}
+                  disabled={!!editingRuleId}
+                  placeholder="Ex: Dano de Fogo"
+                  value={ruleName}
+                  onChange={e => setRuleName(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', opacity: editingRuleId ? 0.6 : 1 }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Fórmula Matemática (Sintaxe UC-334):</label>
+                <input 
+                  type="text"
+                  required
+                  placeholder="Ex: Ataque * 1.5 - Defesa"
+                  value={ruleFormula}
+                  onChange={e => setRuleFormula(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                />
+              </div>
+
+              {editingRuleId && (
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Motivo do Ajuste (Versionamento - UC-337):</label>
+                  <input 
+                    type="text"
+                    required
+                    placeholder="Ex: Reduzido multiplicador para evitar OP"
+                    value={reasonForChange}
+                    onChange={e => setReasonForChange(e.target.value)}
+                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                  />
+                </div>
+              )}
+
+              {!editingRuleId && (
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Categoria:</label>
+                  <select 
+                    value={ruleCategory}
+                    onChange={e => setRuleCategory(e.target.value as any)}
+                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                  >
+                    <option value="COMBAT">Combate</option>
+                    <option value="EXPLORATION">Exploração</option>
+                    <option value="ECONOMY">Economia</option>
+                    <option value="GENERAL">Geral</option>
+                  </select>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setShowRuleModal(false);
+                    setEditingRuleId(null);
+                  }} 
+                  style={{ background: 'transparent', border: 'none', color: '#9ca3af', padding: '0.5rem 1rem', cursor: 'pointer' }}
+                >
+                  Cancelar
+                </button>
+                <button type="submit" style={{ background: '#10b981', border: 'none', color: 'white', padding: '0.5rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>
+                  {editingRuleId ? 'Salvar Ajuste v' + (rules.find(r => r.id === editingRuleId)?.version || 1) : 'Salvar Regra'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Add Level (UC-336) */}
+      {showLevelModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px', padding: '1.8rem', width: '100%', maxWidth: '460px' }}>
+            <h3 style={{ margin: '0 0 1rem 0' }}>🗺️ Documentar Nível / Fase (UC-336)</h3>
+            <form onSubmit={handleAddLevel} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Nome da Fase:</label>
+                <input 
+                  type="text"
+                  required
+                  placeholder="Ex: Masmorra das Almas, Fase 1"
+                  value={levelName}
+                  onChange={e => setLevelName(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Objetivo Principal:</label>
+                <input 
+                  type="text"
+                  required
+                  placeholder="Ex: Encontrar a chave de cristal e derrotar o boss"
+                  value={levelObjective}
+                  onChange={e => setLevelObjective(e.target.value)}
                   style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                 />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>HP Base:</label>
+                  <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Duração (minutos):</label>
                   <input 
                     type="number"
-                    value={baseHp}
-                    onChange={e => setBaseHp(parseInt(e.target.value) || 0)}
-                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Crescimento HP/Nível:</label>
-                  <input 
-                    type="number"
-                    value={hpGrowth}
-                    onChange={e => setHpGrowth(parseInt(e.target.value) || 0)}
+                    value={levelDuration}
+                    onChange={e => setLevelDuration(parseInt(e.target.value) || 30)}
                     style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                   />
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Ataque Base:</label>
-                  <input 
-                    type="number"
-                    value={baseAttack}
-                    onChange={e => setBaseAttack(parseInt(e.target.value) || 0)}
-                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Crescimento Atq/Nível:</label>
-                  <input 
-                    type="number"
-                    value={attackGrowth}
-                    onChange={e => setAttackGrowth(parseInt(e.target.value) || 0)}
-                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
-                  />
-                </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Inimigos Presentes (separados por vírgula):</label>
+                <input 
+                  type="text"
+                  placeholder="Ex: Esqueleto, Zumbi, Golem"
+                  value={levelEnemies}
+                  onChange={e => setLevelEnemies(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Itens / Recompensas (separados por vírgula):</label>
+                <input 
+                  type="text"
+                  placeholder="Ex: Poção de HP, Espada Antiga"
+                  value={levelItems}
+                  onChange={e => setLevelItems(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                />
               </div>
 
               <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
-                <button type="button" onClick={() => setShowBalanceModal(false)} style={{ background: 'transparent', border: 'none', color: '#9ca3af', padding: '0.5rem 1rem', cursor: 'pointer' }}>Cancelar</button>
-                <button type="submit" style={{ background: '#10b981', border: 'none', color: 'white', padding: '0.5rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>Salvar Classe</button>
+                <button type="button" onClick={() => setShowLevelModal(false)} style={{ background: 'transparent', border: 'none', color: '#9ca3af', padding: '0.5rem 1rem', cursor: 'pointer' }}>Cancelar</button>
+                <button type="submit" style={{ background: '#10b981', border: 'none', color: 'white', padding: '0.5rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>Salvar Nível</button>
               </div>
             </form>
           </div>

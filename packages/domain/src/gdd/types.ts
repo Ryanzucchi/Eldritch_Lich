@@ -35,6 +35,51 @@ export interface CombatSimulationResult {
   averageRoundsToKill: number;
 }
 
+export interface GameRule {
+  id: string;
+  projectId: string;
+  name: string; // UC-334
+  category: 'COMBAT' | 'EXPLORATION' | 'ECONOMY' | 'GENERAL';
+  formula: string; // Ex: "Ataque * 1.5 - Defesa"
+  version: number; // UC-337 (Versionamento)
+  reasonForChange?: string; // Motivo da alteração de versão (UC-337)
+  createdAt: string;
+}
+
+export interface GameLevel {
+  id: string;
+  projectId: string;
+  name: string; // UC-336
+  objective: string;
+  durationMinutes: number;
+  enemies: string[];
+  items: string[];
+  mapLayoutUrl?: string; // Mapa visual/planta baixa (UC-336)
+  createdAt: string;
+}
+
+/**
+ * Valida a sintaxe matemática de uma fórmula de regra (UC-334).
+ */
+export function validateRuleFormula(formula: string): boolean {
+  // Substitui variáveis fictícias comuns para testar se a expressão é matemática válida
+  const cleaned = formula
+    .replace(/[a-zA-ZáéíóúÁÉÍÓÚçÇ]+/g, '1')
+    .replace(/\s+/g, '');
+  
+  // Permite apenas operadores, parênteses e números
+  if (/[^\d+\-*/()]/g.test(cleaned)) return false;
+  
+  try {
+    // eslint-disable-next-line no-eval
+    const testEval = Function(`"use strict"; return (${cleaned})`);
+    testEval();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Calcula os atributos de um personagem para um determinado nível (UC-335).
  */
@@ -66,7 +111,6 @@ export function simulateCombat(
   let attackerWins = 0;
   let totalRoundsSum = 0;
 
-  // Simulação Monte Carlo de 100 batalhas
   for (let b = 0; b < rounds; b++) {
     let currentAttHp = attStats.hp;
     let currentDefHp = defStats.hp;
@@ -74,7 +118,6 @@ export function simulateCombat(
 
     while (currentAttHp > 0 && currentDefHp > 0 && r < 50) {
       r++;
-      // Atacante bate
       const isCrit = Math.random() * 100 < critChance;
       const dmg = isCrit ? rawDamage * 1.5 : rawDamage;
       currentDefHp -= dmg;
@@ -84,7 +127,6 @@ export function simulateCombat(
         break;
       }
 
-      // Defensor contra-ataca
       const defRawDmg = Math.max(1, defStats.attack - attStats.defense * 0.5);
       currentAttHp -= defRawDmg;
     }

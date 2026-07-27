@@ -1,7 +1,29 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.validateRuleFormula = validateRuleFormula;
 exports.calculateCharacterStatsAtLevel = calculateCharacterStatsAtLevel;
 exports.simulateCombat = simulateCombat;
+/**
+ * Valida a sintaxe matemática de uma fórmula de regra (UC-334).
+ */
+function validateRuleFormula(formula) {
+    // Substitui variáveis fictícias comuns para testar se a expressão é matemática válida
+    const cleaned = formula
+        .replace(/[a-zA-ZáéíóúÁÉÍÓÚçÇ]+/g, '1')
+        .replace(/\s+/g, '');
+    // Permite apenas operadores, parênteses e números
+    if (/[^\d+\-*/()]/g.test(cleaned))
+        return false;
+    try {
+        // eslint-disable-next-line no-eval
+        const testEval = Function(`"use strict"; return (${cleaned})`);
+        testEval();
+        return true;
+    }
+    catch {
+        return false;
+    }
+}
 /**
  * Calcula os atributos de um personagem para um determinado nível (UC-335).
  */
@@ -24,14 +46,12 @@ function simulateCombat(attacker, defender, level = 10, rounds = 100) {
     const critChance = Math.min(50, Math.round(attStats.attack * 0.2));
     let attackerWins = 0;
     let totalRoundsSum = 0;
-    // Simulação Monte Carlo de 100 batalhas
     for (let b = 0; b < rounds; b++) {
         let currentAttHp = attStats.hp;
         let currentDefHp = defStats.hp;
         let r = 0;
         while (currentAttHp > 0 && currentDefHp > 0 && r < 50) {
             r++;
-            // Atacante bate
             const isCrit = Math.random() * 100 < critChance;
             const dmg = isCrit ? rawDamage * 1.5 : rawDamage;
             currentDefHp -= dmg;
@@ -39,7 +59,6 @@ function simulateCombat(attacker, defender, level = 10, rounds = 100) {
                 attackerWins++;
                 break;
             }
-            // Defensor contra-ataca
             const defRawDmg = Math.max(1, defStats.attack - attStats.defense * 0.5);
             currentAttHp -= defRawDmg;
         }

@@ -4,10 +4,12 @@ Este registro lista em ordem cronológica todas as atualizações de desenvolvim
 
 ## [2026-07-27] (Game Design Document, Mecânicas, Balanceamento de Estatísticas e Simulador de Combate) - UC-333, UC-335, UC-337, UC-317, UC-321, UC-325, UC-326, UC-327, UC-313, UC-316, UC-304, UC-310, UC-312, UC-305, UC-306, UC-301, UC-302, UC-303, UC-376, UC-377, UC-378, UC-379, UC-380, UC-360, UC-361, UC-362, UC-363, UC-364, UC-365, UC-367, UC-368, UC-369, UC-370, UC-340, UC-341, UC-342, UC-343, UC-344, UC-345, UC-219, UC-220, UC-221, UC-229, UC-230, UC-217, UC-218, UC-214, UC-215, UC-216, UC-206, UC-207, UC-208, UC-209, UC-210, UC-082, UC-083, UC-135, UC-136, UC-403, UC-404, UC-405, UC-406, UC-395, UC-396, UC-397, UC-398, UC-270, UC-271, UC-272, UC-274, UC-267, UC-268, UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
 
-### 🎮 Game Design Document (GDD), Balanceamento e Simulador de Combate (UC-333, UC-335, UC-337)
-*   **Mecânicas de Jogo (UC-333):** Interface `/gdd` para catalogação de mecânicas de combate, exploração, puzzle e progressão com definição de Core Loop, gatilhos de entrada e ações.
-*   **Balanceamento de Atributos & Curva de Progressão (UC-335):** Função `calculateCharacterStatsAtLevel` em `@eldritch/domain` projetando estatísticas (HP, Mana, Ataque, Defesa) do nível 1 ao 50.
-*   **Simulador de Combate Monte Carlo (UC-337):** Função `simulateCombat` em `@eldritch/domain` executando simulações de 100 rodadas de duelos de auto-battle entre classes para apuração de probabilidade de vitória, dano por golpe e média de rodadas. Tabelas `gameMechanics` e `playableCharacterBalances` no Dexie (Versão 29).
+### 🎮 Game Design Document (GDD), Regras, Níveis, Balanceamento e Simulador (UC-333, UC-334, UC-335, UC-336, UC-337)
+*   **Mecânicas & Regras (UC-333, UC-334):** Interface `/gdd` para catalogação de mecânicas e equações lógicas/matemáticas de regras, com validador de sintaxe `validateRuleFormula`.
+*   **Versionamento de Regras (UC-337-regras):** Rastreamento de histórico e controle de versão incremental em equações de jogo modificadas.
+*   **Design de Níveis (UC-336):** Ficha técnica estruturada de level design integrando lista de inimigos, itens e layout gráfico das fases.
+*   **Balanceamento de Atributos (UC-335):** Curva de progressão de atributos calculada do nível 1 ao 50 com `calculateCharacterStatsAtLevel`.
+*   **Simulador Monte Carlo (UC-337-simulador):** Simulação estatística de 100 rodadas de combate automatizado para análise de probabilidade de vitória. Tabelas `gameRules` e `gameLevels` adicionadas no Dexie (Versão 30).
 
 ### ⏳ Linhas do Tempo, Vínculo com Lore e Exportação (UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264)
 *   **Exportação Multiformato e HTML Interativo (UC-171, UC-264):** Módulo `exportTimeline` em `@eldritch/domain` (.html, .md, .json).
