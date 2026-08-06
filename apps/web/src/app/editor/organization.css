@@ -1,0 +1,40 @@
+.document-organizer {
+  display: grid;
+  gap: 8px;
+  padding: 0 12px 12px;
+  border-bottom: 1px solid var(--line, #dadce0);
+}
+
+.document-organizer small { color: var(--muted, #5f6368); font-size: 12px; }
+.document-search, .document-controls select {
+  min-width: 0;
+  border: 1px solid #c9d0d8;
+  border-radius: 6px;
+  background: #fff;
+  color: #202124;
+  font: inherit;
+}
+.document-search { padding: 8px 10px; }
+.document-search:focus, .document-controls select:focus { outline: 2px solid #1a73e8; outline-offset: 1px; border-color: #1a73e8; }
+.document-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.document-controls select { padding: 7px; font-size: 12px; }
+.document-groups { display: grid; align-content: start; gap: 2px; padding: 7px 8px 16px; }
+.document-group { border-bottom: 1px solid #edf0f2; padding-bottom: 3px; }
+.document-group-title { width: 100%; display: grid; grid-template-columns: 16px 1fr auto; align-items: center; gap: 6px; padding: 9px 5px 6px; border: 0; background: transparent; color: #3c4043; text-align: left; cursor: pointer; }
+.document-group-title:hover { color: #174ea6; }
+.document-group-title span { color: #5f6368; font-size: 19px; line-height: 12px; }
+.document-group-title strong { font-size: 12px; text-transform: uppercase; letter-spacing: .035em; }
+.document-group-title small { min-width: 20px; padding: 1px 5px; border-radius: 20px; background: #eef3fb; color: #3c4043; font-size: 11px; text-align: center; }
+.document-group-items { display: grid; gap: 2px; }
+.document-group-items > button { margin-left: 4px; }
+.document-no-results { margin: 18px 8px; color: var(--muted, #5f6368); font-size: 13px; text-align: center; }
+.delete-document-button { border: 1px solid #d93025; border-radius: 5px; padding: 6px 9px; background: #fff; color: #b3261e; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.delete-document-button:hover { background: #fce8e6; }
+.delete-document-button:focus { outline: 2px solid #d93025; outline-offset: 1px; }
+
+@media (max-width: 760px) {
+  .document-organizer { padding: 0 8px 8px; }
+  .document-groups { display: grid; max-height: 260px; overflow: auto; }
+  .document-group { min-width: 0; }
+  .document-group-items > button { min-width: 0; }
+}

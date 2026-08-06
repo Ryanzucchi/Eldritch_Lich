@@ -16,5 +16,14 @@
     "ownerId": "3e4b62e3-88d5-4898-ac5b-b5d27d0f5d40",
     "createdAt": "2026-07-24T18:55:18.286Z",
     "updatedAt": "2026-07-24T18:55:18.286Z"
+  },
+  {
+    "id": "08579d2f-26d5-4d2f-95d1-e3884eba5dae",
+    "name": "senhor dos aneis",
+    "genre": "Fantasia",
+    "visibility": "PRIVADO",
+    "ownerId": "3e4b62e3-88d5-4898-ac5b-b5d27d0f5d40",
+    "createdAt": "2026-08-06T18:28:45.953Z",
+    "updatedAt": "2026-08-06T18:28:45.953Z"
   }
 ]

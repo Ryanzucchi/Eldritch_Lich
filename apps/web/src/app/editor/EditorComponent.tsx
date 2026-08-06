@@ -40,7 +40,11 @@ import {
   CrossReferenceItem,
   generateChapterPlaylist,
   PlaylistResult,
-  TrackItem
+  TrackItem,
+  detectLocalContradictions,
+  extractTfIdfKeywords,
+  summarizeChapterLocally,
+  findManuscriptBacklinks
 } from '@eldritch/domain';
 import { computeE5Embedding, extractEntitiesWithNER, ProgressPayload } from '../../services/mms-ai';
 
@@ -231,6 +235,8 @@ export default function EditorComponent() {
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSnapshotTimeRef = useRef<number>(Date.now());
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const consistencyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hydratedProjectRef = useRef<string | null>(null);
 
   // IA Local State (Carregado globalmente no AppContext)
   const { 
@@ -241,7 +247,8 @@ export default function EditorComponent() {
     loadAI: handleLoadAI,
     setHideSidebar,
     activeProject,
-    selectProject
+    selectProject,
+    user
   } = useApp();
 
   // Metas de Produtividade State
@@ -287,7 +294,8 @@ export default function EditorComponent() {
   const [hasCelebratedToday, setHasCelebratedToday] = useState(false);
 
   // Autosave, Sync and Versioning states
-  const [rightTab, setRightTab] = useState<'mms' | 'versions' | 'chat'>('chat');
+  const [rightTab, setRightTab] = useState<'mms' | 'versions' | 'chat' | 'backlinks' | 'toc' | 'keywords'>('chat');
+  const [tocQuery, setTocQuery] = useState('');
   const [syncStatus, setSyncStatus] = useState<'syncing' | 'synced' | 'local'>('synced');
 
   // Lore Chat (UC-158)
@@ -534,6 +542,15 @@ export default function EditorComponent() {
     setTimeout(() => setSuccess(null), 3000);
   };
 
+  const handleSummarizeChapter = () => {
+    const content = editor?.getHTML() || activeManuscript?.content || '';
+    if (!content.trim()) return;
+    const summary = summarizeChapterLocally(content);
+    if (!summary) return;
+    setNoteText(`Resumo do capítulo: ${summary}`);
+    setShowNoteModal(true);
+  };
+
   // Cross-reference insertion handler (UC-394)
   const handleExecuteInsertCrossRef = () => {
     if (!editor || !crossRefTargetId) return;
@@ -623,6 +640,45 @@ export default function EditorComponent() {
     setTimeout(() => setSuccess(null), 3000);
   };
 
+  // Full Project Zip & Format Exporter (UC-064, UC-120, UC-121, UC-161, UC-162, UC-188, UC-189, UC-190, UC-225, UC-226, UC-227, UC-228)
+  const handleExportFullProjectZip = async () => {
+    if (!activeProject) return;
+    const projectData = {
+      project: activeProject,
+      manuscripts,
+      folders,
+      exportDate: new Date().toISOString()
+    };
+    const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${activeProject.name.toLowerCase().replace(/\s+/g, '_')}_backup_completo.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setSuccess('Backup completo do projeto exportado com sucesso (UC-064, UC-121, UC-225)!');
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  const handleImportProjectBackup = async (file: File) => {
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (data.manuscripts && Array.isArray(data.manuscripts)) {
+        await db.manuscripts.bulkPut(data.manuscripts);
+      }
+      if (data.folders && Array.isArray(data.folders)) {
+        await db.folders.bulkPut(data.folders);
+      }
+      await loadManuscripts();
+      await loadFolders();
+      setSuccess('Projeto restaurado com sucesso do backup (UC-120, UC-226, UC-227)!');
+      setTimeout(() => setSuccess(null), 3500);
+    } catch (err) {
+      alert('Erro ao importar backup. Verifique se o arquivo é um JSON válido de backup do Eldritch Lich.');
+    }
+  };
+
   const handleUploadFolderCover = (folderId: string, file: File) => {
     if (file.size > 5 * 1024 * 1024) {
       setSuccess('Erro: A imagem de capa da pasta não pode exceder 5MB (UC-067).');
@@ -645,8 +701,15 @@ export default function EditorComponent() {
     reader.readAsDataURL(file);
   };
 
-  // Theme state (Google Docs Light / Dark mode - UC-159)
-  const [docsTheme, setDocsTheme] = useState<'light' | 'dark'>('dark');
+  // Accessibility, Font Family, Theme & i18n States (UC-159, UC-239, UC-240, UC-241, UC-242, UC-243, UC-244, UC-245)
+  // The manuscript is a document surface; light mode is the predictable
+  // default for long-form writing and matches the rest of the workspace.
+  const [docsTheme, setDocsTheme] = useState<'light' | 'dark'>('light');
+  const [editorFontFamily, setEditorFontFamily] = useState<'serif' | 'sans' | 'mono'>('serif');
+  const [editorFontSize, setEditorFontSize] = useState<number>(18);
+  const [highContrastMode, setHighContrastMode] = useState<boolean>(false);
+  const [isFullscreenReading, setIsFullscreenReading] = useState<boolean>(false);
+  const [systemLanguage, setSystemLanguage] = useState<'pt-BR' | 'en-US' | 'es-ES'>('pt-BR');
 
   // Audit Logs State (UC-061)
   const [showAuditModal, setShowAuditModal] = useState(false);
@@ -1176,6 +1239,7 @@ export default function EditorComponent() {
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [newCommentText, setNewCommentText] = useState('');
   const [selectedTextForComment, setSelectedTextForComment] = useState('');
+  const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
 
   // Chapter Templates State (UC-137, UC-138)
   const [showTemplateModal, setShowTemplateModal] = useState(false);
@@ -1227,6 +1291,7 @@ export default function EditorComponent() {
     await loadComments(activeManuscript.id);
     setShowCommentModal(false);
     setNewCommentText('');
+    setShowMentionSuggestions(false);
     setSuccess('Comentário adicionado na margem do documento!');
     setTimeout(() => setSuccess(null), 3000);
   };
@@ -2268,13 +2333,8 @@ export default function EditorComponent() {
 
     const payload = {
       manuscript: {
-        id: manuscript.id,
-        title: manuscript.title,
-        content: manuscript.content,
-        status: manuscript.status,
-        isLocked: manuscript.isLocked,
-        projectId: activeProjectId,
-        createdAt: manuscript.createdAt
+        ...manuscript,
+        projectId: manuscript.projectId || activeProjectId,
       }
     };
 
@@ -2436,6 +2496,32 @@ export default function EditorComponent() {
   const loadManuscripts = async () => {
     const isBrowser = typeof window !== 'undefined';
     const activeProjectId = isBrowser ? localStorage.getItem('activeProjectId') || 'default' : 'default';
+
+    // The browser database is the working copy, but a fresh browser must be
+    // able to continue the same local project. Hydrate once and only replace a
+    // local record when the server copy is newer, preserving offline edits.
+    if (hydratedProjectRef.current !== activeProjectId && typeof navigator !== 'undefined' && navigator.onLine) {
+      try {
+        const response = await fetch(`/api/manuscripts?projectId=${encodeURIComponent(activeProjectId)}`);
+        if (response.ok) {
+          const { manuscripts: remoteManuscripts } = await response.json();
+          if (Array.isArray(remoteManuscripts)) {
+            const localById = new Map((await db.manuscripts.toArray()).map(item => [item.id, item]));
+            await Promise.all(remoteManuscripts.map(async (remote: Manuscript) => {
+              const local = localById.get(remote.id);
+              if (!local || new Date(remote.updatedAt).getTime() > new Date(local.updatedAt).getTime()) {
+                await db.manuscripts.put(remote);
+              }
+            }));
+          }
+        }
+      } catch (error) {
+        console.warn('Não foi possível reidratar os manuscritos locais:', error);
+      } finally {
+        hydratedProjectRef.current = activeProjectId;
+      }
+    }
+
     const savedManuscripts = await db.manuscripts.toArray();
     
     // Auto purge trash older than 30 days (UC-157 Exception Flow)
@@ -2605,12 +2691,22 @@ export default function EditorComponent() {
     setShortcutConflict(null);
   };
 
+  // Atualização conservadora de lore: somente ficha já existente e menção literal.
+  // Não cria entidades nem deduz atributos factuais a partir de texto ambíguo.
+  const syncKnownCharacterMentions = async (content: string) => {
+    if (!activeProject || !activeManuscript) return;
+    const characters = await db.characterSheets.where('projectId').equals(activeProject.id).toArray();
+    const now = new Date().toISOString();
+    const mentioned = characters.filter(character => new RegExp(`\\b${character.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(content));
+    await Promise.all(mentioned.filter(character => !character.mentionedInManuscriptIds?.includes(activeManuscript.id)).map(character => db.characterSheets.update(character.id, { mentionedInManuscriptIds: [...(character.mentionedInManuscriptIds || []), activeManuscript.id], updatedAt: now })));
+  };
+
   // Initialize TipTap Editor
   const editor = useEditor({
     extensions: [StarterKit],
     content: '',
     onUpdate: ({ editor }) => {
-      if (!activeManuscript || activeManuscript.isLocked) return;
+      if (!activeManuscript || activeManuscript.isLocked || (activeManuscript.folderId && folders.find(folder => folder.id === activeManuscript.folderId)?.writePermission === 'owner' && activeProject?.ownerId !== user?.id)) return;
 
       const currentText = editor.getText();
       const currentWords = countWords(currentText);
@@ -2625,12 +2721,18 @@ export default function EditorComponent() {
 
       // Autosave content to Dexie DB (instant < 5ms)
       const html = editor.getHTML();
+      if (consistencyTimeoutRef.current) clearTimeout(consistencyTimeoutRef.current);
+      consistencyTimeoutRef.current = setTimeout(() => {
+        const alerts = detectLocalContradictions(editor.getText());
+        if (alerts.length > 0) setSuccess(`⚠️ Possível inconsistência: ${alerts[0].explanation} Veja o painel NLP.`);
+      }, 500);
       db.manuscripts.update(activeManuscript.id, {
         content: html,
         updatedAt: new Date().toISOString()
       }).then(() => {
         // Reload list locally without refetching all
         setManuscripts(prev => prev.map(m => m.id === activeManuscript.id ? { ...m, content: html } : m));
+        void syncKnownCharacterMentions(editor.getText());
       });
 
       // Debounced Sync to Server (2000ms)
@@ -2722,7 +2824,11 @@ export default function EditorComponent() {
     return !!(parentFolder as any)?.isArchived;
   })();
 
-  const isEditorLocked = !!(activeManuscript?.isLocked || activeManuscript?.isArchived || isParentFolderArchived || activeCollaboratorHighlight);
+  const isParentFolderWriteRestricted = !!(activeManuscript?.folderId
+    && folders.find(folder => folder.id === activeManuscript.folderId)?.writePermission === 'owner'
+    && activeProject?.ownerId !== user?.id);
+
+  const isEditorLocked = !!(activeManuscript?.isLocked || activeManuscript?.isArchived || isParentFolderArchived || isParentFolderWriteRestricted || activeCollaboratorHighlight);
 
   // Sync editor editability (UC-187 / lock status)
   useEffect(() => {
@@ -2795,6 +2901,7 @@ export default function EditorComponent() {
     await db.manuscripts.put(updated);
     setActiveManuscript(updated);
     setManuscripts(prev => prev.map(m => m.id === updated.id ? updated : m));
+    await syncToServer(updated);
     
     if (editor) {
       editor.setEditable(!isLocked);
@@ -2815,6 +2922,7 @@ export default function EditorComponent() {
     await db.manuscripts.put(updated);
     setActiveManuscript(updated);
     setManuscripts(prev => prev.map(m => m.id === updated.id ? updated : m));
+    await syncToServer(updated);
     
     if (editor) {
       editor.setEditable(!isLocked);
@@ -3099,6 +3207,24 @@ export default function EditorComponent() {
     await loadFolders();
   };
 
+  const handleChangeFolderWritePermission = async (folder: Folder, writePermission: 'all' | 'owner' | 'editors') => {
+    if (activeProject?.ownerId !== user?.id) {
+      setSuccess('Apenas o proprietário do projeto pode alterar permissões de pasta.');
+      return;
+    }
+    const updated = { ...folder, writePermission, updatedAt: new Date().toISOString() };
+    await db.folders.put(updated);
+    try {
+      const response = await fetch('/api/folders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: updated }) });
+      if (!response.ok) throw new Error((await response.json()).message || 'Erro ao salvar permissão.');
+      setSuccess('Permissão de escrita da pasta atualizada.');
+    } catch (error) {
+      await db.folders.put(folder);
+      setSuccess(error instanceof Error ? error.message : 'Erro ao salvar permissão.');
+    }
+    await loadFolders();
+  };
+
   const toggleFolder = (folderId: string) => {
     setExpandedFolders(prev => ({
       ...prev,
@@ -3223,6 +3349,19 @@ export default function EditorComponent() {
             )}
           </div>
           <div className="folder-actions" onClick={e => e.stopPropagation()}>
+            {activeProject?.ownerId === user?.id && (
+              <select
+                aria-label={`Permissão de escrita da pasta ${folder.name}`}
+                value={folder.writePermission || 'all'}
+                onChange={(event) => handleChangeFolderWritePermission(folder, event.target.value as 'all' | 'owner' | 'editors')}
+                title="Permissão de escrita (UC-205)"
+                className="folder-permission-select"
+              >
+                <option value="all">Todos escrevem</option>
+                <option value="editors">Editores escrevem</option>
+                <option value="owner">Só proprietário</option>
+              </select>
+            )}
             <button 
               onClick={(e) => handleToggleFavoriteFolder(folder, e)}
               title={(folder as any).isFavorite ? "Remover dos Favoritos" : "Favoritar Pasta (UC-154)"}
@@ -4213,6 +4352,7 @@ export default function EditorComponent() {
                           <div className="dropdown-menu-list animate-fade-in">
                             <button onClick={() => { handleOpenStandardizeNames(); setActiveMenuDropdown(null); }}>✨ Padronizar Nomes de Personagens (UC-092)</button>
                             <button onClick={() => { handleGenerateChapterPlaylist(); setActiveMenuDropdown(null); }}>🎵 Gerar Playlist do Capítulo por IA (UC-412)</button>
+                            <button onClick={() => { handleSummarizeChapter(); setActiveMenuDropdown(null); }}>🧾 Resumir capítulo em nota (UC-052)</button>
                           </div>
                         )}
                       </div>
@@ -4397,6 +4537,7 @@ export default function EditorComponent() {
                 <button onClick={handleOpenAddComment} className="ribbon-btn" title="Adicionar Comentário na Margem (UC-114)">💬</button>
                 <button onClick={() => setShowLinkModal(true)} className="ribbon-btn" title="Inserir Link (UC-110, UC-111)">🔗</button>
                 <button onClick={() => setShowNoteModal(true)} className="ribbon-btn" title="Inserir Nota de Rodapé (UC-115, UC-393)">📝</button>
+                <button onClick={handleSummarizeChapter} className="ribbon-btn" title="Gerar resumo local do capítulo (UC-052)">🧾</button>
                 <button onClick={() => setShowCrossRefModal(true)} className="ribbon-btn" title="Inserir Referência Cruzada entre Capítulos (UC-394)">📌</button>
                 <button onClick={handleGenerateChapterPlaylist} className="ribbon-btn" title="Gerar Playlist por Humor do Capítulo por IA (UC-412)">🎵</button>
                 <button onClick={() => setShowSearchModal(true)} className="ribbon-btn" title="Buscar & Substituir (UC-022, UC-024)">🔍</button>
@@ -4769,6 +4910,9 @@ export default function EditorComponent() {
               >
                 Versões
               </button>
+              <button type="button" className={`panel-tab-btn ${rightTab === 'backlinks' ? 'active' : ''}`} onClick={() => setRightTab('backlinks')}>Backlinks</button>
+              <button type="button" className={`panel-tab-btn ${rightTab === 'toc' ? 'active' : ''}`} onClick={() => setRightTab('toc')}>Sumário</button>
+              <button type="button" className={`panel-tab-btn ${rightTab === 'keywords' ? 'active' : ''}`} onClick={() => setRightTab('keywords')}>Palavras-chave</button>
               <button 
                 type="button" 
                 onClick={() => setIsRightSidebarOpen(false)}
@@ -4840,6 +4984,12 @@ export default function EditorComponent() {
                   </button>
                 </form>
               </div>
+            ) : rightTab === 'toc' ? (
+              <div className="logs-scroller"><p className="panel-subtitle">Sumário automático do capítulo atual.</p><input value={tocQuery} onChange={event => setTocQuery(event.target.value)} placeholder="Buscar heading..." className="chat-text-input" />{(editor ? Array.from(editor.view.dom.querySelectorAll('h1,h2,h3')).map((element, index) => ({ element, index, level: Number(element.tagName.slice(1)), text: element.textContent || '' })).filter(item => item.text.toLowerCase().includes(tocQuery.toLowerCase())) : []).map(item => <button type="button" key={item.index} className="log-card" style={{ marginLeft: `${(item.level - 1) * 12}px` }} onClick={() => item.element.scrollIntoView({ behavior: 'smooth', block: 'center' })}>H{item.level} · {item.text || 'Sem título'}</button>)}</div>
+            ) : rightTab === 'backlinks' ? (
+              <div className="logs-scroller"><p className="panel-subtitle">Capítulos que fazem referência a este usando <code>[[título]]</code>.</p>{!activeManuscript ? <p className="no-logs">Selecione um capítulo.</p> : findManuscriptBacklinks(manuscripts, activeManuscript.title, activeManuscript.id).length === 0 ? <p className="no-logs">Nenhum backlink encontrado.</p> : findManuscriptBacklinks(manuscripts, activeManuscript.title, activeManuscript.id).map(link => <button key={link.manuscriptId} type="button" className="log-card" onClick={() => { const manuscript = manuscripts.find(item => item.id === link.manuscriptId); if (manuscript) handleSelectChapter(manuscript); }}><strong>{link.title}</strong><br /><small>{link.snippet}</small></button>)}</div>
+            ) : rightTab === 'keywords' ? (
+              <div className="logs-scroller"><p className="panel-subtitle">Termos mais distintivos do capítulo atual em relação aos demais capítulos.</p>{!activeManuscript ? <p className="no-logs">Selecione um capítulo.</p> : <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem' }}>{extractTfIdfKeywords(manuscripts.map(manuscript => ({ id: manuscript.id, content: manuscript.content })), activeManuscript.id).map(keyword => <span key={keyword.term} className="entity-tag">{keyword.term} ×{keyword.occurrences}</span>)}</div>}</div>
             ) : rightTab === 'mms' ? (
               <>
                 <p className="panel-subtitle">Leitura passiva baseada em grafo, entidades e similaridade semantica. O texto continua sendo o centro da tela.</p>
@@ -5821,6 +5971,7 @@ export default function EditorComponent() {
                     { id: 'pdf', label: 'PDF Impressão (.pdf)', desc: 'Folha A4 formatada pronta para publicação' },
                     { id: 'epub', label: 'E-book ePub (.epub)', desc: 'Formatado com estrutura de capítulos e navegação' },
                     { id: 'md', label: 'Markdown (.md)', desc: 'Texto limpo com marcações de formatação' },
+                    { id: 'fountain', label: 'Roteiro Fountain (.fountain)', desc: 'Formato de roteiro interoperável' },
                     { id: 'txt', label: 'Texto Puro (.txt)', desc: 'Sem formatação, compatível com qualquer leitor' },
                     { id: 'html', label: 'Página Web (.html)', desc: 'Documento completo HTML com CSS responsivo' },
                   ].map((fmt) => (
@@ -6205,11 +6356,20 @@ export default function EditorComponent() {
                   rows={3}
                   placeholder="Escreva seu comentário para esta passagem..." 
                   value={newCommentText} 
-                  onChange={(e) => setNewCommentText(e.target.value)}
+                  onChange={(e) => { setNewCommentText(e.target.value); setShowMentionSuggestions(e.target.value.split(/\s/).pop()?.startsWith('@') ?? false); }}
                   className="search-input"
                   style={{ width: '100%', resize: 'vertical' }}
                   autoFocus
                 />
+                {showMentionSuggestions && (
+                  <div role="listbox" aria-label="Sugestões de colaboradores para menção" style={{ marginTop: '0.35rem', border: '1px solid var(--border-subtle)', borderRadius: '6px', padding: '0.3rem', background: 'var(--surface-hover)' }}>
+                    {MOCK_COLLABORATORS.map(collaborator => (
+                      <button key={collaborator.id} type="button" role="option" onClick={() => { setNewCommentText(current => current.replace(/@[^\s]*$/, `@${collaborator.name.split(' ')[0]} `)); setShowMentionSuggestions(false); }} style={{ display: 'block', width: '100%', textAlign: 'left', border: 0, background: 'transparent', color: 'var(--text-primary)', padding: '0.35rem', cursor: 'pointer' }}>
+                        {collaborator.avatar} @{collaborator.name.split(' ')[0]}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
             <div className="import-modal-actions">
