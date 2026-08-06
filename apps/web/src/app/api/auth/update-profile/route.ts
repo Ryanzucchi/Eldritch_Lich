@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { readUsers, writeUsers, verifyToken, signToken } from '../../../../services/auth-backend';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
     const token = cookies().get('token')?.value;

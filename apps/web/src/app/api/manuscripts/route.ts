@@ -6,7 +6,8 @@ import {
   verifyToken, 
   sanitizeInput, 
   readProjects, 
-  readCollaborators 
+  readCollaborators,
+  readFolders
 } from '../../../services/auth-backend';
 import { Manuscript } from '@eldritch/domain';
 
@@ -112,6 +113,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Permissão insuficiente. Você tem apenas acesso de leitura neste projeto.' }, { status: 403 });
     }
 
+    const parentFolder = manuscript.folderId ? readFolders().find(folder => folder.id === manuscript.folderId && folder.projectId === manuscript.projectId) : undefined;
+    if (parentFolder?.writePermission === 'owner' && !isOwner) {
+      return NextResponse.json({ message: 'Esta pasta só pode ser alterada pelo proprietário do projeto.' }, { status: 403 });
+    }
+
     // Sanitization of title and content to prevent XSS
     const sanitizedTitle = sanitizeInput(manuscript.title);
     const sanitizedContent = sanitizeInput(manuscript.content);
@@ -119,6 +125,9 @@ export async function POST(req: NextRequest) {
     const manuscripts = readManuscripts();
     const index = manuscripts.findIndex(m => m.id === manuscript.id);
 
+    // Keep every field that the local-first editor manages. Previously this
+    // endpoint rebuilt only the basic fields, so moving a chapter to a folder,
+    // archiving it, or sending it to the trash was silently lost on refresh.
     const updatedManuscript: Manuscript = {
       id: manuscript.id,
       title: sanitizedTitle,
@@ -126,8 +135,15 @@ export async function POST(req: NextRequest) {
       status: manuscript.status || 'RASCUNHO',
       isLocked: !!manuscript.isLocked,
       projectId: manuscript.projectId,
+      folderId: typeof manuscript.folderId === 'string' ? manuscript.folderId : undefined,
       createdAt: manuscript.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      inTrash: !!manuscript.inTrash,
+      deletedAt: typeof manuscript.deletedAt === 'string' ? manuscript.deletedAt : undefined,
+      tags: Array.isArray(manuscript.tags) ? manuscript.tags.filter((tag: unknown) => typeof tag === 'string').slice(0, 30) : undefined,
+      category: typeof manuscript.category === 'string' ? manuscript.category : undefined,
+      isArchived: !!manuscript.isArchived,
+      coverUrl: typeof manuscript.coverUrl === 'string' ? manuscript.coverUrl : undefined,
     };
 
     if (index === -1) {

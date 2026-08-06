@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { readUsers, verifyPassword, signToken, checkLoginBlock, registerFailedLogin, resetLoginAttempts, sanitizeInput } from '../../../../services/auth-backend';
+import { createSession, readUsers, verifyPassword, signToken, checkLoginBlock, registerFailedLogin, resetLoginAttempts, sanitizeInput } from '../../../../services/auth-backend';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
@@ -47,7 +49,19 @@ export async function POST(req: NextRequest) {
     // Success - reset attempts
     resetLoginAttempts(email, ip);
 
-    // Generate JWT payload
+    if (user.twoFactorEnabled) {
+      const pendingToken = signToken({ id: user.id, purpose: 'two-factor-login' }, 5 * 60);
+      cookies().set('twoFactorPending', pendingToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 5 * 60,
+        path: '/'
+      });
+      return NextResponse.json({ message: 'Informe o código do autenticador para concluir o acesso.', requiresTwoFactor: true });
+    }
+
+    // Generate JWT payload only after every configured factor has been verified.
     const payload = {
       id: user.id,
       name: user.name,
@@ -55,7 +69,8 @@ export async function POST(req: NextRequest) {
       emailVerified: user.emailVerified
     };
 
-    const token = signToken(payload);
+    const session = createSession(user.id, req.headers.get('user-agent') || 'Dispositivo desconhecido', ip);
+    const token = signToken({ ...payload, sid: session.id });
 
     // Set cookies securely
     cookies().set('token', token, {

@@ -142,12 +142,17 @@ export async function POST(req: NextRequest) {
     }
 
     const index = folders.findIndex(f => f.id === folder.id);
+    const existingFolder = index >= 0 ? folders[index] : undefined;
+    if (!isOwner && existingFolder?.writePermission !== (folder.writePermission || 'all')) {
+      return NextResponse.json({ message: 'Apenas o proprietário pode alterar a permissão de escrita da pasta.' }, { status: 403 });
+    }
 
     const updatedFolder: Folder = {
       id: folder.id,
       name: folder.name,
       projectId: folder.projectId,
       parentFolderId: folder.parentFolderId || undefined,
+      writePermission: folder.writePermission || existingFolder?.writePermission || 'all',
       createdAt: folder.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readUsers, writeUsers, readResetTokens, writeResetTokens, hashPassword, resetLoginAttempts } from '../../../../services/auth-backend';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
     const { email, token, password, confirmPassword } = await req.json();

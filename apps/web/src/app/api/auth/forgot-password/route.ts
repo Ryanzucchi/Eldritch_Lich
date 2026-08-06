@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readUsers, readResetTokens, writeResetTokens } from '../../../../services/auth-backend';
 import { ResetToken } from '@eldritch/domain';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
     const { email } = await req.json();

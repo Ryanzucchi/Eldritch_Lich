@@ -7,6 +7,9 @@ export interface User {
     avatar?: string;
     bio?: string;
     timezone?: string;
+    /** AES-GCM ciphertext of the user's TOTP seed; never return this to clients. */
+    twoFactorSecretEncrypted?: string;
+    twoFactorEnabled?: boolean;
     createdAt: string;
     updatedAt: string;
 }
@@ -18,6 +21,15 @@ export interface AuthSession {
         email: string;
         emailVerified: boolean;
     };
+}
+export interface UserSessionRecord {
+    id: string;
+    userId: string;
+    deviceInfo: string;
+    ip: string;
+    createdAt: string;
+    lastSeenAt: string;
+    revokedAt?: string;
 }
 export interface ResetToken {
     id: string;

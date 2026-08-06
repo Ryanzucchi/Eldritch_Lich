@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readUsers, writeUsers, hashPassword } from '../../../../services/auth-backend';
 import { User } from '@eldritch/domain';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
     const { name, email, password, confirmPassword } = await req.json();

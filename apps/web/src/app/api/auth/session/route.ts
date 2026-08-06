@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { verifyToken } from '../../../../services/auth-backend';
+import { isSessionActive, verifyToken } from '../../../../services/auth-backend';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
@@ -12,7 +14,7 @@ export async function GET(req: NextRequest) {
 
     const payload = verifyToken(token);
 
-    if (!payload) {
+    if (!payload || (payload.sid && !isSessionActive(payload.sid, payload.id))) {
       return NextResponse.json({ authenticated: false }, { status: 200 });
     }
 

@@ -3,6 +3,7 @@ export interface ChatChannel {
   projectId: string;
   name: string; // e.g. "Geral", "Worldbuilding", "Capítulo 1"
   description?: string;
+  type?: 'chat' | 'announcement';
   isArchived: boolean;
   createdAt: string;
 }

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { readUsers, verifyToken } from '../../../../services/auth-backend';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   try {
     const token = cookies().get('token')?.value;
@@ -30,6 +32,7 @@ export async function GET(req: NextRequest) {
         avatar: user.avatar || '',
         bio: user.bio || '',
         timezone: user.timezone || 'America/Recife',
+        twoFactorEnabled: Boolean(user.twoFactorEnabled),
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
       }

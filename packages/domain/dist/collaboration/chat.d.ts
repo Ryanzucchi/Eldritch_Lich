@@ -3,6 +3,7 @@ export interface ChatChannel {
     projectId: string;
     name: string;
     description?: string;
+    type?: 'chat' | 'announcement';
     isArchived: boolean;
     createdAt: string;
 }
