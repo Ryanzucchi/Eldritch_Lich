@@ -14,6 +14,8 @@ export interface MetaEdge {
     id: string;
     fromId: string;
     toId: string;
+    /** Relação legível definida pelo autor; a precedência causal continua sendo fromId → toId. */
+    label?: string;
 }
 export interface GMNGraph {
     nodes: MetaNode[];

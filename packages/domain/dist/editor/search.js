@@ -1,8 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.findManuscriptBacklinks = findManuscriptBacklinks;
 exports.searchInText = searchInText;
 exports.replaceMatchInText = replaceMatchInText;
 exports.replaceAllInText = replaceAllInText;
+function findManuscriptBacklinks(manuscripts, targetTitle, excludedId) {
+    const marker = `[[${targetTitle}]]`;
+    return manuscripts.filter(item => item.id !== excludedId && item.content.includes(marker)).map(item => {
+        const index = item.content.indexOf(marker);
+        return { manuscriptId: item.id, title: item.title, snippet: item.content.replace(/<[^>]+>/g, ' ').slice(Math.max(0, index - 60), index + marker.length + 80) };
+    });
+}
 /**
  * Searches for matches in text (plain text or html text) with support for exact word, phrase, or regex/contextual queries.
  */

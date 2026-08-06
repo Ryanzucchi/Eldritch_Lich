@@ -15,6 +15,7 @@ export interface GeoMap {
     projectId: string;
     name: string;
     description?: string;
+    parentMapId?: string;
     imageUrl?: string;
     scaleKmPerPixel?: number;
     createdAt: string;

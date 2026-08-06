@@ -1,5 +1,5 @@
 import { Manuscript } from './types.js';
-export type ExportFormat = 'txt' | 'md' | 'html' | 'docx' | 'epub' | 'pdf';
+export type ExportFormat = 'txt' | 'md' | 'html' | 'docx' | 'epub' | 'pdf' | 'fountain';
 export interface ExportResult {
     filename: string;
     mimeType: string;
@@ -17,6 +17,8 @@ export declare function markdownToHtml(md: string): string;
  * Strips HTML and converts to plain text
  */
 export declare function htmlToPlainText(html: string): string;
+/** Conversão determinística de HTML literário para o formato de roteiro Fountain. */
+export declare function htmlToFountain(html: string): string;
 /**
  * Compiles single or multiple manuscripts into specified format file
  */

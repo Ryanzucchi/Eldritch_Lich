@@ -9,6 +9,16 @@ export interface SearchMatch {
     text: string;
     contextSnippet: string;
 }
+export interface BacklinkMatch {
+    manuscriptId: string;
+    title: string;
+    snippet: string;
+}
+export declare function findManuscriptBacklinks(manuscripts: Array<{
+    id: string;
+    title: string;
+    content: string;
+}>, targetTitle: string, excludedId?: string): BacklinkMatch[];
 /**
  * Searches for matches in text (plain text or html text) with support for exact word, phrase, or regex/contextual queries.
  */

@@ -11,6 +11,16 @@ export interface SearchMatch {
   contextSnippet: string;
 }
 
+export interface BacklinkMatch { manuscriptId: string; title: string; snippet: string; }
+
+export function findManuscriptBacklinks(manuscripts: Array<{ id: string; title: string; content: string }>, targetTitle: string, excludedId?: string): BacklinkMatch[] {
+  const marker = `[[${targetTitle}]]`;
+  return manuscripts.filter(item => item.id !== excludedId && item.content.includes(marker)).map(item => {
+    const index = item.content.indexOf(marker);
+    return { manuscriptId: item.id, title: item.title, snippet: item.content.replace(/<[^>]+>/g, ' ').slice(Math.max(0, index - 60), index + marker.length + 80) };
+  });
+}
+
 /**
  * Searches for matches in text (plain text or html text) with support for exact word, phrase, or regex/contextual queries.
  */

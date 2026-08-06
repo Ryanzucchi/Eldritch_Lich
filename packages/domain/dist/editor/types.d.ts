@@ -6,6 +6,8 @@ export interface Folder {
     createdAt: string;
     updatedAt: string;
     coverUrl?: string;
+    /** Determines which project members may modify manuscripts within this folder. */
+    writePermission?: 'all' | 'owner' | 'editors';
 }
 export interface Manuscript {
     id: string;

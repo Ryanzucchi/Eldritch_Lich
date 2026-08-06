@@ -13,6 +13,7 @@ export interface ReferenceItem {
   doi?: string;
   url?: string;
   createdAt: string;
+  comments?: Array<{ id: string; authorName: string; text: string; createdAt: string }>;
 }
 
 export interface ResearchNote {
@@ -22,7 +23,18 @@ export interface ResearchNote {
   content: string; // Conteúdo com suporte a wiki-links [[Título da Nota]] (UC-326)
   tags: string[];
   referenceId?: string; // Vínculo com fonte/referência (UC-317)
+  repetition?: number;
+  intervalDays?: number;
+  easinessFactor?: number;
+  nextReviewDate?: string;
   createdAt: string;
+  updatedAt: string;
+}
+
+export interface ResearchProject {
+  id: string;
+  projectId: string;
+  coauthors: Array<{ email: string; contributionPercent: number }>;
   updatedAt: string;
 }
 

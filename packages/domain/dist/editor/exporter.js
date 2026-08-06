@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.htmlToMarkdown = htmlToMarkdown;
 exports.markdownToHtml = markdownToHtml;
 exports.htmlToPlainText = htmlToPlainText;
+exports.htmlToFountain = htmlToFountain;
 exports.exportManuscripts = exportManuscripts;
 /**
  * Converts HTML content to clean Markdown string
@@ -88,6 +89,20 @@ function htmlToPlainText(html) {
         .replace(/&quot;/g, '"')
         .trim();
 }
+/** Conversão determinística de HTML literário para o formato de roteiro Fountain. */
+function htmlToFountain(html) {
+    if (!html)
+        return '';
+    const text = (value) => htmlToPlainText(value).replace(/\s+/g, ' ').trim();
+    let fountain = html
+        .replace(/<h1[^>]*>(.*?)<\/h1>/gis, (_, value) => `\n\nINT. ${text(value).toUpperCase()} - DAY\n\n`)
+        .replace(/<h[2-6][^>]*>(.*?)<\/h[2-6]>/gis, (_, value) => `\n\n# ${text(value)}\n\n`)
+        .replace(/<(?:em|i)[^>]*>(.*?)<\/(?:em|i)>/gis, (_, value) => `\n${text(value)}\n`)
+        .replace(/<p[^>]*>(.*?)<\/p>/gis, (_, value) => `\n${text(value)}\n`)
+        .replace(/<br\s*\/?\s*>/gi, '\n');
+    fountain = htmlToPlainText(fountain).replace(/\n{3,}/g, '\n\n').trim();
+    return fountain;
+}
 /**
  * Compiles single or multiple manuscripts into specified format file
  */
@@ -108,6 +123,10 @@ function exportManuscripts(manuscripts, format, projectTitle = 'Manuscrito') {
             mimeType: 'text/markdown;charset=utf-8',
             content: mdContent
         };
+    }
+    if (format === 'fountain') {
+        const content = `Title: ${projectTitle}\n\n` + manuscripts.map(manuscript => `# ${manuscript.title}\n\n${htmlToFountain(manuscript.content)}`).join('\n\n');
+        return { filename: `${sanitizeTitle}.fountain`, mimeType: 'text/plain;charset=utf-8', content };
     }
     if (format === 'html') {
         const htmlBody = manuscripts.map(m => `<section class="chapter"><h1>${m.title}</h1>${m.content}</section>`).join('<hr/>');

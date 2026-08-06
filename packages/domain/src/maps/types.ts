@@ -16,6 +16,7 @@ export interface GeoMap {
   projectId: string;
   name: string;
   description?: string;
+  parentMapId?: string;
   imageUrl?: string;
   scaleKmPerPixel?: number; // Scale ratio for measurement tool (UC-099)
   createdAt: string;

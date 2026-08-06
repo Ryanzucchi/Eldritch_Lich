@@ -16,6 +16,8 @@ export interface MetaEdge {
   id: string; // Composite or UUID
   fromId: string;
   toId: string;
+  /** Relação legível definida pelo autor; a precedência causal continua sendo fromId → toId. */
+  label?: string;
 }
 
 export interface GMNGraph {

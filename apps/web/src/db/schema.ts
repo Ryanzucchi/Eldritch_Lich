@@ -24,6 +24,18 @@ export interface WikiEntity {
   updatedAt: string;
 }
 
+export interface AutomationHistoryEntry {
+  id: string;
+  projectId: string;
+  source: 'MANUSCRIPT_EXTRACTION' | 'SEMANTIC_SCAN' | 'SANDBOX_GENERATION' | 'TEXT_ANALYSIS';
+  kind: string;
+  summary: string;
+  payload: string;
+  manuscriptId?: string;
+  status: 'DETECTED' | 'APPLIED' | 'DISCARDED';
+  createdAt: string;
+}
+
 export class EldritchDatabase extends Dexie {
   metaNodes!: Table<MetaNode, string>;
   metaEdges!: Table<MetaEdge, string>;
@@ -39,6 +51,7 @@ export class EldritchDatabase extends Dexie {
   auditLogs!: Table<SystemActivity, string>;
   reminders!: Table<Reminder, string>;
   wikiEntities!: Table<WikiEntity, string>;
+  automationHistories!: Table<AutomationHistoryEntry, string>;
   timelines!: Table<import('@eldritch/domain').Timeline, string>;
   timelineEvents!: Table<import('@eldritch/domain').TimelineEvent, string>;
   geoMaps!: Table<import('@eldritch/domain').GeoMap, string>;
@@ -69,6 +82,7 @@ export class EldritchDatabase extends Dexie {
   timeClockPunches!: Table<import('@eldritch/domain').TimeClockPunch, string>;
   referenceItems!: Table<import('@eldritch/domain').ReferenceItem, string>;
   researchNotes!: Table<import('@eldritch/domain').ResearchNote, string>;
+  researchProjects!: Table<import('@eldritch/domain').ResearchProject, string>;
   gameMechanics!: Table<import('@eldritch/domain').GameMechanic, string>;
   playableCharacterBalances!: Table<import('@eldritch/domain').PlayableCharacterBalance, string>;
   gameRules!: Table<import('@eldritch/domain').GameRule, string>;
@@ -90,9 +104,24 @@ export class EldritchDatabase extends Dexie {
   bankStatementLines!: Table<import('@eldritch/domain').BankStatementLine, string>;
   budgetAlerts!: Table<import('@eldritch/domain').BudgetAlert, string>;
 
-  constructor() {
+  characterSheets!: Table<import('@eldritch/domain').CharacterSheet, string>;
+  familyRelations!: Table<import('@eldritch/domain').FamilyRelation, string>;
+  factionSheets!: Table<import('@eldritch/domain').FactionSheet, string>;
+  locationSheets!: Table<import('@eldritch/domain').LocationSheet, string>;
+  creatureSheets!: Table<import('@eldritch/domain').CreatureSheet, string>;
+  itemSheets!: Table<import('@eldritch/domain').ItemSheet, string>;
+  historicalEventSheets!: Table<import('@eldritch/domain').HistoricalEventSheet, string>;
+  entityRelationLinks!: Table<import('@eldritch/domain').EntityRelationLink, string>;
+
+  factionWarsOrTreaties!: Table<import('@eldritch/domain').FactionWarOrTreaty, string>;
+  fictionalLanguages!: Table<import('@eldritch/domain').FictionalLanguage, string>;
+  techOrMagicNodes!: Table<import('@eldritch/domain').TechOrMagicNode, string>;
+  religionSheets!: Table<import('@eldritch/domain').ReligionSheet, string>;
+
+  constructor(projectId?: string) {
+
     const isBrowser = typeof window !== 'undefined';
-    const activeProjectId = isBrowser ? localStorage.getItem('activeProjectId') || 'default' : 'default';
+    const activeProjectId = projectId || (isBrowser ? localStorage.getItem('activeProjectId') || 'default' : 'default');
     super(`EldritchDatabase_${activeProjectId}`);
     this.version(1).stores({
       metaNodes: 'id, type, status, title',
@@ -1220,6 +1249,160 @@ export class EldritchDatabase extends Dexie {
       bankStatementLines: 'id, integrationId, type, reconciledTransactionId',
       budgetAlerts: 'id, projectId, category, thresholdPercent'
     });
+    this.version(37).stores({
+      metaNodes: 'id, type, status, title',
+      metaEdges: 'id, fromId, toId',
+      writingGoals: 'id, type, targetWords, deadline',
+      writingLogs: 'id, date',
+      writingStreak: 'id',
+      keyboardShortcuts: 'command',
+      manuscripts: 'id, status, title, folderId, category, isArchived',
+      manuscriptVersions: 'id, manuscriptId, versionNumber, createdAt',
+      pendingSaves: 'id, manuscriptId, timestamp',
+      folders: 'id, projectId, parentFolderId',
+      comments: 'id, manuscriptId, isResolved, createdAt',
+      auditLogs: 'id, type, timestamp',
+      reminders: 'id, projectId, alertTime, isRead',
+      wikiEntities: 'id, projectId, name, type, isConfidential',
+      timelines: 'id, projectId, name',
+      timelineEvents: 'id, timelineId, sortOrder',
+      geoMaps: 'id, projectId, name',
+      geoMapMarkers: 'id, mapId, type',
+      mindMaps: 'id, projectId, title',
+      mindMapNodes: 'id, mindMapId, parentId',
+      mediaAssets: 'id, projectId, category, entityName',
+      storyActs: 'id, projectId, sortOrder',
+      heroJourneyStages: 'id, projectId, characterName, stepNumber',
+      characterArcPoints: 'id, projectId, characterName, sortOrder',
+      sandboxes: 'id, projectId, name, isPromoted',
+      sandboxChanges: 'id, sandboxId, entityType',
+      projectMembers: 'id, projectId, userEmail, role',
+      sharedDocLinks: 'id, manuscriptId, token',
+      projectInviteLinks: 'id, projectId, token, isRevoked',
+      collaborationAuditLogs: 'id, projectId, userId, timestamp',
+      chatChannels: 'id, projectId, isArchived',
+      chatMessages: 'id, channelId, createdAt',
+      notificationSettings: 'id, userId, emailFrequency',
+      teamMeetings: 'id, projectId, date',
+      voiceMessages: 'id, channelId, createdAt',
+      callSessions: 'id, projectId, roomName, status',
+      calendarEvents: 'id, projectId, startDate, category',
+      memberAvailabilities: 'email, timezone, status',
+      employees: 'id, projectId, cpf, email',
+      payrollRecords: 'id, projectId, monthYear, employeeId',
+      vacationRequests: 'id, employeeId, status, type',
+      timeClockPunches: 'id, employeeId, punchTime',
+      referenceItems: 'id, projectId, type, title',
+      researchNotes: 'id, projectId, title, referenceId',
+      gameMechanics: 'id, projectId, name, type',
+      playableCharacterBalances: 'id, projectId, characterName',
+      gameRules: 'id, projectId, name, version',
+      gameLevels: 'id, projectId, name',
+      gameShops: 'id, projectId, shopName',
+      objectiveOkrs: 'id, projectId, title, ownerTeamOrProject, status',
+      okrCheckInLogs: 'id, objectiveId, keyResultId, authorEmail',
+      okrTaskLinks: 'id, taskId, objectiveId, keyResultId',
+      corporatePortfolios: 'id, globalBudget',
+      resourceAllocations: 'id, employeeId, projectId, resourceType',
+      projectCostLogs: 'id, projectId, category',
+      projectFinancials: 'projectId, isInternal',
+      projectRisks: 'id, projectId, category, status',
+      historicalTasks: 'id, projectId, executorEmail, complexity',
+      projectBudgets: 'id, projectId, period, version',
+      financialTransactions: 'id, projectId, type, status, category, paymentDate',
+      invoiceLogs: 'id, transactionId, invoiceNumber, status',
+      bankIntegrations: 'id, bankName, status',
+      bankStatementLines: 'id, integrationId, type, reconciledTransactionId',
+      budgetAlerts: 'id, projectId, category, thresholdPercent',
+      characterSheets: 'id, projectId, name, role, factionId',
+      familyRelations: 'id, projectId, personId, relatedPersonId, relationType',
+      factionSheets: 'id, projectId, name, leaderId',
+      locationSheets: 'id, projectId, name, factionId',
+      creatureSheets: 'id, projectId, name, habitatLocationId',
+      itemSheets: 'id, projectId, name, ownerCharacterId, locationId',
+      historicalEventSheets: 'id, projectId, name, locationId',
+      entityRelationLinks: 'id, projectId, sourceEntityId, targetEntityId'
+    });
+    this.version(38).stores({
+      metaNodes: 'id, type, status, title',
+      metaEdges: 'id, fromId, toId',
+      writingGoals: 'id, type, targetWords, deadline',
+      writingLogs: 'id, date',
+      writingStreak: 'id',
+      keyboardShortcuts: 'command',
+      manuscripts: 'id, status, title, folderId, category, isArchived',
+      manuscriptVersions: 'id, manuscriptId, versionNumber, createdAt',
+      pendingSaves: 'id, manuscriptId, timestamp',
+      folders: 'id, projectId, parentFolderId',
+      comments: 'id, manuscriptId, isResolved, createdAt',
+      auditLogs: 'id, type, timestamp',
+      reminders: 'id, projectId, alertTime, isRead',
+      wikiEntities: 'id, projectId, name, type, isConfidential',
+      timelines: 'id, projectId, name',
+      timelineEvents: 'id, timelineId, sortOrder',
+      geoMaps: 'id, projectId, name',
+      geoMapMarkers: 'id, mapId, type',
+      mindMaps: 'id, projectId, title',
+      mindMapNodes: 'id, mindMapId, parentId',
+      mediaAssets: 'id, projectId, category, entityName',
+      storyActs: 'id, projectId, sortOrder',
+      heroJourneyStages: 'id, projectId, characterName, stepNumber',
+      characterArcPoints: 'id, projectId, characterName, sortOrder',
+      sandboxes: 'id, projectId, name, isPromoted',
+      sandboxChanges: 'id, sandboxId, entityType',
+      projectMembers: 'id, projectId, userEmail, role',
+      sharedDocLinks: 'id, manuscriptId, token',
+      projectInviteLinks: 'id, projectId, token, isRevoked',
+      collaborationAuditLogs: 'id, projectId, userId, timestamp',
+      chatChannels: 'id, projectId, isArchived',
+      chatMessages: 'id, channelId, createdAt',
+      notificationSettings: 'id, userId, emailFrequency',
+      teamMeetings: 'id, projectId, date',
+      voiceMessages: 'id, channelId, createdAt',
+      callSessions: 'id, projectId, roomName, status',
+      calendarEvents: 'id, projectId, startDate, category',
+      memberAvailabilities: 'email, timezone, status',
+      employees: 'id, projectId, cpf, email',
+      payrollRecords: 'id, projectId, monthYear, employeeId',
+      vacationRequests: 'id, employeeId, status, type',
+      timeClockPunches: 'id, employeeId, punchTime',
+      referenceItems: 'id, projectId, type, title',
+      researchNotes: 'id, projectId, title, referenceId',
+      gameMechanics: 'id, projectId, name, type',
+      playableCharacterBalances: 'id, projectId, characterName',
+      gameRules: 'id, projectId, name, version',
+      gameLevels: 'id, projectId, name',
+      gameShops: 'id, projectId, shopName',
+      objectiveOkrs: 'id, projectId, title, ownerTeamOrProject, status',
+      okrCheckInLogs: 'id, objectiveId, keyResultId, authorEmail',
+      okrTaskLinks: 'id, taskId, objectiveId, keyResultId',
+      corporatePortfolios: 'id, globalBudget',
+      resourceAllocations: 'id, employeeId, projectId, resourceType',
+      projectCostLogs: 'id, projectId, category',
+      projectFinancials: 'projectId, isInternal',
+      projectRisks: 'id, projectId, category, status',
+      historicalTasks: 'id, projectId, executorEmail, complexity',
+      projectBudgets: 'id, projectId, period, version',
+      financialTransactions: 'id, projectId, type, status, category, paymentDate',
+      invoiceLogs: 'id, transactionId, invoiceNumber, status',
+      bankIntegrations: 'id, bankName, status',
+      bankStatementLines: 'id, integrationId, type, reconciledTransactionId',
+      budgetAlerts: 'id, projectId, category, thresholdPercent',
+      characterSheets: 'id, projectId, name, role, factionId',
+      familyRelations: 'id, projectId, personId, relatedPersonId, relationType',
+      factionSheets: 'id, projectId, name, leaderId',
+      locationSheets: 'id, projectId, name, factionId',
+      creatureSheets: 'id, projectId, name, habitatLocationId',
+      itemSheets: 'id, projectId, name, ownerCharacterId, locationId',
+      historicalEventSheets: 'id, projectId, name, locationId',
+      entityRelationLinks: 'id, projectId, sourceEntityId, targetEntityId',
+      factionWarsOrTreaties: 'id, projectId, type, title',
+      fictionalLanguages: 'id, projectId, name',
+      techOrMagicNodes: 'id, projectId, name, category',
+      religionSheets: 'id, projectId, name'
+    });
+    this.version(39).stores({ researchProjects: 'id, projectId' });
+    this.version(40).stores({ automationHistories: 'id, projectId, source, kind, status, manuscriptId, createdAt' });
   }
 }
 
