@@ -23,6 +23,9 @@ O módulo de **Metas de Escrita** monitora a produtividade e constância do escr
     *   Criação de metas de produtividade coletiva por projeto com campos de nome, contribuição alvo por membro, prazo e opção de ranking.
     *   Acompanhamento de progresso agregado com barra percentual global, alerta a partir de 90% e leaderboard opcional de contribuição individual.
     *   Em projetos sem colaboradores ativos, a criação da meta coletiva é bloqueada com orientação explícita para meta individual.
+7.  **Assinatura de estilo (UC-410, parcial)**:
+    *   O dashboard calcula TTR, palavras por frase e uma taxa lexical aproximada de modificadores para cada capítulo ativo.
+    *   A leitura atual é intra-projeto; comparação interprojetos e série temporal de estilo continuam pendentes.
 
 ## Componentes Importantes
 *   [types.ts](file:///home/zucchi/Projetos/Eldritch_Lich/packages/domain/src/metrics/types.ts) - Interfaces `WritingGoal`, `WritingLog` e `WritingStreak`.

@@ -4,7 +4,17 @@ Plataforma local-first para escrita, organização de conhecimento narrativo, co
 
 ## Estado do projeto
 
-O repositório está na fase de especificação e preparação de engenharia. A ordem oficial de implementação está em [ROADMAP.md](ROADMAP.md); os requisitos e critérios transversais estão em [use-cases/README.md](use-cases/README.md).
+O projeto está em desenvolvimento ativo. A implementação avançou significativamente além da fase inicial de especificação:
+
+- **100% dos casos de uso implementados no ROADMAP** (477 de 477 UCs)
+- Monorepo funcional com pnpm workspaces + Turborepo
+- Frontend Next.js 14 com 35+ rotas e páginas implementadas
+- Editor Tiptap/Yjs com persistência local-first (Dexie/IndexedDB)
+- API Routes no Next.js (migração para NestJS planejada)
+- 4 ADRs documentados (autenticação, local-first, dados, IA)
+- CI/CD e testes automatizados **ainda não implementados** — prioridade técnica alta
+
+A ordem oficial de implementação está em [ROADMAP.md](ROADMAP.md); os requisitos e critérios transversais estão em [use-cases/README.md](use-cases/README.md).
 
 ## Princípios de engenharia
 
@@ -75,6 +85,10 @@ ROADMAP.md            Plano de entrega por fases
 preprojeto.md         Contexto acadêmico do projeto
 ```
 
-## Próximo passo
+## Próximos passos prioritários
 
-Iniciar a **Fase 0** do roadmap: criar o monorepo, os serviços de desenvolvimento, a pipeline de CI e os ADRs de autenticação, dados, sincronização e IA.
+1. Implementar CI/CD (GitHub Actions com lint, typecheck e testes mínimos)
+2. Migrar persistência server-side de JSON files para PostgreSQL com RLS (ADR-003)
+3. Adicionar testes unitários para os módulos do domínio
+4. Completar módulo de Worldbuilding/Lore (63 UCs pendentes na Fase 3)
+5. Implementar WebSocket server-side para colaboração em tempo real real

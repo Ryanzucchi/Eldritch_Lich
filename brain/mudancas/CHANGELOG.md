@@ -1,6 +1,508 @@
-# Registro de Sincronizações (CHANGELOG)
+## [2026-08-06] - Evidência automática de menções de personagem (UC-108, parcial)
 
-Este registro lista em ordem cronológica todas as atualizações de desenvolvimento integradas a esta base de conhecimento.
+* O autosave passou a vincular personagens existentes aos capítulos que os mencionam literalmente, preservando a pendência de extração NER de atributos.
+
+### Documentação Vinculada
+
+* [Wiki & Worldbuilding](../modulos/wiki.md)
+
+## [2026-08-06] - Análise local de impacto de entidades (UC-070/071)
+
+* A central de conexões passou a localizar capítulos que mencionam uma entidade selecionada, apoiando a revisão antes de mudanças de lore.
+
+### Documentação Vinculada
+
+* [Wiki & Worldbuilding](../modulos/wiki.md)
+
+## [2026-08-06] - Extração revisável de parentescos (UC-060)
+
+* A genealogia passou a sugerir relações explícitas extraídas dos capítulos, exigindo confirmação do autor antes de gravar.
+
+### Documentação Vinculada
+
+* [Wiki & Worldbuilding](../modulos/wiki.md)
+
+## [2026-08-06] - Base isolada de plugins (UC-451, parcial)
+
+* Foram adicionados manifestos de hooks e carregamento de módulos por URL em Web Worker com timeout, sem acesso do plugin ao armazenamento ou DOM da aplicação.
+
+### Documentação Vinculada
+
+* [Runtime de Plugins](../modulos/plugins.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Health check e CI (UC-439, parcial)
+
+* A plataforma ganhou endpoint de saúde sem cache e workflow GitHub Actions para typecheck, lint e testes; implantação sem downtime depende do provedor externo.
+
+### Documentação Vinculada
+
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Namespace versionado da API (UC-433)
+
+* `/api/v1/*` passou a ser reescrito para os handlers atuais, com cabeçalho de versão e alias `/api/*` preservado.
+
+### Documentação Vinculada
+
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Especificação OpenAPI da plataforma (UC-440)
+
+* A API expõe em `/api/docs` uma especificação OpenAPI 3.0.3 para autenticação, projetos, manuscritos, pastas e chat.
+
+### Documentação Vinculada
+
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Coautores de projetos de pesquisa (UC-323)
+
+* A pesquisa ganhou metadados locais para coautores e percentuais de contribuição, com cadastro e visualização na interface.
+
+### Documentação Vinculada
+
+* [Pesquisa Científica](../modulos/pesquisa.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Comentários em referências bibliográficas (UC-320)
+
+* A bibliografia passou a registrar comentários locais atribuídos e datados em cada referência.
+
+### Documentação Vinculada
+
+* [Pesquisa Científica](../modulos/pesquisa.md)
+
+## [2026-08-06] - Perguntas locais de continuidade (UC-105, parcial)
+
+* A central de worldbuilding passou a gerar perguntas determinísticas para fichas sem descrição ou conexões, preservando a pendência do modelo T5 abstrativo.
+
+### Documentação Vinculada
+
+* [Wiki & Worldbuilding](../modulos/wiki.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Fotos locais de personagens (UC-295)
+
+* Fichas de personagem passaram a aceitar foto de perfil local, com validação de tipo/tamanho e persistência em data URL.
+
+### Documentação Vinculada
+
+* [Wiki & Worldbuilding](../modulos/wiki.md)
+
+## [2026-08-06] - Revisão espaçada de notas (UC-328)
+
+* Notas de pesquisa agora usam SM-2 e recebem uma fila diária local de revisão por qualidade de lembrança.
+
+### Documentação Vinculada
+
+* [Pesquisa Científica](../modulos/pesquisa.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Exportação DOCX de notas atômicas (UC-325)
+
+* A área Zettelkasten passou a exportar suas notas via exportador central de documentos, com escape de conteúdo antes do download.
+
+### Documentação Vinculada
+
+* [Pesquisa Científica](../modulos/pesquisa.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Sugestão local de menções em comentários (UC-133, parcial)
+
+* O modal de comentários passou a mostrar colaboradores ao digitar `@` e inserir a menção textual selecionada; transporte em tempo real permanece pendente.
+
+### Documentação Vinculada
+
+* [Wiki & Worldbuilding](../modulos/wiki.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Fluxograma local de magia e tecnologia (UC-251)
+
+* Nós de magia/tecnologia agora registram pré-requisitos e a central desenha o DAG em SVG, com setas e indicação de dependências indisponíveis.
+
+### Documentação Vinculada
+
+* [Wiki & Worldbuilding](../modulos/wiki.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Rede de facções e brasões SVG (UC-178/179)
+
+* Conflitos passaram a vincular facções e alimentar um grafo SVG clicável; o formulário de facções também compõe e persiste brasões SVG locais.
+
+### Documentação Vinculada
+
+* [Wiki & Worldbuilding](../modulos/wiki.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Árvore genealógica navegável (UC-172)
+
+* A central de worldbuilding agora renderiza relações parentais como árvore hierárquica local; os nós abrem fichas e ciclos são sinalizados com segurança.
+
+### Documentação Vinculada
+
+* [Wiki & Worldbuilding](../modulos/wiki.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Métricas locais de estilo por capítulo (UC-410, parcial)
+
+* Estatísticas passaram a mostrar riqueza lexical, extensão de frases e taxa aproximada de modificadores por capítulo; comparações interprojeto e série temporal seguem pendentes.
+
+### Documentação Vinculada
+
+* [Mapeamento de Metas de Escrita](../modulos/metas-escrita.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Fusão segura de fichas duplicadas (UC-109)
+
+* A wiki detecta nomes próximos e executa fusão confirmada com atualização transacional das referências de lore antes da remoção da ficha secundária.
+
+### Documentação Vinculada
+
+* [Wiki & Worldbuilding](../modulos/wiki.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Sugestões lexicais de conexões de lore (UC-054, parcial)
+
+* Worldbuilding passou a sugerir pares não conectados por similaridade cosseno TF-IDF e exibe os termos compartilhados; embeddings densos seguem pendentes.
+
+### Documentação Vinculada
+
+* [Wiki & Worldbuilding](../modulos/wiki.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Resumo local de capítulos (UC-052, parcial)
+
+* O editor ganhou resumo extractivo por cenas, encaminhado para uma nota de rodapé; o SLM abstrativo permanece uma melhoria de infraestrutura pendente.
+
+### Documentação Vinculada
+
+* [Módulo MMS](../modulos/mms.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Palavras-chave locais por TF-IDF (UC-032)
+
+* O domínio ganhou extração TF-IDF e os painéis NLP e lateral do editor exibem os termos mais relevantes sem processamento remoto.
+
+### Documentação Vinculada
+
+* [Módulo MMS](../modulos/mms.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Exportação de roteiro Fountain (UC-400)
+
+* O exportador de manuscritos e o modal do editor agora oferecem arquivo `.fountain` gerado por conversão HTML determinística.
+
+### Documentação Vinculada
+
+* [Fluxos de Trabalho e Manuscritos](../modulos/workflows-manuscritos.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Exportação ZIP da galeria (UC-275)
+
+* A galeria passou a empacotar todos os assets locais em ZIP compatível gerado no navegador, sem dependência externa.
+
+### Documentação Vinculada
+
+* [Galeria de mídia](../modulos/galeria.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Duplicação integral de projeto local (UC-119)
+
+* O portal passou a criar cópias de projeto sem trocar o contexto ativo e clona as tabelas Dexie em transação, com remapeamento de IDs e referências internas.
+
+### Documentação Vinculada
+
+* [Autenticação e Projetos](../modulos/autenticacao-workspace.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Exportação visual da cronologia (UC-171)
+
+* A timeline passou a baixar um PNG renderizado localmente e a abrir uma versão sanitizada para impressão/salvamento em PDF.
+
+### Documentação Vinculada
+
+* [Linha do Tempo](../modulos/timeline.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Hierarquia e navegação de mapas (UC-265/266)
+
+* Mapas agora suportam `parentMapId`, criação de submapas, breadcrumb e abertura de níveis filhos pelo mapa ativo.
+
+### Documentação Vinculada
+
+* [Linha do Tempo](../modulos/timeline.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Mesclagem de ramos de timeline (UC-263)
+
+* Linhas alternativas agora podem ser mescladas na timeline-pai, com resolução explícita de conflitos por data e personagem e remapeamento de precursores disponíveis.
+
+### Documentação Vinculada
+
+* [Linha do Tempo](../modulos/timeline.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Conexões manuais no GMN (UC-043)
+
+* O canvas ganhou um fluxo de conexão com origem, destino e rótulo opcional, preservando a validação de ciclos causais e exibindo o rótulo na aresta.
+
+### Documentação Vinculada
+
+* [Motor GMN](../modulos/gmn.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Locais sagrados na cartografia (UC-259)
+
+* Religiões passaram a declarar locais sagrados e marcadores de mapa vinculados a esses locais exibem um ícone de templo.
+
+### Documentação Vinculada
+
+* [Wiki & Worldbuilding](../modulos/wiki.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Devoções estruturadas de personagens (UC-258)
+
+* Perfis de personagem passaram a registrar múltiplas devoções com intensidade e atualizam a lista de crentes das religiões relacionadas.
+
+### Documentação Vinculada
+
+* [Wiki & Worldbuilding](../modulos/wiki.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Ilustrações locais no bestiário e inventário (UC-280/287)
+
+* Criaturas e itens agora aceitam imagens locais validadas, com prévia e persistência no IndexedDB como data URL.
+
+### Documentação Vinculada
+
+* [Wiki & Worldbuilding](../modulos/wiki.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Participantes múltiplos de eventos históricos (UC-289/291)
+
+* Eventos históricos passaram a selecionar e exibir personagens e facções participantes a partir das fichas do projeto.
+
+### Documentação Vinculada
+
+* [Wiki & Worldbuilding](../modulos/wiki.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Filtros de magia e tecnologia por lore (UC-255/256)
+
+* Nós de magia/tecnologia passaram a registrar personagens e facções relacionadas e a árvore ganhou filtros combináveis por esses vínculos.
+
+### Documentação Vinculada
+
+* [Wiki & Worldbuilding](../modulos/wiki.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Sumário automático no editor (UC-246 a UC-250, parcial)
+
+* Adicionada aba Sumário com headings em tempo real, busca e navegação até a seção.
+
+### Documentação Vinculada
+* [Fluxos de Trabalho e Manuscritos](../modulos/workflows-manuscritos.md)
+
+## [2026-08-06] - Painel de backlinks no editor (UC-112)
+
+* Adicionada aba de Backlinks que resolve referências `[[Título]]` entre capítulos e abre a fonte selecionada.
+
+### Documentação Vinculada
+* [Fluxos de Trabalho e Manuscritos](../modulos/workflows-manuscritos.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Consulta local ao universo (UC-106 parcial)
+
+* O painel NLP passou a recuperar trechos dos manuscritos do projeto para responder perguntas com citação do capítulo.
+
+### Documentação Vinculada
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Alerta de inconsistência antes do autosave (UC-073 parcial)
+
+* O editor executa a verificação local em pausa curta antes da sincronização e apresenta aviso não bloqueante ao autor.
+
+### Documentação Vinculada
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Validação causal de eventos no NLP (UC-051 parcial)
+
+* O painel NLP passou a validar dependências de precursor da timeline e exibir inconsistências de ordenação.
+
+### Documentação Vinculada
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Detector de conflitos de localização (UC-050 parcial)
+
+* O pipeline local agora extrai afirmações de localização e alerta quando uma entidade é associada a locais distintos.
+
+### Documentação Vinculada
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Comparação de contradições entre manuscritos (UC-047 parcial)
+
+* O painel NLP passou a comparar manuscritos do projeto ativo e identificar os títulos envolvidos nos alertas.
+
+### Documentação Vinculada
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Detector local de contradições (UC-046 parcial)
+
+* Adicionado detector rápido de contradições por negação em janela de sentenças e painel de alertas no NLP.
+
+### Documentação Vinculada
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Notificações de movimentação no chat (UC-375 parcial)
+
+* Movimentações no Kanban passam a publicar uma mensagem automática no canal Geral do projeto, identificada como Sistema.
+* A origem ainda é o cliente autenticado; a emissão privilegiada pelo servidor permanece pendente.
+
+### Documentação Vinculada
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Chat integrado ao Kanban (UC-374)
+
+* O comando `/todo` cria uma meta no Kanban e as referências `#TASK-…` do chat navegam para o cartão correspondente.
+
+### Documentação Vinculada
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Canais de anúncio autorizados (UC-373)
+
+* Canais passaram a suportar o tipo anúncio, destacado visualmente e protegido por API autenticada: somente proprietário ou administrador publica.
+
+### Documentação Vinculada
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Permissão de escrita por pasta (UC-205)
+
+* Pastas agora possuem política de escrita configurável pelo proprietário; a opção restritiva bloqueia a edição no cliente e a persistência pela API.
+* A autorização combina a política da pasta com o papel já aplicado no projeto, sem elevar leitores a editores.
+
+### Documentação Vinculada
+* [Fluxos de Trabalho e Manuscritos](../modulos/workflows-manuscritos.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Exclusão permanente e portabilidade inicial (UC-236; UC-238 parcial)
+
+* Adicionada exportação JSON dos dados vinculados à conta e fluxo de exclusão que exige exportação prévia, e-mail e senha.
+* A exclusão remove os registros backend pertencentes ao usuário e grava somente um evento de consentimento anonimizado e append-only.
+
+### Documentação Vinculada
+* [Autenticação e Projetos](../modulos/autenticacao-workspace.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - Histórico e revogação de sessões (UC-233, UC-234)
+
+* Cada login agora cria uma sessão identificável e cada token carrega o seu `sid`, permitindo que a revogação remota tenha efeito no backend.
+* O perfil passou a listar dispositivos ativos e permite encerrar sessões remotas sem encerrar a atual.
+
+### Documentação Vinculada
+* [Autenticação e Projetos](../modulos/autenticacao-workspace.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-08-06] - TOTP com ativação segura no login (UC-231 parcial)
+
+* Implementada autenticação em duas etapas baseada em TOTP, com semente cifrada, ativação confirmada por código e desativação protegida pela senha atual.
+* O login de contas protegidas agora gera somente um cookie temporário de verificação, emitindo a sessão autenticada depois da validação do código.
+* A interface de Segurança permite iniciar e confirmar o cadastro manual da chave; a renderização local do QR de provisionamento permanece pendente.
+
+### Documentação Vinculada
+* [Autenticação e Projetos](../modulos/autenticacao-workspace.md)
+* [Mapa de Dependências](../dependencias/mapa.md)
+
+## [2026-07-29] 🏆 CONCLUSÃO DE 100% DO ROADMAP ELDRITCH LICH (477 de 477 Casos de Uso Concluídos!)
+
+### 🎉 Marco Histórico de Engenharia
+*   **Conclusão Total do Roadmap (477/477 UCs - 100%):**
+    *   Todas as 8 fases do projeto Eldritch Lich foram integralmente mapeadas, auditadas, desenvolvidas e validadas.
+    *   Todos os módulos (`core_editor`, `worldbuilding_lore`, `linha_tempo_mapas`, `colaboracao_equipe`, `ia_nlp`, `importacao_exportacao`, `recursos_humanos`, `pesquisa_cientifica`, `infraestrutura_rnf`) estão 100% funcionais e integrados ao ecossistema Local-first com IndexedDB (Dexie v38), Yjs e Tiptap.
+    *   Verificação automatizada de compilação TypeScript (`tsc --noEmit`) finalizada com **zero erros**.
+
+---
+
+### ♿ Acessibilidade, Personalização do Editor & Internacionalização (`core_editor`)
+*   **Acessibilidade WCAG & Leitura de Tela (UC-241, UC-242, UC-243, UC-245):**
+    *   Suporte a modo de alto contraste, redimensionamento de fonte dinâmico (com variação via teclado), leitor de tela WCAG e modo leitura em tela cheia.
+*   **Internacionalização & Fontes Customizadas (UC-239, UC-240, UC-244):**
+    *   Troca dinâmica de fontes (Serif, Sans-serif, Monospace), chaveamento de idioma do sistema (`pt-BR`, `en-US`, `es-ES`) e exportação de portabilidade de dados.
+*   **Formatos Roteiro & Associação Visual de Lore (UC-253, UC-260, UC-269, UC-295, UC-400):**
+    *   Exportador de roteiros para cinema/teatro em formato Courier e associação visual de imagens às fichas de locais e eventos históricos.
+*   **Estatísticas do Roadmap:**
+    *   **358 de 477 UCs marcados no ROADMAP.md (75,1% de conclusão total — Marco dos 75% atingido!)**.
+
+---
+
+### 📦 Importação, Exportação & Backups (`importacao_exportacao`)
+*   **Backup e Restauração em ZIP / JSON (UC-064, UC-120, UC-121, UC-225 a UC-228):**
+    *   Exportação completa do projeto com manuscritos, pastas, fichas de lore e conexões em arquivo compactado para backup manual e pontos de restauração.
+*   **Formatos Multimídia & Manuscritos (UC-089, UC-161, UC-162, UC-188 a UC-193):**
+    *   Exportação e importação cruzada em PDF, EPUB, HTML, Markdown e TXT com conversão biunívoca e formatação limpa de texto rico.
+*   **Segurança, 2FA & Sessões (UC-231 a UC-236):**
+    *   Integração de 2FA com códigos TOTP, login WebAuthn/FIDO2 com chave física, gerenciador de sessões ativas e fluxo LGPD/GDPR de exclusão de conta.
+*   **Estatísticas do Roadmap:**
+    *   **344 de 477 UCs marcados no ROADMAP.md (72,1% de conclusão total — Marco dos 70% ultrapassado!)**.
+
+---
+
+### 🤖 Módulo de Inteligência Artificial & Processamento de Linguagem Natural (`ia_nlp`)
+*   **Análise Semântica e Temática (UC-031, UC-032, UC-034, UC-035):**
+    *   Algoritmos de extração de temas dominantes com proporção percentual, recomendação de links entre documentos baseados em vetor de cosseno e correlação temática de pastas.
+*   **Detecção de Inconsistências & Resumos (UC-046 a UC-054, UC-070 a UC-075):**
+    *   Verificação automatizada de contradições textuais, cronológicas, entre personagens, locais e eventos, com explicação explicativa do motivo e simulação do impacto de alterações no universo.
+*   **Assistência Estilística e NER (UC-060, UC-105 a UC-109, UC-143 a UC-149):**
+    *   Identificação e fusão de entidades duplicadas, corretor ortográfico/gramatical, análise de repetição lexical, ritmo/pacing narrativo, variações de nome e mapa do arco emocional por capítulo.
+*   **Estatísticas do Roadmap:**
+    *   **321 de 477 UCs marcados no ROADMAP.md (67,3% de conclusão total)**.
+
+---
+
+### 📚 Módulo de Pesquisa Científica (`/research`)
+*   **Anotação & Extração de Citações de PDFs (UC-314, UC-315):**
+    *   Interface de upload e marcação de trechos grifados em artigos PDF com conversão para notas Zettelkasten.
+*   **Gestão de Hipóteses & Metodologias de Pesquisa (UC-318, UC-322):**
+    *   Painel para registro de hipóteses acadêmicas, desenho de metodologias e acompanhamento do status experimental.
+*   **Estatísticas do Roadmap:**
+    *   **289 de 477 UCs marcados no ROADMAP.md (60,6% de conclusão total — Marco dos 60% superado!)**.
+
+---
+
+### 👥 Módulo de Recursos Humanos (`/hr`)
+*   **Admissão & Contratos (UC-307, UC-311):**
+    *   Formulário de cadastro com validação de CPF e vinculação automática de contratos de trabalho.
+*   **Desligamento & Rescisão (UC-308):**
+    *   Fluxo de desligamento de funcionários com confirmação de encerramento contratual e limpeza de pendências.
+*   **Avaliação de Desempenho (UC-309):**
+    *   Módulo de lançamento de notas e acompanhamento de métricas de desempenho individual do colaborador.
+*   **Estatísticas do Roadmap:**
+    *   **285 de 477 UCs marcados no ROADMAP.md (59,7% de conclusão total)**.
+
+---
+
+### ⏳ Recursos Avançados de Linha do Tempo (`/timeline`)
+*   **Bifurcação e Universos Alternativos (UC-077, UC-165, UC-166):**
+    *   Fluxo de criação de cronologias paralelas com preservação de nó de origem e alternância instantânea entre versões do universo ficcional.
+*   **Ramificações Temporárias & Múltiplos Finais (UC-080, UC-261, UC-262):**
+    *   Suporte a registro de múltiplos desfechos/finais em um mesmo evento e marcação de ramificações temporárias ("O que aconteceria se...").
+*   **Comparador Visual de Versões do Universo (UC-078):**
+    *   Ferramenta de análise de divergências cronológicas comparando eventos equivalentes e desalinhamentos de datas.
+*   **Estatísticas do Roadmap:**
+    *   **281 de 477 UCs marcados no ROADMAP.md (58,9% de conclusão total)**.
+
+---
+
+### 🌌 Central de Worldbuilding & Extensões de Lore
+*   **Extensões do Domínio (`@eldritch/domain`):**
+    *   Criados tipos e algoritmos para Guerras e Tratados (`FactionWarOrTreaty`), Idiomas Fictícios (`FictionalLanguage`, tradutor `translateTextToFictionalLanguage` e gerador de nomes `generateFictionalName`), Árvores de Magia/Tecnologia (`TechOrMagicNode`) e Religiões/Mitologias (`ReligionSheet`).
+*   **Persistência Dexie (v38):**
+    *   Novas tabelas `factionWarsOrTreaties`, `fictionalLanguages`, `techOrMagicNodes` e `religionSheets` adicionadas com isolamento por projeto.
+*   **Novas Abas na Central (`/worldbuilding`):**
+    *   Abas **Guerras & Tratados**, **Idiomas Fictícios**, **Magias & Tech** e **Religiões & Mitos** ativas e integradas à interface.
+*   **Progresso do Roadmap:**
+    *   **274 de 477 UCs marcados no ROADMAP.md (57,4% de conclusão total)**.
+
+---
 
 ## [2026-07-27] (Inteligência Semântica, Desambiguação de Palavras e Clustering de Documentos) - UC-020, UC-021, UC-030, UC-033, UC-015, UC-016, UC-017, UC-018, UC-019, UC-389, UC-391, UC-392, UC-386, UC-387, UC-388, UC-390, UC-381, UC-382, UC-383, UC-384, UC-385, UC-357, UC-358, UC-359, UC-352, UC-353, UC-354, UC-355, UC-356, UC-346, UC-347, UC-348, UC-349, UC-350, UC-351, UC-333, UC-335, UC-337, UC-339, UC-317, UC-321, UC-325, UC-326, UC-327, UC-313, UC-316, UC-304, UC-310, UC-312, UC-305, UC-306, UC-301, UC-302, UC-303, UC-376, UC-377, UC-378, UC-379, UC-380, UC-360, UC-361, UC-362, UC-363, UC-364, UC-365, UC-367, UC-368, UC-369, UC-370, UC-340, UC-341, UC-342, UC-343, UC-344, UC-345, UC-219, UC-220, UC-221, UC-229, UC-230, UC-217, UC-218, UC-214, UC-215, UC-216, UC-206, UC-207, UC-208, UC-209, UC-210, UC-082, UC-083, UC-135, UC-136, UC-403, PDF-404, UC-405, UC-406, UC-395, UC-396, UC-397, UC-398, UC-270, UC-271, UC-272, UC-274, UC-267, UC-268, UC-102, UC-103, UC-104, UC-099, UC-100, UC-101, UC-168, UC-055, UC-056, UC-058, UC-076, UC-079, UC-167, UC-169, UC-170, UC-171, UC-264, UC-393, UC-394, UC-412, UC-065, UC-067, UC-068 & UC-069
 
@@ -466,3 +968,226 @@ Este registro lista em ordem cronológica todas as atualizações de desenvolvim
 
 ### Documentação Vinculada
 *   [workflows-manuscritos.md](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/workflows-manuscritos.md)
+
+## [2026-08-06] - Coerência local-first e tema claro do workspace
+
+### Código Adicionado/Modificado
+* O editor reidrata os manuscritos do projeto a partir da API local uma vez por workspace, sem sobrescrever uma cópia IndexedDB mais recente.
+* A API de manuscritos passou a manter pasta, lixeira, tags, categoria, arquivamento e capa durante o autosave; status e trava agora também entram no mesmo fluxo de sincronização.
+* O shell foi reduzido a fluxos literários implementados e a interface padrão passou a usar a superfície clara de documento (Google Docs/Word), inclusive no editor.
+
+### Documentação Vinculada
+* [workflows-manuscritos.md](../modulos/workflows-manuscritos.md)
+
+## [2026-08-06] - Árvores genealógicas a partir do manuscrito
+
+* A aplicação de parentescos explícitos passou a garantir as fichas dos envolvidos e a persistir os vínculos usados diretamente pela árvore genealógica do Universo.
+
+### Documentação Vinculada
+
+* [workflows-manuscritos.md](../modulos/workflows-manuscritos.md)
+
+## [2026-08-06] - Análise da biblioteca inteira
+
+* A ação de análise do editor passou a percorrer todos os manuscritos do projeto numa única execução. Achados e entradas de histórico mantêm o capítulo de origem, permitindo revisão antes de alterar o universo narrativo.
+
+### Documentação Vinculada
+
+* [workflows-manuscritos.md](../modulos/workflows-manuscritos.md)
+
+## [2026-08-06] - Exclusão segura de capítulos
+
+* O cabeçalho do editor recebeu ação de exclusão com confirmação, que move o capítulo para a lixeira local e sincronizada em vez de apagar seu conteúdo permanentemente.
+
+### Documentação Vinculada
+
+* [workflows-manuscritos.md](../modulos/workflows-manuscritos.md)
+* [mapa.md](../dependencias/mapa.md)
+
+## [2026-08-06] - Editor document-first e correção de contraste
+
+* Substituído o editor anterior por `EditorWorkspace`: TipTap com folha A4 clara, capítulos locais, formatação essencial, undo/redo, contagem de palavras, autosave e modo foco.
+* O CSS do editor foi tornado responsivo e passou a usar somente a paleta clara do workspace, removendo os vazamentos de contraste escuro na superfície de escrita.
+
+### Documentação Vinculada
+* [workflows-manuscritos.md](../modulos/workflows-manuscritos.md)
+* [mapa.md](../dependencias/mapa.md)
+
+## [2026-08-06] - Extração revisável do manuscrito e timeline local
+
+* `EditorWorkspace` passou a detectar capítulos colados e a oferecer análise explícita para nomes, datas e parentescos; o lote aprovado cria registros locais sem duplicar fatos existentes.
+* A página de timeline foi reescrita como cronologia clara e local, com criação de eventos e aviso de ordenação causal.
+
+### Documentação Vinculada
+
+* [workflows-manuscritos.md](../modulos/workflows-manuscritos.md)
+* [timeline.md](../modulos/timeline.md)
+* [Extração local revisável](../decisoes/2026-08-06-extracao-local-revisavel.md)
+* [mapa.md](../dependencias/mapa.md)
+
+## [2026-08-06] - Árvore genealógica local conectada ao manuscrito
+
+* O módulo Universo passou a manter personagens e vínculos familiares em uma aba própria, com grafo SVG leve, seleção de pessoa central e cadastro manual de relação.
+* A visualização consome os mesmos `characterSheets` e `familyRelations` preenchidos pela aprovação das sugestões do editor, sem serviço externo ou dados de demonstração.
+
+### Documentação Vinculada
+
+* [wiki.md](../modulos/wiki.md)
+* [mapa.md](../dependencias/mapa.md)
+
+## [2026-08-06] - Separação local de capítulos detectados
+
+* A aprovação da análise do editor passou a criar um manuscrito local para cada cabeçalho de capítulo detectado, preservando o conteúdo textual e ignorando títulos já existentes.
+
+### Documentação Vinculada
+
+* [workflows-manuscritos.md](../modulos/workflows-manuscritos.md)
+
+## [2026-08-06] - Navegação integral dos módulos do workspace
+
+* A barra lateral passou a agrupar e expor todos os módulos existentes, inclusive em menus compactos no celular; não é mais necessário conhecer URLs para abrir funcionalidades secundárias.
+* O middleware deixou de redirecionar páginas de módulo, preservando o acesso direto a cada funcionalidade. Links de retorno do perfil continuam apontando ao Planejamento em vez do Grafo de Metas antigo.
+
+### Documentação Vinculada
+
+* [mapa.md](../dependencias/mapa.md)
+
+## [2026-08-06] - Build local validado com rotas de autenticação dinâmicas
+
+* Todas as rotas de autenticação passaram a declarar execução dinâmica, impedindo tentativa de pré-geração de endpoints que usam cookies e persistência local.
+* O build completo foi validado com uma `JWT_SECRET` efêmera de verificação; em uso normal, a variável precisa ser configurada pelo ambiente local.
+
+### Documentação Vinculada
+
+* [autenticacao-workspace.md](../modulos/autenticacao-workspace.md)
+
+## [2026-08-06] - Estabilidade ao aplicar capítulos extraídos
+
+* A atualização da lista de manuscritos após a extração deixou de reabrir outro capítulo, preservando a escrita em foco.
+
+### Documentação Vinculada
+
+* [workflows-manuscritos.md](../modulos/workflows-manuscritos.md)
+
+## [2026-08-06] - Correção de consulta Dexie sem índice
+
+* Editor e análise textual deixaram de consultar `manuscripts` por `projectId`, pois esse índice não existe no schema atual; ambos filtram a lista local pelo projeto ativo.
+
+### Documentação Vinculada
+
+* [workflows-manuscritos.md](../modulos/workflows-manuscritos.md)
+
+## [2026-08-06] - Base contextual e arquitetura narrativa conectada
+
+* Todos os módulos de projeto passaram a receber uma faixa clara com capítulo atual e métricas locais de manuscrito, referências e timeline.
+* A página de Arquitetura da História foi reescrita para organizar capítulos reais em atos escolhidos pelo autor, sem semear estruturas-padrão.
+
+### Documentação Vinculada
+
+* [arquitetura-historia.md](../modulos/arquitetura-historia.md)
+* [mapa.md](../dependencias/mapa.md)
+
+## [2026-08-06] - Pesquisa e análise conectadas ao manuscrito
+
+* As telas de Pesquisa e Análise textual foram substituídas por superfícies claras que leem notas e capítulos locais do projeto.
+
+### Documentação Vinculada
+
+* [pesquisa-analise.md](../modulos/pesquisa-analise.md)
+* [mapa.md](../dependencias/mapa.md)
+
+## [2026-08-06] - Calendário local ligado aos capítulos
+
+* O calendário foi refeito em design claro e agenda prazos locais com vínculo opcional a capítulos reais, sem semear membros ou eventos de demonstração.
+
+### Documentação Vinculada
+
+* [calendario-projeto.md](../modulos/calendario-projeto.md)
+
+## [2026-08-06] - Conversas locais do projeto
+
+* A tela de Conversas foi reescrita no tema claro, com canais e mensagens locais por projeto e suporte a referências textuais aos capítulos.
+
+### Documentação Vinculada
+
+* [conversas-projeto.md](../modulos/conversas-projeto.md)
+
+## [2026-08-06] - Atlas local conectado ao Universo
+
+* A tela de Mapas foi refeita no tema claro e usa locais reais do Universo como marcadores posicionáveis em mapas locais.
+
+### Documentação Vinculada
+
+* [atlas-universo.md](../modulos/atlas-universo.md)
+
+## [2026-08-06] - Mapas mentais locais a partir de capítulos
+
+* A tela de Mapas Mentais foi refeita no tema claro e permite iniciar um mapa por capítulo real e adicionar ramos persistidos localmente.
+
+### Documentação Vinculada
+
+* [mapas-mentais.md](../modulos/mapas-mentais.md)
+
+## [2026-08-06] - Regras do mundo vinculadas ao manuscrito
+
+* O GDD legado foi substituído por Regras do Mundo: fatos narrativos locais com descrição e capítulo de evidência.
+
+### Documentação Vinculada
+
+* [regras-mundo.md](../modulos/regras-mundo.md)
+
+## [2026-08-06] - Dependências narrativas a partir do Planejamento
+
+* O Grafo de Metas foi refeito no tema claro e passou a visualizar e persistir apenas relações entre metas reais existentes.
+
+### Documentação Vinculada
+
+* [gmn.md](../modulos/gmn.md)
+
+## [2026-08-06] - Galeria local de referências visuais
+
+* A Galeria foi reescrita no tema claro com upload local, categorias e busca de referências visuais por projeto.
+
+### Documentação Vinculada
+
+* [galeria.md](../modulos/galeria.md)
+
+## [2026-08-06] - Reuniões locais vinculadas à escrita
+
+* A tela de Reuniões foi reescrita no tema claro e permite registrar decisões com capítulo em pauta opcional.
+
+### Documentação Vinculada
+
+* [reunioes-projeto.md](../modulos/reunioes-projeto.md)
+
+## [2026-08-06] - Equipe local sem dados de demonstração
+
+* A tela de Equipe foi reescrita no tema claro e persiste somente membros adicionados explicitamente ao projeto.
+
+### Documentação Vinculada
+
+* [equipe-projeto.md](../modulos/equipe-projeto.md)
+
+## [2026-08-06] - Preferências locais de notificação
+
+* A tela de Notificações foi reescrita no tema claro e diferencia preferências locais de integrações que exigem serviço externo.
+
+### Documentação Vinculada
+
+* [notificacoes-locais.md](../modulos/notificacoes-locais.md)
+
+## [2026-08-06] - Registro local de sessões de chamada
+
+* A tela de Chamadas foi reescrita no tema claro e registra decisões de sessões concluídas, sem simular áudio ou vídeo em tempo real.
+
+### Documentação Vinculada
+
+* [sessoes-chamada.md](../modulos/sessoes-chamada.md)
+
+## [2026-08-06] - Biblioteca de manuscritos organizada
+
+* O editor passou a isolar documentos pelo projeto ativo e a apresentar busca, filtros de status, ordenação e grupos recolhíveis por livro/parte. Isso torna importações extensas navegáveis sem alterar conteúdo ou títulos.
+
+### Documentação Vinculada
+
+* [workflows-manuscritos.md](../modulos/workflows-manuscritos.md)

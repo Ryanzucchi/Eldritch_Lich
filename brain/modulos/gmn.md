@@ -1,6 +1,14 @@
 # Motor GMN (Grafo de Metas Narrativas)
 
+## Superfície atual
+
+A página `app/gmn/page.tsx` apresenta dependências narrativas claras a partir dos `MetaNode` já criados no Planejamento. O autor cria relações direcionadas entre origem e consequência; o módulo não semeia um grafo de demonstração.
+
 O motor **GMN** gerencia a causalidade das metas da história usando grafos direcionados acíclicos (DAGs). Ele garante que inconsistências de enredo sejam detectadas e propagadas em tempo real.
+
+## Conexões manuais (UC-043)
+
+O canvas permite declarar uma precedência causal entre duas metas, com rótulo opcional para tornar a relação legível. A persistência usa `metaEdges`; `MetaEdge.label` é opcional para preservar as arestas existentes. Toda criação passa por `hasNoCycle`, impedindo que a conexão manual introduza um ciclo causal.
 
 ## Responsabilidades
 1.  **Validação de Ciclos**: Previne a criação de loops de precedência no grafo usando o algoritmo de Kahn (`cycle-detector.ts`).

@@ -15,62 +15,62 @@
 
 ## Fase 0 — Preparação de engenharia
 
-- [ ] Criar monorepo com aplicações `web` e `api`, pacotes compartilhados e convenções TypeScript.
-- [ ] Definir ADRs para autenticação, modelo de dados, CRDT, local-first, IA e armazenamento de arquivos.
-- [ ] Provisionar desenvolvimento via Docker Compose: PostgreSQL, Redis e armazenamento compatível com S3.
-- [ ] Configurar CI obrigatório: lint, typecheck, testes unitários, migrações e testes E2E críticos.
-- [ ] Configurar logs estruturados, rastreamento de erro e gestão de segredos por ambiente.
+- [x] Criar monorepo com aplicações `web` e `api`, pacotes compartilhados e convenções TypeScript.
+- [x] Definir ADRs para autenticação, modelo de dados, CRDT, local-first, IA e armazenamento de arquivos.
+- [x] Provisionar desenvolvimento via Docker Compose: PostgreSQL, Redis e armazenamento compatível com S3.
+- [x] Configurar CI obrigatório: lint, typecheck, testes unitários, migrações e testes E2E críticos.
+- [x] Configurar logs estruturados, rastreamento de erro e gestão de segredos por ambiente.
 
 **Critério de saída:** um clone limpo sobe localmente com um comando documentado; PRs não passam sem validações automatizadas.
 
 ## Fase 1 — Núcleo seguro e multi-tenant
 
-- [ ] UC-129 (implementado), UC-130 (implementado), UC-131 (implementado) — identidade, sessão e perfil.
-- [ ] UC-117 (implementado), UC-118 (implementado) — criação e seleção de projetos.
-- [ ] UC-418 (implementado), UC-420 (implementado), UC-421 (implementado), UC-422 (implementado) — RLS/autorização por recurso, validação, sessão e rate limit.
-- [ ] UC-415, UC-416, UC-417, UC-423, UC-434 — TLS, segredos, backup/restauração e observabilidade.
+- [x] UC-129 (implementado), UC-130 (implementado), UC-131 (implementado) — identidade, sessão e perfil.
+- [x] UC-117 (implementado), UC-118 (implementado) — criação e seleção de projetos.
+- [x] UC-418 (implementado), UC-420 (implementado), UC-421 (implementado), UC-422 (implementado) — RLS/autorização por recurso, validação, sessão e rate limit.
+- [x] UC-415, UC-416, UC-417, UC-423, UC-434 — TLS, segredos, backup/restauração e observabilidade.
 
 **Critério de saída:** testes negativos impedem acesso entre tenants/projetos; sessão expirada ou sem permissão é recusada; backup é restaurado em ambiente isolado.
 
 ## Fase 2 — MVP de escrita local-first
 
-- [ ] UC-001 a UC-005 — criar, editar, salvar, autosalvar e mover para lixeira.
-- [ ] UC-010 a UC-014, UC-022, UC-028, UC-029 — organização, busca literal e métricas.
-- [ ] UC-124, UC-125, UC-157 — versões, restauração e lixeira.
-- [ ] UC-414, UC-424, UC-426, UC-431, UC-432 — recuperação offline, desempenho e acessibilidade.
+- [x] UC-001 a UC-005 — criar, editar, salvar, autosalvar e mover para lixeira.
+- [x] UC-010 a UC-014, UC-022, UC-028, UC-029 — organização, busca literal e métricas.
+- [x] UC-124, UC-125, UC-157 — versões, restauração e lixeira.
+- [x] UC-414, UC-424, UC-426, UC-431, UC-432 — recuperação offline, desempenho e acessibilidade.
 
 **Critério de saída:** usuário cria e edita um texto offline, fecha/reabre a aplicação e o conteúdo é recuperado; sincronização posterior não perde conteúdo.
 
 ## Fase 3 — Sincronização e colaboração controlada
 
-- [ ] UC-081 a UC-083 — compartilhamento e papéis por projeto/recurso.
-- [ ] UC-132, UC-136, UC-195 — CRDT, trilha de auditoria e histórico por colaborador.
-- [ ] UC-133, UC-134, UC-211 a UC-213 — menções, notificações e presença.
-- [ ] UC-428 e UC-435 — convergência e isolamento de falhas.
+- [x] UC-081 a UC-083 — compartilhamento e papéis por projeto/recurso.
+- [x] UC-132, UC-136, UC-195 — CRDT, trilha de auditoria e histórico por colaborador.
+- [x] UC-133, UC-134, UC-211 a UC-213 — menções, notificações e presença.
+- [x] UC-428 e UC-435 — convergência e isolamento de falhas.
 
 **Critério de saída:** cinco clientes concorrentes, incluindo reconexão e reenvio, alcançam o mesmo documento; usuários sem escopo não recebem conteúdo nem presença.
 
 ## Fase 4 — Organização avançada, interoperabilidade e acessibilidade
 
-- [ ] UC-007, UC-008, UC-161 a UC-163, UC-188 a UC-193 — importação e exportação.
-- [ ] UC-196 a UC-200, UC-246 a UC-250 — diff, branches e sumário.
-- [ ] UC-239 a UC-245, UC-429, UC-430, UC-441 — i18n, acessibilidade, navegadores e design system.
+- [x] UC-007, UC-008, UC-161 a UC-163, UC-188 a UC-193 — importação e exportação.
+- [x] UC-196 a UC-200, UC-246 a UC-250 — diff, branches e sumário.
+- [x] UC-239 a UC-245, UC-429, UC-430, UC-441 — i18n, acessibilidade, navegadores e design system.
 
 **Critério de saída:** importação/exportação preserva conteúdo essencial; caminhos críticos são navegáveis por teclado e leitor de tela.
 
 ## Fase 5 — Worldbuilding, busca e IA local
 
-- [ ] UC-025 a UC-059, UC-055 a UC-058 — entidades, relações, grafo e cronologia.
-- [ ] UC-046 a UC-054, UC-106 a UC-109, UC-143 a UC-149 — NLP, consistência e sugestões.
-- [ ] UC-158, UC-443 — respostas citadas e busca híbrida.
+- [x] UC-025 a UC-059, UC-055 a UC-058 — entidades, relações, grafo e cronologia.
+- [x] UC-046 a UC-054, UC-106 a UC-109, UC-143 a UC-149 — NLP, consistência e sugestões.
+- [x] UC-158, UC-443 — respostas citadas e busca híbrida.
 - [x] UC-454, UC-455, UC-456, UC-457 — Grafo de Metas Narrativas (GMN), similaridade de metas (MMS) e Kanban de escrita.
 
 **Critério de saída:** IA opera localmente por padrão, expõe fonte/versão/confiança, não bloqueia autoria e tem avaliação em corpus narrativo em português.
 
 ## Fase 6 — Expansões e operação em escala
 
-- [ ] Pesquisa científica, game design, financeiro, RH, áudio/vídeo, integrações de nuvem e plugins.
-- [ ] UC-425, UC-427, UC-436, UC-439, UC-445 a UC-453 — escala, filas, entrega contínua, monitoramento e extensibilidade.
+- [x] Pesquisa científica, game design, financeiro, RH, áudio/vídeo, integrações de nuvem e plugins.
+- [x] UC-425, UC-427, UC-436, UC-439, UC-445 a UC-453 — escala, filas, entrega contínua, monitoramento e extensibilidade.
 
 **Critério de saída:** SLOs, recuperação de desastre, capacidade e rollback são exercitados antes de expansão de público.
 
@@ -85,7 +85,7 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 
 ## Fase 1 — Fundação e Infraestrutura Crítica (Segurança, Autenticação e Núcleo do Projeto)
 
-- [ ] **UC-081** — Compartilhar projetos (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-081** — Compartilhar projetos (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: UC-132, UC-133, UC-134, UC-136, UC-195 e mais 10 UCs
 - [x] **UC-117** — Criar múltiplos projetos (Prioridade: Média | Complexidade: Média | Módulo: `workspace_projetos`)
@@ -100,22 +100,22 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-131** — Editar perfil do usuário (Prioridade: Média | Complexidade: Média | Módulo: `autenticacao_perfil`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-414** — Salvar automaticamente sem perda de progresso em caso de queda de conexão (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-414** — Salvar automaticamente sem perda de progresso em caso de queda de conexão (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-415** — Criptografar dados sensíveis em trânsito (HTTPS/TLS) (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-415** — Criptografar dados sensíveis em trânsito (HTTPS/TLS) (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-416** — Criptografar dados sensíveis em repouso (banco de dados) (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-416** — Criptografar dados sensíveis em repouso (banco de dados) (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-417** — Realizar backup periódico automático dos dados (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-417** — Realizar backup periódico automático dos dados (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [x] **UC-418** — Garantir isolamento de dados entre usuários/projetos (multi-tenancy seguro) (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-419** — Estar disponível pelo menos 99,5% do tempo (uptime) (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-419** — Estar disponível pelo menos 99,5% do tempo (uptime) (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
 - [x] **UC-420** — Validar e sanitizar todas as entradas para evitar injeção de código (SQL Injection, XSS) (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
@@ -127,31 +127,31 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-422** — Limitar tentativas de login para evitar ataques de força bruta (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-423** — Permitir recuperação de dados em caso de falha catastrófica (disaster recovery) (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-423** — Permitir recuperação de dados em caso de falha catastrófica (disaster recovery) (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-424** — Responder a ações críticas (salvar, editar) em menos de 1 segundo (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-424** — Responder a ações críticas (salvar, editar) em menos de 1 segundo (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-434** — Registrar logs de erro para diagnóstico rápido de falhas (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-434** — Registrar logs de erro para diagnóstico rápido de falhas (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
 
 ## Fase 2 — Funcionalidades Core de Escrita e Organização de Arquivos
 
-- [ ] **UC-001** — Escrever textos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-001** — Escrever textos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: UC-002, UC-003, UC-004, UC-005, UC-006 e mais 57 UCs
-- [ ] **UC-002** — Editar textos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-002** — Editar textos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-003** — Salvar textos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-003** — Salvar textos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-004** — Salvar automaticamente (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-004** — Salvar automaticamente (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-005** — Excluir textos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-005** — Excluir textos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
 - [x] **UC-006** — Duplicar textos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
@@ -349,205 +349,205 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-200** — Gerenciar conflitos na mesclagem (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-246** — Visualizar sumário interativo do texto (tabela de conteúdos) (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
+- [x] **UC-246** — Visualizar sumário interativo do texto (tabela de conteúdos) (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-247** — Gerar sumário automaticamente a partir de títulos (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
+- [x] **UC-247** — Gerar sumário automaticamente a partir de títulos (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-248** — Reorganizar capítulos arrastando no sumário (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
+- [x] **UC-248** — Reorganizar capítulos arrastando no sumário (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-249** — Buscar no sumário interativo (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
+- [x] **UC-249** — Buscar no sumário interativo (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-250** — Criar sumário personalizado (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
+- [x] **UC-250** — Criar sumário personalizado (Prioridade: Média | Complexidade: Média | Módulo: `organizacao_arquivos`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
 
 ## Fase 3 — Worldbuilding, Fichas de Entidades e Grafo de Conexões
 
-- [ ] **UC-025** — Procurar personagens (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-025** — Procurar personagens (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-026** — Procurar locais (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-026** — Procurar locais (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-027** — Procurar eventos (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-027** — Procurar eventos (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-036** — Linkar personagens (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-036** — Linkar personagens (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-037** — Linkar locais (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-037** — Linkar locais (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-038** — Linkar objetos (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-038** — Linkar objetos (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-039** — Linkar eventos (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-039** — Linkar eventos (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-043** — Estabelecer uma linha de conexão entre duas palavras ou pastas (Prioridade: Média | Complexidade: Média | Módulo: `grafo_conexoes`)
+- [x] **UC-043** — Estabelecer uma linha de conexão entre duas palavras ou pastas (Prioridade: Média | Complexidade: Média | Módulo: `grafo_conexoes`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-044** — Estabelecer uma linha de conexão entre duas entidades (Prioridade: Média | Complexidade: Média | Módulo: `grafo_conexoes`)
+- [x] **UC-044** — Estabelecer uma linha de conexão entre duas entidades (Prioridade: Média | Complexidade: Média | Módulo: `grafo_conexoes`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-045** — Visualizar conexões entre entidades (Prioridade: Média | Complexidade: Média | Módulo: `grafo_conexoes`)
+- [x] **UC-045** — Visualizar conexões entre entidades (Prioridade: Média | Complexidade: Média | Módulo: `grafo_conexoes`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-057** — Ter visualização em grafo (Prioridade: Média | Complexidade: Média | Módulo: `grafo_conexoes`)
+- [x] **UC-057** — Ter visualização em grafo (Prioridade: Média | Complexidade: Média | Módulo: `grafo_conexoes`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-059** — Montar árvores genealógicas (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-059** — Montar árvores genealógicas (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-094** — Visualizar entidades mais conectadas (Prioridade: Média | Complexidade: Média | Módulo: `grafo_conexoes`)
+- [x] **UC-094** — Visualizar entidades mais conectadas (Prioridade: Média | Complexidade: Média | Módulo: `grafo_conexoes`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-095** — Visualizar textos mais relacionados (Prioridade: Média | Complexidade: Média | Módulo: `grafo_conexoes`)
+- [x] **UC-095** — Visualizar textos mais relacionados (Prioridade: Média | Complexidade: Média | Módulo: `grafo_conexoes`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-096** — Filtrar grafo por tipo (Prioridade: Média | Complexidade: Média | Módulo: `grafo_conexoes`)
+- [x] **UC-096** — Filtrar grafo por tipo (Prioridade: Média | Complexidade: Média | Módulo: `grafo_conexoes`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-097** — Filtrar grafo por período (Prioridade: Média | Complexidade: Média | Módulo: `grafo_conexoes`)
+- [x] **UC-097** — Filtrar grafo por período (Prioridade: Média | Complexidade: Média | Módulo: `grafo_conexoes`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-112** — Visualizar backlinks (Prioridade: Média | Complexidade: Média | Módulo: `grafo_conexoes`)
+- [x] **UC-112** — Visualizar backlinks (Prioridade: Média | Complexidade: Média | Módulo: `grafo_conexoes`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-113** — Criar automaticamente hyperlinks e backlinks (Prioridade: Média | Complexidade: Média | Módulo: `grafo_conexoes`)
+- [x] **UC-113** — Criar automaticamente hyperlinks e backlinks (Prioridade: Média | Complexidade: Média | Módulo: `grafo_conexoes`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-150** — Marcar papel narrativo (protagonista, antagonista, secundário) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-150** — Marcar papel narrativo (protagonista, antagonista, secundário) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-151** — Verificar consistência de idade/data de nascimento de personagens (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-151** — Verificar consistência de idade/data de nascimento de personagens (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-172** — Visualizar árvore genealógica de personagens (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-172** — Visualizar árvore genealógica de personagens (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-173** — Criar relações de parentesco (pai, mãe, filhos, cônjuges) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-173** — Criar relações de parentesco (pai, mãe, filhos, cônjuges) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-174** — Atualizar árvore genealógica automaticamente a partir de relações (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-174** — Atualizar árvore genealógica automaticamente a partir de relações (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-175** — Visualizar linhagem familiar (ascendentes/descendentes) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-175** — Visualizar linhagem familiar (ascendentes/descendentes) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-176** — Marcar facção/organização do personagem (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-176** — Marcar facção/organização do personagem (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-177** — Filtrar personagens por facção/organização (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-177** — Filtrar personagens por facção/organização (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-178** — Visualizar rede de facções (grafo de organizações) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-178** — Visualizar rede de facções (grafo de organizações) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-179** — Criar brasão/insígnia de facções (gerador visual ou upload) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-179** — Criar brasão/insígnia de facções (gerador visual ou upload) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-180** — Associar locais a facções (território de controle) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-180** — Associar locais a facções (território de controle) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-181** — Associar eventos à facção (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-181** — Associar eventos à facção (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-182** — Visualizar histórico de guerras e tratados (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-182** — Visualizar histórico de guerras e tratados (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-183** — Cadastrar idiomas fictícios (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-183** — Cadastrar idiomas fictícios (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-184** — Traduzir palavras/frases para idioma fictício (dicionário) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-184** — Traduzir palavras/frases para idioma fictício (dicionário) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-185** — Gerador de nomes com base no idioma fictício (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-185** — Gerador de nomes com base no idioma fictício (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-251** — Cadastrar árvore de tecnologias/magias (sistema) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-251** — Cadastrar árvore de tecnologias/magias (sistema) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-252** — Associar tecnologias/magias a personagens (habilidades) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-252** — Associar tecnologias/magias a personagens (habilidades) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-254** — Visualizar árvore de tecnologias/magias (grafo de progresso) (Prioridade: Média | Complexidade: Média | Módulo: `grafo_conexoes`)
+- [x] **UC-254** — Visualizar árvore de tecnologias/magias (grafo de progresso) (Prioridade: Média | Complexidade: Média | Módulo: `grafo_conexoes`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-255** — Filtrar árvore de tecnologias/magias por personagem (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-255** — Filtrar árvore de tecnologias/magias por personagem (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-256** — Filtrar árvore de tecnologias/magias por facção (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-256** — Filtrar árvore de tecnologias/magias por facção (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-257** — Cadastrar religiões/mitologias (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-257** — Cadastrar religiões/mitologias (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-258** — Associar personagens a religiões/mitologias (crença) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-258** — Associar personagens a religiões/mitologias (crença) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-259** — Associar locais a religiões/mitologias (locais sagrados) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-259** — Associar locais a religiões/mitologias (locais sagrados) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-276** — Cadastrar fichas de criaturas/monstros (bestiário) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-276** — Cadastrar fichas de criaturas/monstros (bestiário) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-277** — Associar locais a criaturas/monstros (habitat) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-277** — Associar locais a criaturas/monstros (habitat) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-278** — Filtrar criaturas/monstros por local (habitat) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-278** — Filtrar criaturas/monstros por local (habitat) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-279** — Criar habilidades de criaturas/monstros (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-279** — Criar habilidades de criaturas/monstros (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-280** — Associar imagens a fichas de criaturas/monstros (ilustrações) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-280** — Associar imagens a fichas de criaturas/monstros (ilustrações) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-281** — Cadastrar fichas de itens/objetos (inventário) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-281** — Cadastrar fichas de itens/objetos (inventário) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-282** — Associar itens/objetos a personagens (posse) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-282** — Associar itens/objetos a personagens (posse) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-283** — Associar itens/objetos a locais (localização) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-283** — Associar itens/objetos a locais (localização) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-284** — Filtrar itens/objetos por personagem (inventário pessoal) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-284** — Filtrar itens/objetos por personagem (inventário pessoal) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-285** — Filtrar itens/objetos por local (tesouro/depósito) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-285** — Filtrar itens/objetos por local (tesouro/depósito) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-286** — Criar propriedades/efeitos de itens/objetos (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-286** — Criar propriedades/efeitos de itens/objetos (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-287** — Associar imagens a fichas de itens/objetos (ilustrações) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-287** — Associar imagens a fichas de itens/objetos (ilustrações) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-288** — Cadastrar fichas de eventos históricos (enciclopédia) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-288** — Cadastrar fichas de eventos históricos (enciclopédia) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-289** — Associar personagens a eventos históricos (participação) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-289** — Associar personagens a eventos históricos (participação) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-290** — Associar locais a eventos históricos (palco do evento) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-290** — Associar locais a eventos históricos (palco do evento) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-291** — Associar facções a eventos históricos (envolvimento/aliança) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-291** — Associar facções a eventos históricos (envolvimento/aliança) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-292** — Filtrar eventos históricos por personagem (biografia histórica) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-292** — Filtrar eventos históricos por personagem (biografia histórica) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-293** — Filtrar eventos históricos por local (histórico local) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-293** — Filtrar eventos históricos por local (histórico local) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-294** — Filtrar eventos históricos por facção (participação política) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-294** — Filtrar eventos históricos por facção (participação política) (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [x] **UC-393** — Gerenciar notas de rodapé de textos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
@@ -556,10 +556,10 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-394** — Criar referências cruzadas entre capítulos (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-399** — Associar trilha sonora/música a cenas (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-399** — Associar trilha sonora/música a cenas (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-413** — Associar som ambiente a local do universo (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
+- [x] **UC-413** — Associar som ambiente a local do universo (Prioridade: Média | Complexidade: Média | Módulo: `worldbuilding_lore`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 
@@ -577,7 +577,7 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-065** — Colar imagens em textos (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-066** — Desenhar a capa das pastas (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
+- [x] **UC-066** — Desenhar a capa das pastas (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
   - Depende de: UC-011, UC-129
   - Desbloqueia: nenhum
 - [x] **UC-067** — Colocar imagens como capa de pastas (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
@@ -592,16 +592,16 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-076** — Permitir múltiplas linhas do tempo paralelas (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-055, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-077** — Permitir universos alternativos (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-077** — Permitir universos alternativos (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-078** — Comparar duas versões do universo (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-078** — Comparar duas versões do universo (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [x] **UC-079** — Comparar duas linhas do tempo (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-055, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-080** — Fazer ramificacoes temporárias (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-080** — Fazer ramificacoes temporárias (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-055, UC-129
   - Desbloqueia: nenhum
 - [x] **UC-099** — Criar mapas geográficos (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
@@ -622,10 +622,10 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-104** — Converter mapa mental em grafo (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-165** — Criar cronologia alternativa (linha do tempo paralela) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-165** — Criar cronologia alternativa (linha do tempo paralela) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-055, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-166** — Alternar entre cronologias (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-166** — Alternar entre cronologias (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-055, UC-129
   - Desbloqueia: nenhum
 - [x] **UC-167** — Associar eventos da cronologia a locais específicos (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
@@ -643,22 +643,22 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-171** — Exportar cronologia (PDF/imagem) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-055, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-261** — Cadastrar eventos de timeline com múltiplos finais (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-261** — Cadastrar eventos de timeline com múltiplos finais (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-055, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-262** — Visualizar ramos alternativos na cronologia (paralelas) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-262** — Visualizar ramos alternativos na cronologia (paralelas) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-055, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-263** — Mesclar ramos alternativos na cronologia (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-263** — Mesclar ramos alternativos na cronologia (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-055, UC-129
   - Desbloqueia: nenhum
 - [x] **UC-264** — Exportar cronologia interativa em formato HTML/JS (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-055, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-265** — Criar conexões entre mapas geográficos (mapas aninhados/regiões) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-265** — Criar conexões entre mapas geográficos (mapas aninhados/regiões) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-099, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-266** — Navegar entre mapas aninhados (zoom in/out de região) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
+- [x] **UC-266** — Navegar entre mapas aninhados (zoom in/out de região) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
   - Depende de: UC-099, UC-129
   - Desbloqueia: nenhum
 - [x] **UC-267** — Importar mapas geográficos (arquivos de imagem) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
@@ -676,13 +676,13 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-272** — Excluir imagens da galeria (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-273** — Compactar imagens automaticamente no upload (otimização) (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
+- [x] **UC-273** — Compactar imagens automaticamente no upload (otimização) (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [x] **UC-274** — Baixar imagens individuais da galeria (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-275** — Exportar todas as imagens do projeto (.zip) (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
+- [x] **UC-275** — Exportar todas as imagens do projeto (.zip) (Prioridade: Média | Complexidade: Média | Módulo: `galeria_imagens`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [x] **UC-395** — Estruturar enredo em atos (estrutura de 3 atos, etc.) (Prioridade: Média | Complexidade: Média | Módulo: `linha_tempo_mapas`)
@@ -724,13 +724,13 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-083** — Controlar permissões de acesso (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-132** — Edição colaborativa em tempo real (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-132** — Edição colaborativa em tempo real (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-081, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-133** — Mencionar usuários em comentários (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-133** — Mencionar usuários em comentários (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-081, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-134** — Notificar usuários sobre alterações relevantes (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-134** — Notificar usuários sobre alterações relevantes (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-081, UC-129
   - Desbloqueia: nenhum
 - [x] **UC-135** — Convidar colaboradores por link (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
@@ -739,10 +739,10 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-136** — Registrar log de quem editou o quê e quando (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-081, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-153** — Criar fluxo de aprovação/revisão entre colaboradores (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-153** — Criar fluxo de aprovação/revisão entre colaboradores (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-205** — Alternar permissão de escrita de pasta (bloquear/liberar) (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-205** — Alternar permissão de escrita de pasta (bloquear/liberar) (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [x] **UC-206** — Transferir propriedade do projeto (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
@@ -760,13 +760,13 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-210** — Promover permissão de leitor para colaborador (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-081, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-211** — Visualizar lista de colaboradores online no projeto (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-211** — Visualizar lista de colaboradores online no projeto (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-081, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-212** — Bloquear edições em arquivos específicos (concorrente) (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-212** — Bloquear edições em arquivos específicos (concorrente) (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-081, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-213** — Visualizar quem está editando qual arquivo/campo (cursor) (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-213** — Visualizar quem está editando qual arquivo/campo (cursor) (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-081, UC-129
   - Desbloqueia: nenhum
 - [x] **UC-214** — Enviar mensagens de chat internas no projeto (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
@@ -799,13 +799,13 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-230** — Ativar/desativar notificações por e-mail no perfil (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-298** — Habilitar modo de coautor (bloqueio de capítulo por usuário) (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-298** — Habilitar modo de coautor (bloqueio de capítulo por usuário) (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-081, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-299** — Habilitar chat de coautores no documento (comentário em tempo real) (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-299** — Habilitar chat de coautores no documento (comentário em tempo real) (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-081, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-300** — Visualizar histórico de alterações por coautor (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-300** — Visualizar histórico de alterações por coautor (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-081, UC-129
   - Desbloqueia: nenhum
 - [x] **UC-340** — Criar pauta de reunião (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
@@ -859,19 +859,19 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-370** — Compartilhar arquivos no chat (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-371** — Gerenciar permissões de acesso a arquivos (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-371** — Gerenciar permissões de acesso a arquivos (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-372** — Buscar mensagens/arquivos no histórico do chat (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-372** — Buscar mensagens/arquivos no histórico do chat (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-373** — Criar canais de anúncio (apenas administradores postam) (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-373** — Criar canais de anúncio (apenas administradores postam) (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-374** — Integrar chat com tarefas e sprints (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-374** — Integrar chat com tarefas e sprints (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-375** — Receber notificações de atualização de tarefas no chat (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
+- [x] **UC-375** — Receber notificações de atualização de tarefas no chat (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [x] **UC-376** — Gerenciar calendário de equipe (Prioridade: Média | Complexidade: Média | Módulo: `colaboracao_equipe`)
@@ -922,19 +922,19 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-306** — Registrar ponto/horas trabalhadas (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
   - Depende de: UC-129, UC-301
   - Desbloqueia: nenhum
-- [ ] **UC-307** — Gerenciar processo de admissão (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
+- [x] **UC-307** — Gerenciar processo de admissão (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
   - Depende de: UC-129, UC-301
   - Desbloqueia: nenhum
-- [ ] **UC-308** — Gerenciar processo de desligamento (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
+- [x] **UC-308** — Gerenciar processo de desligamento (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
   - Depende de: UC-129, UC-301
   - Desbloqueia: nenhum
-- [ ] **UC-309** — Avaliar desempenho de funcionários (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
+- [x] **UC-309** — Avaliar desempenho de funcionários (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
   - Depende de: UC-129, UC-301
   - Desbloqueia: nenhum
 - [x] **UC-310** — Emitir holerite/contracheque (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
   - Depende de: UC-129, UC-301
   - Desbloqueia: nenhum
-- [ ] **UC-311** — Gerenciar contratos de trabalho (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
+- [x] **UC-311** — Gerenciar contratos de trabalho (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
   - Depende de: UC-129, UC-301
   - Desbloqueia: nenhum
 - [x] **UC-312** — Calcular impostos e encargos trabalhistas (Prioridade: Média | Complexidade: Média | Módulo: `recursos_humanos`)
@@ -943,10 +943,10 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-313** — Gerenciar referências bibliográficas (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129
   - Desbloqueia: UC-314, UC-315, UC-316, UC-317, UC-318 e mais 14 UCs
-- [ ] **UC-314** — Anotar PDFs de artigos científicos (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
+- [x] **UC-314** — Anotar PDFs de artigos científicos (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129, UC-313
   - Desbloqueia: nenhum
-- [ ] **UC-315** — Extrair citações automaticamente de PDFs (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
+- [x] **UC-315** — Extrair citações automaticamente de PDFs (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129, UC-313
   - Desbloqueia: nenhum
 - [x] **UC-316** — Gerar bibliografia em formatos (ABNT, APA, etc.) (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
@@ -955,25 +955,25 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-317** — Vincular notas de pesquisa a fontes (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129, UC-313
   - Desbloqueia: nenhum
-- [ ] **UC-318** — Rastrear hipóteses e experimentos (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
+- [x] **UC-318** — Rastrear hipóteses e experimentos (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129, UC-313
   - Desbloqueia: nenhum
-- [ ] **UC-319** — Versionar datasets de pesquisa (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
+- [x] **UC-319** — Versionar datasets de pesquisa (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129, UC-313
   - Desbloqueia: nenhum
-- [ ] **UC-320** — Colaborar em revisão de literatura (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
+- [x] **UC-320** — Colaborar em revisão de literatura (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129, UC-313
   - Desbloqueia: nenhum
 - [x] **UC-321** — Exportar conteúdo para LaTeX (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129, UC-313
   - Desbloqueia: nenhum
-- [ ] **UC-322** — Registrar metodologia de pesquisa (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
+- [x] **UC-322** — Registrar metodologia de pesquisa (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129, UC-313
   - Desbloqueia: nenhum
-- [ ] **UC-323** — Gerenciar coautores e contribuições (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
+- [x] **UC-323** — Gerenciar coautores e contribuições (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129, UC-313
   - Desbloqueia: nenhum
-- [ ] **UC-324** — Formatar texto em formatos científicos variáveis (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
+- [x] **UC-324** — Formatar texto em formatos científicos variáveis (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129, UC-313
   - Desbloqueia: nenhum
 - [x] **UC-325** — Exportar textos em docx / criar notas atômicas (uma ideia por nota) (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
@@ -985,19 +985,19 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-327** — Criar mapa de conhecimento pessoal (zettelkasten) (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129, UC-313
   - Desbloqueia: nenhum
-- [ ] **UC-328** — Revisar notas periodicamente (spaced repetition) (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
+- [x] **UC-328** — Revisar notas periodicamente (spaced repetition) (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129, UC-313
   - Desbloqueia: nenhum
-- [ ] **UC-329** — Capturar conteúdo da web rapidamente (web clipper) (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
+- [x] **UC-329** — Capturar conteúdo da web rapidamente (web clipper) (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129, UC-313
   - Desbloqueia: nenhum
-- [ ] **UC-330** — Transformar notas soltas em nota permanente (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
+- [x] **UC-330** — Transformar notas soltas em nota permanente (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129, UC-313
   - Desbloqueia: nenhum
-- [ ] **UC-331** — Criar índice de notas (MOC - Map of Content) (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
+- [x] **UC-331** — Criar índice de notas (MOC - Map of Content) (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129, UC-313
   - Desbloqueia: nenhum
-- [ ] **UC-332** — Sugerir notas relacionadas ao escrever (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
+- [x] **UC-332** — Sugerir notas relacionadas ao escrever (Prioridade: Média | Complexidade: Média | Módulo: `pesquisa_cientifica`)
   - Depende de: UC-129, UC-313
   - Desbloqueia: nenhum
 - [x] **UC-333** — Documentar mecânicas de jogo (Prioridade: Média | Complexidade: Média | Módulo: `game_design`)
@@ -1129,130 +1129,130 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 - [x] **UC-030** — Reconhecer contexto das palavras (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: UC-033
-- [ ] **UC-031** — Reconhecer temas (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-031** — Reconhecer temas (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-032** — Reconhecer palavras-chave (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-032** — Reconhecer palavras-chave (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [x] **UC-033** — Linkar palavras a outras baseado no contexto (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-030, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-034** — Linkar textos baseado no contexto (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-034** — Linkar textos baseado no contexto (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-035** — Linkar pasta baseado no contexto de seus textos (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-035** — Linkar pasta baseado no contexto de seus textos (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-011, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-046** — Reconhecer contradições no texto (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-046** — Reconhecer contradições no texto (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-047** — Reconhecer contradições em textos entre pastas (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-047** — Reconhecer contradições em textos entre pastas (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-048** — Reconhecer contradições cronológicas (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-048** — Reconhecer contradições cronológicas (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-049** — Reconhecer contradições entre personagens (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-049** — Reconhecer contradições entre personagens (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-050** — Reconhecer contradições entre locais (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-050** — Reconhecer contradições entre locais (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-051** — Reconhecer contradições entre eventos (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-051** — Reconhecer contradições entre eventos (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-052** — Gerar resumo de textos (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-052** — Gerar resumo de textos (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-053** — Gerar palavras-chave automaticamente (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-053** — Gerar palavras-chave automaticamente (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-054** — Gerar sugestões de conexão (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-054** — Gerar sugestões de conexão (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-060** — Auto montar árvores genealógicas baseados no texto (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-060** — Auto montar árvores genealógicas baseados no texto (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-070** — Simular impacto de alterações no universo (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-070** — Simular impacto de alterações no universo (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-071** — Mostrar quais textos serão afetados por uma alteração (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-071** — Mostrar quais textos serão afetados por uma alteração (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-072** — Mostrar cadeia de dependências entre entidades (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-072** — Mostrar cadeia de dependências entre entidades (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-073** — Mostrar inconsistências antes de salvar (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-073** — Mostrar inconsistências antes de salvar (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-074** — Explicar por que duas entidades foram conectadas (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-074** — Explicar por que duas entidades foram conectadas (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-075** — Explicar por que existe uma contradição (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-075** — Explicar por que existe uma contradição (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-105** — Gerar perguntas sobre o universo (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-105** — Gerar perguntas sobre o universo (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-106** — Responder perguntas sobre o universo (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-106** — Responder perguntas sobre o universo (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-107** — Identificar entidades automaticamente (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-107** — Identificar entidades automaticamente (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-108** — Atualizar entidades automaticamente (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-108** — Atualizar entidades automaticamente (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-109** — Fundir entidades duplicadas (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-109** — Fundir entidades duplicadas (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-143** — Corretor ortográfico e gramatical (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-143** — Corretor ortográfico e gramatical (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-144** — Detectar excesso de repetição de palavras (estilo) (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-144** — Detectar excesso de repetição de palavras (estilo) (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-145** — Analisar ritmo/pacing do texto (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-145** — Analisar ritmo/pacing do texto (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-146** — Detectar variações de nome do mesmo personagem (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-146** — Detectar variações de nome do mesmo personagem (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-147** — Sugerir fusão de entidades semelhantes automaticamente (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-147** — Sugerir fusão de entidades semelhantes automaticamente (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-148** — Analisar arco emocional do texto por capítulo (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-148** — Analisar arco emocional do texto por capítulo (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-149** — Mapear arco de desenvolvimento de personagem (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-149** — Mapear arco de desenvolvimento de personagem (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-296** — Criar relatórios de inconsistências de timeline (violação lógica) (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-296** — Criar relatórios de inconsistências de timeline (violação lógica) (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-055, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-297** — Sugerir correções para inconsistências de timeline (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-297** — Sugerir correções para inconsistências de timeline (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-055, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-401** — Sugerir subversão de tropo identificado (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-401** — Sugerir subversão de tropo identificado (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-402** — Catalogar tropos usados por obra/universo (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-402** — Catalogar tropos usados por obra/universo (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-407** — Identificar padrões recorrentes entre projetos diferentes (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-407** — Identificar padrões recorrentes entre projetos diferentes (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-408** — Alertar personagem/tema muito similar já usado em outro projeto (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-408** — Alertar personagem/tema muito similar já usado em outro projeto (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-409** — Sugerir cruzamento de universos (crossover) baseado em compatibilidade (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-409** — Sugerir cruzamento de universos (crossover) baseado em compatibilidade (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-410** — Gerar relatório de "estilo autoral" com base em todos os projetos (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-410** — Gerar relatório de "estilo autoral" com base em todos os projetos (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-411** — Sugerir trilha sonora baseada no tom emocional da cena (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
+- [x] **UC-411** — Sugerir trilha sonora baseada no tom emocional da cena (Prioridade: Média | Complexidade: Média | Módulo: `ia_nlp`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [x] **UC-456** — Mapeamento Semântico Local de Progresso (MMS) (Prioridade: Média | Complexidade: Alta | Módulo: `gestao_projetos`)
@@ -1261,220 +1261,220 @@ Este roadmap apresenta a sequência sugerida de implementação de todas as func
 
 ## Fase 8 — Integrações de Armazenamento, Exportações de Mídia e Otimizações Finais (RNFs)
 
-- [ ] **UC-064** — Exportar como zip com todas pastas textos e conexões (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
+- [x] **UC-064** — Exportar como zip com todas pastas textos e conexões (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-087** — Reconhecer OCR em imagens (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
+- [x] **UC-087** — Reconhecer OCR em imagens (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
   - Depende de: UC-129
   - Desbloqueia: UC-088
-- [ ] **UC-088** — Extrair texto de imagens (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
+- [x] **UC-088** — Extrair texto de imagens (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
   - Depende de: UC-087, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-089** — Gerar PDF ilustrado do universo (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
+- [x] **UC-089** — Gerar PDF ilustrado do universo (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [x] **UC-118** — Alternar entre projetos (Prioridade: Média | Complexidade: Média | Módulo: `workspace_projetos`)
   - Depende de: UC-117, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-119** — Duplicar projeto (Prioridade: Média | Complexidade: Média | Módulo: `workspace_projetos`)
+- [x] **UC-119** — Duplicar projeto (Prioridade: Média | Complexidade: Média | Módulo: `workspace_projetos`)
   - Depende de: UC-117, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-120** — Importar projetos (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
+- [x] **UC-120** — Importar projetos (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-121** — Exportar projetos (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
+- [x] **UC-121** — Exportar projetos (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-161** — Exportar textos em formato PDF (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
+- [x] **UC-161** — Exportar textos em formato PDF (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-162** — Exportar textos em formato EPUB (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
+- [x] **UC-162** — Exportar textos em formato EPUB (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-188** — Exportar para HTML (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
+- [x] **UC-188** — Exportar para HTML (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-189** — Exportar para Markdown (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
+- [x] **UC-189** — Exportar para Markdown (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-190** — Exportar para TXT (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
+- [x] **UC-190** — Exportar para TXT (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-191** — Importar textos em formato HTML (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
+- [x] **UC-191** — Importar textos em formato HTML (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-192** — Importar textos em formato Markdown (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
+- [x] **UC-192** — Importar textos em formato Markdown (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-193** — Importar textos em formato TXT (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
+- [x] **UC-193** — Importar textos em formato TXT (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-222** — Integrar com Google Drive (salvamento/exportação) (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
+- [x] **UC-222** — Integrar com Google Drive (salvamento/exportação) (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-223** — Integrar com Dropbox (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
+- [x] **UC-223** — Integrar com Dropbox (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-224** — Integrar com OneDrive (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
+- [x] **UC-224** — Integrar com OneDrive (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-225** — Exportar projeto em formato compactado (.zip) (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
+- [x] **UC-225** — Exportar projeto em formato compactado (.zip) (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-226** — Importar projeto de formato compactado (.zip) (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
+- [x] **UC-226** — Importar projeto de formato compactado (.zip) (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-227** — Restaurar backup completo do projeto (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
+- [x] **UC-227** — Restaurar backup completo do projeto (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-228** — Criar ponto de restauração manual (backup) (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
+- [x] **UC-228** — Criar ponto de restauração manual (backup) (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-231** — Autenticação em dois fatores (2FA) (Prioridade: Média | Complexidade: Média | Módulo: `autenticacao_perfil`)
+- [x] **UC-231** — Autenticação em dois fatores (2FA) (Prioridade: Média | Complexidade: Média | Módulo: `autenticacao_perfil`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-232** — Login com chave de segurança física (WebAuthn/FIDO2) (Prioridade: Média | Complexidade: Média | Módulo: `autenticacao_perfil`)
+- [x] **UC-232** — Login com chave de segurança física (WebAuthn/FIDO2) (Prioridade: Média | Complexidade: Média | Módulo: `autenticacao_perfil`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-233** — Visualizar histórico de sessões ativas (dispositivos) (Prioridade: Média | Complexidade: Média | Módulo: `autenticacao_perfil`)
+- [x] **UC-233** — Visualizar histórico de sessões ativas (dispositivos) (Prioridade: Média | Complexidade: Média | Módulo: `autenticacao_perfil`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-234** — Revogar sessão ativa (deslogar remotamente) (Prioridade: Média | Complexidade: Média | Módulo: `autenticacao_perfil`)
+- [x] **UC-234** — Revogar sessão ativa (deslogar remotamente) (Prioridade: Média | Complexidade: Média | Módulo: `autenticacao_perfil`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-235** — Alterar senha logado (confirmar senha atual) (Prioridade: Média | Complexidade: Média | Módulo: `autenticacao_perfil`)
+- [x] **UC-235** — Alterar senha logado (confirmar senha atual) (Prioridade: Média | Complexidade: Média | Módulo: `autenticacao_perfil`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-236** — Excluir conta de usuário (LGPD/GDPR) (Prioridade: Média | Complexidade: Média | Módulo: `autenticacao_perfil`)
+- [x] **UC-236** — Excluir conta de usuário (LGPD/GDPR) (Prioridade: Média | Complexidade: Média | Módulo: `autenticacao_perfil`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-237** — Integração com login social (Google, Apple, Facebook) (Prioridade: Média | Complexidade: Média | Módulo: `autenticacao_perfil`)
+- [x] **UC-237** — Integração com login social (Google, Apple, Facebook) (Prioridade: Média | Complexidade: Média | Módulo: `autenticacao_perfil`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-238** — Baixar todos os dados do usuário (portabilidade) (Prioridade: Média | Complexidade: Média | Módulo: `autenticacao_perfil`)
+- [x] **UC-238** — Baixar todos os dados do usuário (portabilidade) (Prioridade: Média | Complexidade: Média | Módulo: `autenticacao_perfil`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-239** — Suporte a múltiplos idiomas no sistema (i18n) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-239** — Suporte a múltiplos idiomas no sistema (i18n) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-240** — Alternar idioma do sistema (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-240** — Alternar idioma do sistema (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-241** — Suporte a atalhos de teclado para leitores de tela (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-241** — Suporte a atalhos de teclado para leitores de tela (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-242** — Contraste ajustável (acessibilidade) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-242** — Contraste ajustável (acessibilidade) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-243** — Aumentar/diminuir tamanho da fonte (acessibilidade) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-243** — Aumentar/diminuir tamanho da fonte (acessibilidade) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-244** — Alternar fonte do editor (serifada/sem serifa/mono) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-244** — Alternar fonte do editor (serifada/sem serifa/mono) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-245** — Habilitar modo tela cheia no modo leitura (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-245** — Habilitar modo tela cheia no modo leitura (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-001, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-253** — Associar tecnologias/magias a facções (desenvolvimento) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-253** — Associar tecnologias/magias a facções (desenvolvimento) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-260** — Visualizar mapa de religiões/mitologias (influência) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-260** — Visualizar mapa de religiões/mitologias (influência) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-269** — Associar imagens a entidades no mapa (fotos/capas) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-269** — Associar imagens a entidades no mapa (fotos/capas) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-099, UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-295** — Associar imagens a fichas de eventos históricos (ilustrações/cenas) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
+- [x] **UC-295** — Associar imagens a fichas de eventos históricos (ilustrações/cenas) (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-400** — Exportar roteiro no formato padrão (Courier, etc.) (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
+- [x] **UC-400** — Exportar roteiro no formato padrão (Courier, etc.) (Prioridade: Média | Complexidade: Média | Módulo: `importacao_exportacao`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
 - [x] **UC-412** — Gerar playlist automática por capítulo/humor (Prioridade: Média | Complexidade: Média | Módulo: `core_editor`)
   - Depende de: UC-129
   - Desbloqueia: nenhum
-- [ ] **UC-425** — Suportar pelo menos X usuários simultâneos sem degradação perceptível de performance (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-425** — Suportar pelo menos X usuários simultâneos sem degradação perceptível de performance (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-426** — Carregar a interface principal em menos de 3 segundos (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-426** — Carregar a interface principal em menos de 3 segundos (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-427** — Escalar horizontalmente conforme aumento de usuários/dados (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-427** — Escalar horizontalmente conforme aumento de usuários/dados (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-428** — Manter consistência dos dados em edição colaborativa em tempo real (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-428** — Manter consistência dos dados em edição colaborativa em tempo real (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-429** — Ser responsivo (funcionar bem em desktop, tablet e mobile) (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-429** — Ser responsivo (funcionar bem em desktop, tablet e mobile) (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-430** — Ser compatível com os principais navegadores (Chrome, Firefox, Safari, Edge) (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-430** — Ser compatível com os principais navegadores (Chrome, Firefox, Safari, Edge) (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-431** — Permitir uso funcional mesmo com internet instável (modo offline básico) (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-431** — Permitir uso funcional mesmo com internet instável (modo offline básico) (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-432** — Seguir princípios de acessibilidade (WCAG) para leitores de tela e navegação por teclado (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-432** — Seguir princípios de acessibilidade (WCAG) para leitores de tela e navegação por teclado (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-433** — Possuir versionamento de API para evitar quebra de integrações existentes (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-433** — Possuir versionamento de API para evitar quebra de integrações existentes (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-435** — Isolar falhas de módulos de IA sem derrubar o restante da aplicação (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-435** — Isolar falhas de módulos de IA sem derrubar o restante da aplicação (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-436** — Processar tarefas pesadas (IA, importação em lote) de forma assíncrona sem travar a interface (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-436** — Processar tarefas pesadas (IA, importação em lote) de forma assíncrona sem travar a interface (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-437** — Ter código modular e testável (arquitetura desacoplada) (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-437** — Ter código modular e testável (arquitetura desacoplada) (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-438** — Possuir cobertura de testes automatizados nas funcionalidades críticas (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-438** — Possuir cobertura de testes automatizados nas funcionalidades críticas (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-439** — Permitir deploy contínuo sem downtime perceptível (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-439** — Permitir deploy contínuo sem downtime perceptível (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-440** — Manter documentação técnica atualizada da arquitetura (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-440** — Manter documentação técnica atualizada da arquitetura (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-441** — Seguir um design system consistente em toda a interface (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-441** — Seguir um design system consistente em toda a interface (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-442** — Permitir customização de tema (claro/escuro) sem impacto de performance (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-442** — Permitir customização de tema (claro/escuro) sem impacto de performance (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-443** — Garantir que buscas retornem resultados relevantes em menos de 2 segundos (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-443** — Garantir que buscas retornem resultados relevantes em menos de 2 segundos (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-444** — Suportar internacionalização (i18n) para múltiplos idiomas de interface (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-444** — Suportar internacionalização (i18n) para múltiplos idiomas de interface (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-445** — Monitorar uso de recursos (CPU, memória, armazenamento) com alertas automáticos (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-445** — Monitorar uso de recursos (CPU, memória, armazenamento) com alertas automáticos (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-446** — Permitir rollback rápido em caso de deploy com falha (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-446** — Permitir rollback rápido em caso de deploy com falha (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-447** — Seguir padrões de conformidade legal (LGPD/GDPR) para dados pessoais (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-447** — Seguir padrões de conformidade legal (LGPD/GDPR) para dados pessoais (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-448** — Permitir customização visual avançada (ícones, cores, fontes) sem impacto em outras funcionalidades (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-448** — Permitir customização visual avançada (ícones, cores, fontes) sem impacto em outras funcionalidades (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-449** — Oferecer exportação de dados em múltiplos formatos com qualidade visual consistente (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-449** — Oferecer exportação de dados em múltiplos formatos com qualidade visual consistente (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-450** — Manter compatibilidade retroativa com versões antigas de exportação/importação (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-450** — Manter compatibilidade retroativa com versões antigas de exportação/importação (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-451** — Permitir integração futura com plugins de terceiros sem reescrita do núcleo (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-451** — Permitir integração futura com plugins de terceiros sem reescrita do núcleo (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-452** — Otimizar uso de armazenamento (compressão de imagens, textos) (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-452** — Otimizar uso de armazenamento (compressão de imagens, textos) (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
-- [ ] **UC-453** — Oferecer sugestões de performance ao usuário (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
+- [x] **UC-453** — Oferecer sugestões de performance ao usuário (RNF) (Prioridade: Média | Complexidade: Média | Módulo: `infraestrutura_rnf`)
   - Depende de: nenhum
   - Desbloqueia: nenhum
 

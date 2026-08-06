@@ -2,6 +2,14 @@
 
 O **MMS** é o pipeline de NLP local responsável por indexar o manuscrito do autor em tempo real e atualizar as metas do GMN sem vazamento de propriedade intelectual.
 
+## Palavras-chave locais (UC-032)
+
+`nlp/keywords.ts` calcula TF-IDF sem rede nem modelo externo. No editor, o capítulo atual é comparado ao corpus de manuscritos do projeto, o que evita que frequência pura trate palavras comuns do livro como termos distintivos.
+
+## Resumo de capítulo (UC-052, fallback)
+
+`nlp/summary.ts` divide o HTML em cenas e seleciona frases informativas por bloco, preenchendo uma nota de rodapé no editor. É um fallback extractivo local; a camada abstrativa com SLM continua pendente de instalação do modelo quantizado.
+
 ## Responsabilidades
 1.  **Geração de Embeddings**: Vetorização local usando o modelo `multilingual-e5-small` (carregado via Transformers.js no navegador).
 2.  **Cálculo de Similaridade**: Computa a similaridade de cosseno ($S_{cos}$) entre o parágrafo digitado e as descrições de metas ativas.
