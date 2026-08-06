@@ -25,7 +25,7 @@ interface AppContextType {
   aiLoadStatus: string;
   loadAI: () => Promise<void>;
   selectProject: (project: Project) => void;
-  createProject: (name: string, genre: string, visibility: 'PRIVADO' | 'COMPARTILHADO') => Promise<Project>;
+  createProject: (name: string, genre: string, visibility: 'PRIVADO' | 'COMPARTILHADO', options?: { activate?: boolean }) => Promise<Project>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
   hideSidebar: boolean;
@@ -131,7 +131,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const createProject = async (name: string, genre: string, visibility: 'PRIVADO' | 'COMPARTILHADO') => {
+  const createProject = async (name: string, genre: string, visibility: 'PRIVADO' | 'COMPARTILHADO', options: { activate?: boolean } = {}) => {
     const res = await fetch('/api/projects', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -145,6 +145,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const newProj = data.project;
     setProjects(prev => [...prev, newProj]);
+    if (options.activate === false) return newProj;
     localStorage.setItem('activeProjectId', newProj.id);
     setActiveProject(newProj);
     if (typeof window !== 'undefined') {

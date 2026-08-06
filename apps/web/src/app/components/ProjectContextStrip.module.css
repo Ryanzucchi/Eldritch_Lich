@@ -1,0 +1,4 @@
+.strip { display: flex; align-items: center; gap: 22px; min-height: 58px; padding: 10px 32px; border-bottom: 1px solid var(--line); background: #fff; color: var(--ink); }
+.current { min-width: 190px; display: grid; gap: 2px; }.current span { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }.current strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+.metrics { display: flex; flex: 1; gap: 16px; color: var(--muted); font-size: 12px; }.metrics strong { color: var(--ink); }.strip > a { color: var(--blue); font-size: 13px; font-weight: 700; white-space: nowrap; }
+@media (max-width: 760px) { .strip { padding: 10px 16px; gap: 12px; overflow-x: auto; }.metrics { flex: none; }.metrics span { white-space: nowrap; }.current { min-width: 140px; }.strip > a { display: none; } }

@@ -1,0 +1,12 @@
+.timeline-page { max-width: 1060px; }
+.timeline-toolbar { display: flex; align-items: flex-end; gap: 12px; padding: 16px; margin: 20px 0; }
+.timeline-selector { display: grid; gap: 5px; min-width: 220px; }
+.timeline-selector label, .timeline-event-form label { color: #3c4043; font-size: 12px; font-weight: 700; }
+.timeline-selector select, .timeline-create input, .timeline-event-form input, .timeline-event-form textarea { width: 100%; padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); font: inherit; }
+.timeline-create { display: flex; flex: 1; gap: 8px; }
+.timeline-event-form { display: grid; grid-template-columns: 1fr 180px; gap: 14px; padding: 20px; margin-bottom: 20px; }
+.timeline-event-form label { display: grid; gap: 6px; }.timeline-event-form label:last-of-type, .timeline-event-form > div { grid-column: 1 / -1; }
+.timeline-warnings { margin: 18px 0; padding: 14px 16px; border-left: 4px solid #f9ab00; background: #fff8e1; color: #5f4300; }.timeline-warnings p { margin: 6px 0 0; font-size: 13px; }
+.timeline-track { position: relative; padding: 10px 0 26px 42px; }.timeline-track::before { content: ''; position: absolute; top: 0; bottom: 0; left: 17px; width: 2px; background: #c6dafc; }
+.timeline-event { position: relative; padding: 0 0 22px; }.timeline-marker { position: absolute; left: -42px; top: 17px; width: 36px; height: 36px; display: grid; place-items: center; border: 3px solid #fff; border-radius: 50%; background: var(--blue); color: #fff; box-shadow: 0 0 0 1px #8ab4f8; font-size: 12px; font-weight: 700; }.timeline-event-card { padding: 18px 20px; border: 1px solid var(--line); border-radius: 9px; background: #fff; box-shadow: var(--shadow); }.timeline-event-card time { color: #174ea6; font-size: 12px; font-weight: 700; text-transform: uppercase; }.timeline-event-card h2 { margin: 5px 0; color: var(--ink); font-size: 18px; }.timeline-event-card p { margin: 0; color: var(--muted); line-height: 1.55; }.timeline-event-card button { margin-top: 12px; padding: 0; border: 0; background: transparent; color: #c5221f; font: inherit; font-size: 12px; cursor: pointer; }.timeline-empty { margin: 60px 0; }
+@media (max-width: 700px) { .timeline-toolbar { align-items: stretch; flex-direction: column; }.timeline-create { width: 100%; }.timeline-event-form { grid-template-columns: 1fr; }.timeline-event-form label:last-of-type, .timeline-event-form > div { grid-column: auto; } }

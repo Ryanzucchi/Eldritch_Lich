@@ -1,0 +1,9 @@
+.sidebar { max-height: 100vh; overflow-y: auto; }
+.moduleGroups { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; display: grid; gap: 4px; }
+.moduleGroup summary { padding: 8px 10px; color: var(--muted); cursor: pointer; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.moduleGroup summary:hover { color: var(--ink); background: #f1f3f4; border-radius: 6px; }
+.moduleGroup > div { display: grid; gap: 2px; padding: 0 0 5px; }
+.moduleGroup a { display: block; padding: 7px 10px 7px 20px; border-radius: 6px; color: #3c4043; font-size: 13px; }
+.moduleGroup a:hover { background: #f1f3f4; color: var(--ink); }
+.moduleGroup a:global(.is-active) { background: var(--blue-soft); color: #174ea6; font-weight: 700; }
+@media (max-width: 760px) { .sidebar { max-height: none; overflow: visible; }.moduleGroups { display: flex; flex-shrink: 0; margin: 0; padding: 0; border: 0; }.moduleGroup { flex-shrink: 0; }.moduleGroup summary { white-space: nowrap; }.moduleGroup > div { position: absolute; z-index: 20; min-width: 190px; padding: 6px; border: 1px solid var(--line); border-radius: 8px; background: #fff; box-shadow: var(--shadow); }.moduleGroup:not([open]) > div { display: none; } }
