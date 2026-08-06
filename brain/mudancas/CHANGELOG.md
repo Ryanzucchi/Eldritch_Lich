@@ -1191,3 +1191,12 @@
 ### Documentação Vinculada
 
 * [workflows-manuscritos.md](../modulos/workflows-manuscritos.md)
+
+## [2026-08-06] - Auditoria estrutural e exportação local
+
+* A nova tela de Auditoria de dados exporta todas as tabelas da instância IndexedDB do projeto ativo e verifica referências órfãs, duplicidades, genealogias, ordem cronológica, histórico automático e HTML importado escapado.
+* A fidelidade literária continua sendo uma revisão comparativa: o JSON exportado fornece o registro completo para confronto com o manuscrito-fonte, sem alterar dados automaticamente.
+
+### Documentação Vinculada
+
+* [auditoria-dados.md](../modulos/auditoria-dados.md)

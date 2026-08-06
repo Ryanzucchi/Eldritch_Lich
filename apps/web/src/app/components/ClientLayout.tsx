@@ -17,7 +17,7 @@ const WORKSPACE_LINKS = [
 
 const MODULE_GROUPS = [
   { label: 'Construção da história', links: [{ href: '/story', label: 'Arquitetura da história' }, { href: '/gdd', label: 'Documento de design' }, { href: '/gmn', label: 'Grafo de metas' }, { href: '/mindmaps', label: 'Mapas mentais' }, { href: '/maps', label: 'Mapas do mundo' }] },
-  { label: 'Pesquisa e análise', links: [{ href: '/wiki', label: 'Wiki e relações' }, { href: '/research', label: 'Pesquisa' }, { href: '/nlp', label: 'Análise textual' }, { href: '/semantics', label: 'Semântica' }, { href: '/gallery', label: 'Galeria' }] },
+  { label: 'Pesquisa e análise', links: [{ href: '/wiki', label: 'Wiki e relações' }, { href: '/research', label: 'Pesquisa' }, { href: '/nlp', label: 'Análise textual' }, { href: '/semantics', label: 'Semântica' }, { href: '/audit', label: 'Auditoria de dados' }, { href: '/gallery', label: 'Galeria' }] },
   { label: 'Colaboração', links: [{ href: '/calendar', label: 'Calendário' }, { href: '/chat', label: 'Conversas' }, { href: '/calls', label: 'Chamadas' }, { href: '/meetings', label: 'Reuniões' }, { href: '/team', label: 'Equipe' }, { href: '/settings/notifications', label: 'Notificações' }] },
   { label: 'Administração', links: [{ href: '/finance', label: 'Finanças' }, { href: '/finance-automation', label: 'Automação financeira' }, { href: '/finance-reporting', label: 'Relatórios financeiros' }, { href: '/forecast', label: 'Previsões' }, { href: '/hr', label: 'Pessoas' }, { href: '/okrs', label: 'Objetivos' }, { href: '/portfolio', label: 'Portfólio' }, { href: '/sandbox', label: 'Laboratório' }] },
 ];

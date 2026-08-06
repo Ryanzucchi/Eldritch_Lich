@@ -97,6 +97,8 @@ graph TD
     ManuscriptEditor[app/editor/EditorComponent.tsx] -->|Sugere menções em comentários| CollaborationDomain
     ResearchPage[app/research/page.tsx] -->|Lê e grava notas e capítulos do projeto| DexieSchema
     AnalysisPage[app/nlp/page.tsx] -->|Calcula métricas determinísticas do capítulo selecionado| DexieSchema
+    AuditPage[app/audit/page.tsx] -->|Exporta dump completo e apresenta achados| ProjectAudit[services/project-audit.ts]
+    ProjectAudit -->|Lê todas as tabelas da base local do projeto| DexieSchema
     CalendarPage[app/calendar/page.tsx] -->|Agenda eventos e lê capítulos vinculáveis| DexieSchema
     ChatPage[app/chat/page.tsx] -->|Lê e grava canais e mensagens locais| DexieSchema
     MapsPage[app/maps/page.tsx] -->|Lê locais e persiste mapas e marcadores| DexieSchema

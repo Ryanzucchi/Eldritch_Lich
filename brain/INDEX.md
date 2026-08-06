@@ -12,6 +12,7 @@ Bem-vindo à base de conhecimento ativa e atualizada do projeto **Eldritch Lich*
 *   [Linha do Tempo](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/timeline.md) - Cronologias, ramos alternativos e mesclagem causal.
 *   [Arquitetura da História](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/arquitetura-historia.md) - Atos e arcos conectados aos capítulos existentes.
 *   [Pesquisa e Análise](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/pesquisa-analise.md) - Notas e leitura editorial de capítulos locais.
+*   [Auditoria de Dados](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/auditoria-dados.md) - Exportação completa do IndexedDB e verificação estrutural por projeto.
 *   [Calendário do Projeto](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/calendario-projeto.md) - Prazos e encontros ligados aos capítulos.
 *   [Conversas do Projeto](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/conversas-projeto.md) - Canais e mensagens locais.
 *   [Atlas do Universo](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/atlas-universo.md) - Mapas e locais do projeto.
