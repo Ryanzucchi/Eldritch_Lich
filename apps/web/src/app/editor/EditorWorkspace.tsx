@@ -9,7 +9,7 @@ import StarterKit from '@tiptap/starter-kit';
 import { Manuscript } from '@eldritch/domain';
 import { db, ExtractionCandidate } from '../../db/schema';
 import { useApp } from '../../context/AppContext';
-import { EXTRACTION_HEURISTIC_VERSION, ExtractedSuggestion, extractManuscriptSuggestions, normalizeImportedManuscript, prepareManuscriptForExtraction, toTimelineEvent } from '../../services/manuscript-extraction';
+import { EXTRACTION_HEURISTIC_VERSION, ExtractedSuggestion, extractionSourceHash, extractManuscriptSuggestions, extractManuscriptSuggestionsWithLocalTools, normalizeImportedManuscript, prepareManuscriptForExtraction, toTimelineEvent } from '../../services/manuscript-extraction';
 
 const emptyDocument = '<p></p>';
 const textAsDocument = (text: string) => text.split(/\n{2,}/).map(paragraph => paragraph.trim()).filter(Boolean).map(paragraph => `<p>${paragraph.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>`).join('') || emptyDocument;
@@ -22,7 +22,8 @@ const suggestionTypeLabel = (suggestion: ExtractedSuggestion) => suggestion.kind
 
 type DocumentStatusFilter = 'TODOS' | 'RASCUNHO' | 'REVISAO' | 'FINALIZADO';
 type DocumentSort = 'ESTRUTURA' | 'RECENTES' | 'TITULO';
-type ReviewedSuggestion = ExtractedSuggestion & { sourceManuscriptId?: string; sourceManuscriptTitle?: string };
+type AnalysisMode = 'REBUILD' | 'ADD';
+type ReviewedSuggestion = ExtractedSuggestion & { sourceManuscriptId?: string; sourceManuscriptTitle?: string; sourceHash?: string };
 
 const romanToNumber = (value: string) => {
   const symbols: Record<string, number> = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
@@ -56,6 +57,8 @@ export default function EditorWorkspace() {
   const [wordCount, setWordCount] = useState(0);
   const [suggestions, setSuggestions] = useState<ReviewedSuggestion[]>([]);
   const [selectedSuggestionFingerprints, setSelectedSuggestionFingerprints] = useState<Set<string>>(new Set());
+  const [isAnalysisModeOpen, setIsAnalysisModeOpen] = useState(false);
+  const [activeAnalysisRunId, setActiveAnalysisRunId] = useState<string | null>(null);
   const [analysisNotices, setAnalysisNotices] = useState<string[]>([]);
   const [isApplyingSuggestions, setIsApplyingSuggestions] = useState(false);
   const [isAnalyzingManuscripts, setIsAnalyzingManuscripts] = useState(false);
@@ -76,7 +79,7 @@ export default function EditorWorkspace() {
           window.setTimeout(() => {
             const next = extractManuscriptSuggestions(pastedText);
             setSuggestions(next);
-            setSelectedSuggestionFingerprints(new Set(next.map(item => item.fingerprint)));
+            setSelectedSuggestionFingerprints(new Set());
           }, 0);
         }
         return false;
@@ -201,37 +204,60 @@ export default function EditorWorkspace() {
     } catch { setSaveState('offline'); }
   };
 
-  const analyzeProjectManuscripts = async () => {
+  const analyzeProjectManuscripts = async (mode: AnalysisMode) => {
     if (!activeProject) return;
     setIsAnalyzingManuscripts(true);
     try {
       const notices: string[] = [];
-      const extracted = documents.flatMap(document => {
+      const runId = crypto.randomUUID();
+      const canonicalTypesByName = new Map<string, Set<string>>();
+      for (const entity of (await db.wikiEntities.toArray()).filter(entity => entity.projectId === activeProject.id)) {
+        const name = entity.name.trim().toLocaleLowerCase('pt-BR');
+        canonicalTypesByName.set(name, new Set([...(canonicalTypesByName.get(name) ?? []), entity.type]));
+      }
+      const extractedByDocument = await Promise.all(documents.map(async document => {
         const content = document.id === activeDocument?.id && editor ? editor.getHTML() : document.content;
         const readiness = prepareManuscriptForExtraction(content);
         if (!readiness.ready) {
           notices.push(`${document.title}: ${readiness.reason}`);
-          return [];
+          return [] as ReviewedSuggestion[];
         }
-        const isFrontMatter = /^(pref[aá]cio|pr[oó]logo)$/i.test(document.title.trim());
-        return extractManuscriptSuggestions(content, { manuscriptId: document.id, isNarrativeSource: !isFrontMatter }).map(suggestion => ({ ...suggestion, sourceManuscriptId: document.id, sourceManuscriptTitle: document.title }));
+        const isFrontMatter = /^(pref[aá]cio|pr[oó]logo)\b/i.test(document.title.trim());
+        const isChronicle = /ap[êe]ndice|anais|cronologia/i.test(document.title);
+        const sourceHash = extractionSourceHash(content);
+        const result = await extractManuscriptSuggestionsWithLocalTools(content, { manuscriptId: document.id, isNarrativeSource: !isFrontMatter, sourceKind: isFrontMatter ? 'EDITORIAL' : isChronicle ? 'CHRONICLE' : 'NARRATIVE' });
+        return result.map(suggestion => ({ ...suggestion, sourceManuscriptId: document.id, sourceManuscriptTitle: document.title, sourceHash }));
+      }));
+      const extracted = extractedByDocument.flat().filter(suggestion => {
+        if (suggestion.kind !== 'entity') return true;
+        const canonicalTypes = canonicalTypesByName.get(suggestion.name.trim().toLocaleLowerCase('pt-BR'));
+        if (!canonicalTypes || (canonicalTypes.size === 1 && canonicalTypes.has(suggestion.type))) return true;
+        notices.push(`${suggestion.sourceManuscriptTitle}: “${suggestion.name}” conflita com o tipo canônico existente (${[...canonicalTypes].join(', ')}); mantido fora da aplicação automática.`);
+        return false;
       });
       const next: ReviewedSuggestion[] = [];
       const now = new Date().toISOString();
       const candidates: ExtractionCandidate[] = [];
+      const previousCandidates = (await db.extractionCandidates.toArray()).filter(candidate => candidate.projectId === activeProject.id);
+      if (mode === 'REBUILD') {
+        const superseded = previousCandidates.filter(candidate => candidate.status === 'PENDING' || candidate.status === 'APPROVED');
+        if (superseded.length) await db.extractionCandidates.bulkPut(superseded.map(candidate => ({ ...candidate, status: 'SUPERSEDED' as const, decidedAt: now })));
+      }
       for (const suggestion of extracted) {
-        const existing = await db.extractionCandidates.where('fingerprint').equals(suggestion.fingerprint).first();
-        if (existing) continue;
-        candidates.push({ id: crypto.randomUUID(), projectId: activeProject.id, manuscriptId: suggestion.sourceManuscriptId, fingerprint: suggestion.fingerprint, kind: suggestion.kind, confidence: suggestion.confidence, heuristicVersion: EXTRACTION_HEURISTIC_VERSION, payload: JSON.stringify(suggestion), status: 'PENDING', createdAt: now });
+        const sourceHash = suggestion.sourceHash ?? '';
+        const existing = previousCandidates.some(candidate => candidate.baseFingerprint === suggestion.fingerprint && candidate.sourceHash === sourceHash && candidate.heuristicVersion === EXTRACTION_HEURISTIC_VERSION && candidate.status !== 'SUPERSEDED');
+        if (mode === 'ADD' && existing) continue;
+        candidates.push({ id: crypto.randomUUID(), projectId: activeProject.id, manuscriptId: suggestion.sourceManuscriptId, runId, baseFingerprint: suggestion.fingerprint, fingerprint: `${suggestion.fingerprint}|${sourceHash}|${runId}`, sourceHash, kind: suggestion.kind, confidence: suggestion.confidence, heuristicVersion: EXTRACTION_HEURISTIC_VERSION, payload: JSON.stringify({ suggestion, runId, sourceHash }), status: 'PENDING', createdAt: now });
         next.push(suggestion);
       }
       if (candidates.length) {
         await db.extractionCandidates.bulkPut(candidates);
-        await db.automationHistories.bulkPut(next.map(suggestion => ({ id: crypto.randomUUID(), projectId: activeProject.id, source: 'MANUSCRIPT_EXTRACTION' as const, kind: suggestion.kind, summary: `${suggestionTypeLabel(suggestion)} candidato (${Math.round(suggestion.confidence * 100)}%): ${suggestionLabel(suggestion)}`, payload: JSON.stringify(suggestion), manuscriptId: suggestion.sourceManuscriptId, status: 'DETECTED' as const, createdAt: now })));
+        await db.automationHistories.bulkPut(next.map(suggestion => ({ id: crypto.randomUUID(), projectId: activeProject.id, source: 'MANUSCRIPT_EXTRACTION' as const, kind: suggestion.kind, summary: `${suggestionTypeLabel(suggestion)} candidato (${Math.round(suggestion.confidence * 100)}%): ${suggestionLabel(suggestion)}`, payload: JSON.stringify({ suggestion, runId, sourceHash: suggestion.sourceHash }), manuscriptId: suggestion.sourceManuscriptId, status: 'DETECTED' as const, createdAt: now })));
       }
       setSuggestions(next);
-      setSelectedSuggestionFingerprints(new Set(next.map(item => item.fingerprint)));
-      setAnalysisNotices(notices);
+      setSelectedSuggestionFingerprints(new Set());
+      setActiveAnalysisRunId(runId);
+      setAnalysisNotices([...notices, ...(next.length ? [`${mode === 'REBUILD' ? 'Análise refeita' : 'Novidades adicionadas'}: ${next.length} candidato(s) aguardando revisão. Nenhum foi selecionado ou aplicado automaticamente.`] : ['Nenhum candidato novo encontrado.'])]);
     } finally { setIsAnalyzingManuscripts(false); }
   };
 
@@ -254,9 +280,19 @@ export default function EditorWorkspace() {
     return next;
   });
 
+  const selectSuggestions = (predicate: (suggestion: ReviewedSuggestion) => boolean) => {
+    setSelectedSuggestionFingerprints(new Set(suggestions.filter(predicate).map(suggestion => suggestion.fingerprint)));
+  };
+
   const applySuggestions = async () => {
     const approved = suggestions.filter(suggestion => selectedSuggestionFingerprints.has(suggestion.fingerprint));
     if (!activeProject || approved.length === 0) return;
+    const activeCandidates = (await db.extractionCandidates.toArray()).filter(candidate => candidate.projectId === activeProject.id && candidate.runId === activeAnalysisRunId && approved.some(suggestion => suggestion.fingerprint === candidate.baseFingerprint));
+    if (activeCandidates.some(candidate => candidate.heuristicVersion !== EXTRACTION_HEURISTIC_VERSION || candidate.confidence < 0.88)) {
+      setAnalysisNotices(['Este lote foi produzido por uma heurística antiga ou não atingiu a evidência mínima. Escolha “Refazer tudo” para gerar uma revisão segura.']);
+      return;
+    }
+    if (!window.confirm(`Aplicar ${approved.length} candidato(s) selecionado(s) ao universo do projeto? Esta ação será registrada e poderá ser auditada.`)) return;
     setIsApplyingSuggestions(true);
     const now = new Date().toISOString();
     try {
@@ -276,6 +312,11 @@ export default function EditorWorkspace() {
       const existingCreatures = await db.creatureSheets.where('projectId').equals(activeProject.id).toArray();
       const characters = new Map(existingCharacters.map(character => [character.name.trim().toLocaleLowerCase('pt-BR'), character]));
       const entityNames = new Set(existingEntities.map(entity => entity.name.trim().toLocaleLowerCase('pt-BR')));
+      const entityTypesByName = new Map<string, Set<string>>();
+      for (const entity of existingEntities) {
+        const normalized = entity.name.trim().toLocaleLowerCase('pt-BR');
+        entityTypesByName.set(normalized, new Set([...(entityTypesByName.get(normalized) ?? []), entity.type]));
+      }
       const locationNames = new Set(existingLocations.map(item => item.name.trim().toLocaleLowerCase('pt-BR')));
       const itemNames = new Set(existingItems.map(item => item.name.trim().toLocaleLowerCase('pt-BR')));
       const factionNames = new Set(existingFactions.map(item => item.name.trim().toLocaleLowerCase('pt-BR')));
@@ -284,9 +325,12 @@ export default function EditorWorkspace() {
       const ensureEntity = async (suggestion: Extract<ReviewedSuggestion, { kind: 'entity' }>) => {
         const { name, type, excerpt, sourceManuscriptId: manuscriptId } = suggestion;
         const normalized = name.trim().toLocaleLowerCase('pt-BR');
+        const existingTypes = entityTypesByName.get(normalized);
+        if (existingTypes && (existingTypes.size !== 1 || !existingTypes.has(type))) return undefined;
         if (!entityNames.has(normalized)) {
           await db.wikiEntities.put({ id: crypto.randomUUID(), projectId: activeProject.id, name, type, description: `Candidato aprovado com evidência: ${excerpt}`, content: '', isConfidential: false, createdAt: now, updatedAt: now });
           entityNames.add(normalized);
+          entityTypesByName.set(normalized, new Set([type]));
         }
         if (type === 'Personagem') {
           const existing = characters.get(normalized);
@@ -321,7 +365,7 @@ export default function EditorWorkspace() {
       const timeline = existingTimelines[0] ?? { id: crypto.randomUUID(), projectId: activeProject.id, name: 'Cronologia do manuscrito', description: 'Gerada a partir de fatos explícitos do texto.', calendarType: 'custom' as const, createdAt: now, updatedAt: now };
       if (!existingTimelines.length && approved.some(item => item.kind === 'event')) await db.timelines.put(timeline);
       const existingEvents = await db.timelineEvents.where('timelineId').equals(timeline.id).toArray();
-      let sortOrder = existingEvents.length;
+      let sortOrder = Math.max(-1, ...existingEvents.map(event => event.sortOrder)) + 1;
       for (const suggestion of approved.filter((item): item is Extract<ReviewedSuggestion, { kind: 'event' }> => item.kind === 'event')) {
         if (!existingEvents.some(event => event.title.toLocaleLowerCase('pt-BR') === suggestion.title.toLocaleLowerCase('pt-BR') && event.dateStr === suggestion.dateStr)) {
           await db.timelineEvents.put(toTimelineEvent(suggestion, timeline.id, sortOrder++));
@@ -337,8 +381,9 @@ export default function EditorWorkspace() {
       }
       setSuggestions([]);
       setSelectedSuggestionFingerprints(new Set());
-      const candidates = await db.extractionCandidates.where('fingerprint').anyOf(approved.map(item => item.fingerprint)).toArray();
-      await db.extractionCandidates.bulkPut(candidates.map(candidate => ({ ...candidate, status: 'APPROVED' as const, decidedAt: now })));
+      const approvedFingerprints = new Set(approved.map(item => item.fingerprint));
+      const candidates = activeCandidates.filter(candidate => approvedFingerprints.has(candidate.baseFingerprint));
+      await db.extractionCandidates.bulkPut(candidates.map(candidate => ({ ...candidate, status: 'APPLIED' as const, decidedAt: now })));
       await db.automationHistories.put({ id: crypto.randomUUID(), projectId: activeProject.id, source: 'MANUSCRIPT_EXTRACTION', kind: 'batch', summary: `${approved.length} sugestões revisadas e aplicadas ao projeto`, payload: JSON.stringify(approved), status: 'APPLIED', createdAt: now });
       const refreshedDocuments = (await db.manuscripts.toArray()).filter(document => document.projectId === activeProject.id && !document.inTrash).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
       setDocuments(refreshedDocuments);
@@ -352,9 +397,10 @@ export default function EditorWorkspace() {
     <section className="editor-document">
       {!activeDocument ? <div className="editor-empty"><h1>Seu primeiro capítulo começa aqui.</h1><p>Crie um manuscrito para organizar a sua história.</p><button type="button" className="primary-button" onClick={createDocument}>Criar capítulo</button></div> : <>
         <header className="document-header"><div className="document-title-group"><input aria-label="Título do capítulo" value={title} onChange={event => setTitle(event.target.value)} onBlur={() => void saveCurrent({ title })} /><span>{wordCount.toLocaleString('pt-BR')} palavras</span></div><div><select aria-label="Estado do capítulo" value={status} onChange={event => { const next = event.target.value as typeof status; setStatus(next); void saveCurrent({ status: next, isLocked: next === 'FINALIZADO' }); }}><option value="RASCUNHO">Rascunho</option><option value="REVISAO">Em revisão</option><option value="FINALIZADO">Finalizado</option></select><button type="button" className="delete-document-button" onClick={() => void deleteCurrentDocument()}>Excluir</button><span className={`save-indicator ${saveState}`}>{saveState === 'saved' ? 'Salvo localmente' : saveState === 'saving' ? 'Salvando…' : 'Fila local'}</span></div></header>
-        <div className="editor-toolbar" aria-label="Formatação"><div className="toolbar-group"><button type="button" title="Desfazer" onClick={() => editor?.chain().focus().undo().run()}>↶</button><button type="button" title="Refazer" onClick={() => editor?.chain().focus().redo().run()}>↷</button></div><div className="toolbar-group"><button type="button" onClick={() => editor?.chain().focus().toggleBold().run()} className={editor?.isActive('bold') ? 'is-active' : ''}><b>B</b></button><button type="button" onClick={() => editor?.chain().focus().toggleItalic().run()} className={editor?.isActive('italic') ? 'is-active' : ''}><i>I</i></button><button type="button" onClick={() => editor?.chain().focus().toggleStrike().run()} className={editor?.isActive('strike') ? 'is-active' : ''}><s>S</s></button></div><div className="toolbar-group"><button type="button" onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()} className={editor?.isActive('heading', { level: 2 }) ? 'is-active' : ''}>Título</button><button type="button" onClick={() => editor?.chain().focus().toggleBulletList().run()} className={editor?.isActive('bulletList') ? 'is-active' : ''}>Lista</button><button type="button" onClick={() => editor?.chain().focus().toggleOrderedList().run()} className={editor?.isActive('orderedList') ? 'is-active' : ''}>1.</button><button type="button" onClick={() => editor?.chain().focus().toggleBlockquote().run()} className={editor?.isActive('blockquote') ? 'is-active' : ''}>“</button></div><button type="button" className="secondary-button" onClick={() => void normalizeCurrentImport()}>Normalizar importação</button><button type="button" className="secondary-button" disabled={isAnalyzingManuscripts || documents.length === 0} onClick={() => void analyzeProjectManuscripts()}>{isAnalyzingManuscripts ? 'Analisando biblioteca…' : `Analisar ${documents.length} manuscritos`}</button><button type="button" className="focus-button" onClick={() => setFocusMode(value => !value)}>{focusMode ? 'Sair do foco' : 'Modo foco'}</button></div>
+        <div className="editor-toolbar" aria-label="Formatação"><div className="toolbar-group"><button type="button" title="Desfazer" onClick={() => editor?.chain().focus().undo().run()}>↶</button><button type="button" title="Refazer" onClick={() => editor?.chain().focus().redo().run()}>↷</button></div><div className="toolbar-group"><button type="button" onClick={() => editor?.chain().focus().toggleBold().run()} className={editor?.isActive('bold') ? 'is-active' : ''}><b>B</b></button><button type="button" onClick={() => editor?.chain().focus().toggleItalic().run()} className={editor?.isActive('italic') ? 'is-active' : ''}><i>I</i></button><button type="button" onClick={() => editor?.chain().focus().toggleStrike().run()} className={editor?.isActive('strike') ? 'is-active' : ''}><s>S</s></button></div><div className="toolbar-group"><button type="button" onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()} className={editor?.isActive('heading', { level: 2 }) ? 'is-active' : ''}>Título</button><button type="button" onClick={() => editor?.chain().focus().toggleBulletList().run()} className={editor?.isActive('bulletList') ? 'is-active' : ''}>Lista</button><button type="button" onClick={() => editor?.chain().focus().toggleOrderedList().run()} className={editor?.isActive('orderedList') ? 'is-active' : ''}>1.</button><button type="button" onClick={() => editor?.chain().focus().toggleBlockquote().run()} className={editor?.isActive('blockquote') ? 'is-active' : ''}>“</button></div><button type="button" className="secondary-button" onClick={() => void normalizeCurrentImport()}>Normalizar importação</button><button type="button" className="secondary-button" disabled={isAnalyzingManuscripts || documents.length === 0} onClick={() => setIsAnalysisModeOpen(true)}>{isAnalyzingManuscripts ? 'Analisando biblioteca…' : `Analisar ${documents.length} manuscritos`}</button><button type="button" className="focus-button" onClick={() => setFocusMode(value => !value)}>{focusMode ? 'Sair do foco' : 'Modo foco'}</button></div>
+        {isAnalysisModeOpen && <aside className="extraction-review analysis-mode-choice" aria-live="polite"><div><strong>Como deseja analisar a biblioteca?</strong><p>Escolha antes de iniciar. Nenhum resultado será aplicado automaticamente.</p></div><div className="extraction-actions"><button type="button" className="secondary-button" onClick={() => setIsAnalysisModeOpen(false)}>Cancelar</button><button type="button" className="secondary-button" onClick={() => { setIsAnalysisModeOpen(false); void analyzeProjectManuscripts('ADD'); }}>Adicionar novidades</button><button type="button" className="primary-button" onClick={() => { setIsAnalysisModeOpen(false); void analyzeProjectManuscripts('REBUILD'); }}>Refazer tudo</button></div><ul><li><span>Adicionar</span><div><strong>Analisa apenas conteúdo novo ou alterado.</strong><small>Mantém a fila de revisão existente e evita criar o mesmo candidato novamente.</small></div></li><li><span>Refazer</span><div><strong>Reprocessa todos os manuscritos.</strong><small>Substitui candidatos pendentes da análise anterior; dados já aplicados não são apagados.</small></div></li></ul></aside>}
         {analysisNotices.length > 0 && <aside className="extraction-review" aria-live="polite"><strong>Itens que não foram analisados</strong><ul>{analysisNotices.map(notice => <li key={notice}>{notice}</li>)}</ul></aside>}
-        {suggestions.length > 0 && <aside className="extraction-review" aria-live="polite"><div><strong>{suggestions.length} candidatos novos em {documents.length} manuscritos</strong><p>O sistema não grava no universo até você selecionar e aprovar os candidatos com evidência e confiança exibidas.</p></div><div className="extraction-actions"><button type="button" className="secondary-button" onClick={() => { setSuggestions([]); setSelectedSuggestionFingerprints(new Set()); }}>Fechar revisão</button><button type="button" className="primary-button" disabled={isApplyingSuggestions || selectedSuggestionFingerprints.size === 0} onClick={() => void applySuggestions()}>{isApplyingSuggestions ? 'Aplicando…' : `Aplicar ${selectedSuggestionFingerprints.size} selecionada(s)`}</button></div><ul>{suggestions.map((suggestion, index) => <li key={`${suggestion.fingerprint}-${index}`}><input type="checkbox" checked={selectedSuggestionFingerprints.has(suggestion.fingerprint)} onChange={() => toggleSuggestion(suggestion.fingerprint)} aria-label={`Selecionar ${suggestionLabel(suggestion)}`} /><span>{suggestionTypeLabel(suggestion)} · {Math.round(suggestion.confidence * 100)}%</span><div><strong>{suggestionLabel(suggestion)}</strong><small>{suggestion.kind === 'chapter' ? suggestion.content.slice(0, 180) : suggestion.excerpt}{suggestion.sourceManuscriptTitle && ` · ${suggestion.sourceManuscriptTitle}`}</small></div></li>)}</ul></aside>}
+        {suggestions.length > 0 && <aside className="extraction-review" aria-live="polite"><div><strong>{suggestions.length} candidatos elegíveis em {documents.length} manuscritos</strong><p>O lote não começa selecionado. A seleção automática inclui NER local, eventos e relações; candidatos do fallback por regras continuam para revisão individual.</p></div><div className="extraction-actions"><button type="button" className="secondary-button" onClick={() => { setSuggestions([]); setSelectedSuggestionFingerprints(new Set()); }}>Fechar revisão</button><button type="button" className="primary-button" disabled={isApplyingSuggestions || selectedSuggestionFingerprints.size === 0} onClick={() => void applySuggestions()}>{isApplyingSuggestions ? 'Aplicando…' : `Aplicar ${selectedSuggestionFingerprints.size} selecionada(s)`}</button></div><div className="extraction-bulk-actions" aria-label="Seleção automática de candidatos"><button type="button" className="secondary-button" onClick={() => selectSuggestions(suggestion => suggestion.kind !== 'entity' || suggestion.analysisSource === 'STANZA_LOCAL')}>Selecionar lote de alta evidência ({suggestions.filter(suggestion => suggestion.kind !== 'entity' || suggestion.analysisSource === 'STANZA_LOCAL').length})</button><button type="button" className="secondary-button" onClick={() => selectSuggestions(suggestion => suggestion.kind === 'entity' && suggestion.analysisSource === 'STANZA_LOCAL')}>Entidades NER local ({suggestions.filter(suggestion => suggestion.kind === 'entity' && suggestion.analysisSource === 'STANZA_LOCAL').length})</button><button type="button" className="secondary-button" onClick={() => selectSuggestions(suggestion => suggestion.kind === 'event' || suggestion.kind === 'relation')}>Eventos e relações ({suggestions.filter(suggestion => suggestion.kind === 'event' || suggestion.kind === 'relation').length})</button><button type="button" className="secondary-button" onClick={() => setSelectedSuggestionFingerprints(new Set())}>Limpar seleção</button></div><ul>{suggestions.map((suggestion, index) => <li key={`${suggestion.fingerprint}-${index}`}><input type="checkbox" checked={selectedSuggestionFingerprints.has(suggestion.fingerprint)} onChange={() => toggleSuggestion(suggestion.fingerprint)} aria-label={`Selecionar ${suggestionLabel(suggestion)}`} /><span>{suggestionTypeLabel(suggestion)} · {Math.round(suggestion.confidence * 100)}%{suggestion.kind === 'entity' && ` · ${suggestion.analysisSource === 'STANZA_LOCAL' ? 'NER local' : 'revisão manual'}`}</span><div><strong>{suggestionLabel(suggestion)}</strong><small>{suggestion.kind === 'chapter' ? suggestion.content.slice(0, 180) : suggestion.excerpt}{suggestion.sourceManuscriptTitle && ` · ${suggestion.sourceManuscriptTitle}`}</small></div></li>)}</ul></aside>}
         <div className="paper"><EditorContent editor={editor} /></div>
       </>}
     </section>

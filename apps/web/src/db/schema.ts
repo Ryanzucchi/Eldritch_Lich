@@ -28,12 +28,18 @@ export interface ExtractionCandidate {
   id: string;
   projectId: string;
   manuscriptId?: string;
+  /** Identifies one complete analysis execution, for traceability and safe reruns. */
+  runId: string;
+  /** Stable identity of the extracted fact before it is versioned by its source/run. */
+  baseFingerprint: string;
   fingerprint: string;
+  /** Hash of the normalized source used by this analysis. */
+  sourceHash: string;
   kind: 'chapter' | 'entity' | 'event' | 'relation';
   confidence: number;
   heuristicVersion: string;
   payload: string;
-  status: 'PENDING' | 'APPROVED' | 'DISCARDED';
+  status: 'PENDING' | 'APPROVED' | 'APPLIED' | 'DISCARDED' | 'SUPERSEDED';
   createdAt: string;
   decidedAt?: string;
 }
@@ -1419,6 +1425,7 @@ export class EldritchDatabase extends Dexie {
     this.version(39).stores({ researchProjects: 'id, projectId' });
     this.version(40).stores({ automationHistories: 'id, projectId, source, kind, status, manuscriptId, createdAt' });
     this.version(41).stores({ extractionCandidates: 'id, projectId, manuscriptId, fingerprint, status, createdAt' });
+    this.version(42).stores({ extractionCandidates: 'id, projectId, manuscriptId, fingerprint, baseFingerprint, sourceHash, runId, status, createdAt' });
   }
 }
 
