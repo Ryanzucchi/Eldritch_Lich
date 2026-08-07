@@ -38,3 +38,4 @@ Bem-vindo à base de conhecimento ativa e atualizada do projeto **Eldritch Lich*
 *   [ADR-002: Arquitetura Local-First (Yjs + Dexie)](file:///home/zucchi/Projetos/Eldritch_Lich/docs/adr/ADR-002-arquitetura-local-first-yjs-dexie.md)
 *   [ADR-003: Banco de Dados e Segurança](file:///home/zucchi/Projetos/Eldritch_Lich/docs/adr/ADR-003-banco-de-dados-e-seguranca-postgresql-rls.md)
 *   [Extração local revisável](file:///home/zucchi/Projetos/Eldritch_Lich/brain/decisoes/2026-08-06-extracao-local-revisavel.md)
+*   [ADR: Candidatos de extração antes do cânone](file:///home/zucchi/Projetos/Eldritch_Lich/brain/decisoes/2026-08-07-candidatos-antes-do-canone.md)

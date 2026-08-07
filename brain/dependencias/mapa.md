@@ -61,8 +61,9 @@ graph TD
     KanbanBoard[app/kanban/page.tsx] -->|Layout unificado| DashboardLayout
     KanbanBoard -->|Lê/Grava Metas| DexieSchema
     ManuscriptEditor[app/editor/EditorWorkspace.tsx] -->|Edita e salva capítulos locais| DexieSchema
-    ManuscriptEditor -->|Solicita sugestões revisáveis| ManuscriptExtraction[services/manuscript-extraction.ts]
-    ManuscriptExtraction -->|Grava entidades, personagens, relações e eventos aprovados| DexieSchema
+    ManuscriptEditor -->|Normaliza, solicita e revisa candidatos| ManuscriptExtraction[services/manuscript-extraction.ts]
+    ManuscriptExtraction -->|Produz evidência, confiança e fingerprint| ExtractionCandidates[db.extractionCandidates]
+    ManuscriptEditor -->|Promove somente candidatos aprovados| DexieSchema
     ManuscriptEditor -->|Sincroniza cópia de trabalho| ManuscriptsAPI
     ManuscriptEditor[app/editor/page.tsx] -->|Analisa digitação| MMSService
     ManuscriptEditor -->|Atualiza status| DexieSchema
@@ -98,7 +99,7 @@ graph TD
     ResearchPage[app/research/page.tsx] -->|Lê e grava notas e capítulos do projeto| DexieSchema
     AnalysisPage[app/nlp/page.tsx] -->|Calcula métricas determinísticas do capítulo selecionado| DexieSchema
     AuditPage[app/audit/page.tsx] -->|Exporta dump completo e apresenta achados| ProjectAudit[services/project-audit.ts]
-    ProjectAudit -->|Lê todas as tabelas da base local do projeto| DexieSchema
+    ProjectAudit -->|Lê todas as tabelas e valida candidatos| DexieSchema
     CalendarPage[app/calendar/page.tsx] -->|Agenda eventos e lê capítulos vinculáveis| DexieSchema
     ChatPage[app/chat/page.tsx] -->|Lê e grava canais e mensagens locais| DexieSchema
     MapsPage[app/maps/page.tsx] -->|Lê locais e persiste mapas e marcadores| DexieSchema

@@ -1200,3 +1200,14 @@
 ### Documentação Vinculada
 
 * [auditoria-dados.md](../modulos/auditoria-dados.md)
+
+## [2026-08-07] - Extração literária conservadora e aprovada por revisão
+
+* A análise passou a normalizar importações antes de extrair, bloquear marcação escapada, registrar candidatos com evidência/confiança/fingerprint e exigir seleção explícita antes de promover dados ao universo ou à cronologia.
+* A auditoria local agora verifica os metadados e duplicidades desses candidatos.
+
+### Documentação Vinculada
+
+* [workflows-manuscritos.md](../modulos/workflows-manuscritos.md)
+* [auditoria-dados.md](../modulos/auditoria-dados.md)
+* [2026-08-07-candidatos-antes-do-canone.md](../decisoes/2026-08-07-candidatos-antes-do-canone.md)

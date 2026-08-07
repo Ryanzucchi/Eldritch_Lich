@@ -18,6 +18,8 @@ Permite inspecionar a base local real do projeto ativo, sem depender dos arquivo
 - posições cronológicas duplicadas;
 - conteúdo de manuscrito cujo HTML foi escapado durante a importação;
 - metadados mínimos dos registros coletados automaticamente.
+- candidatos de extração sem evidência, confiança válida, versão da heurística ou chave idempotente;
+- fingerprints duplicados que poderiam reaplicar a mesma extração.
 
 ## Limites e revisão literária
 
@@ -28,3 +30,4 @@ O resultado “sem problema estrutural” não confirma que uma entidade, evento
 - `apps/web/src/db/schema.ts`: define as tabelas Dexie da instância local.
 - `apps/web/src/services/project-audit.ts`: serializa e audita os registros.
 - `apps/web/src/app/audit/page.tsx`: expõe o fluxo ao usuário.
+- `apps/web/src/services/manuscript-extraction.ts`: cria candidatos conservadores e revisáveis.

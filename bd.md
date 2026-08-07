@@ -5,7 +5,7 @@
 O armazenamento principal do Eldritch Lich é **IndexedDB**, acessado pelo navegador por meio de **Dexie**. Não há PostgreSQL, MySQL ou outro servidor de banco de dados configurado para o modo local atual.
 
 - **Classe e schema:** `apps/web/src/db/schema.ts`
-- **Versão atual do schema Dexie:** `40`
+- **Versão atual do schema Dexie:** `41`
 - **Nome físico por projeto ativo:** `EldritchDatabase_<activeProjectId>`
 - **Chaves:** salvo indicação contrária, `id` é a chave primária. Os campos após `id` na coluna de índices são índices Dexie simples, não chaves estrangeiras com integridade automática.
 - **Isolamento:** a maior parte dos registros traz `projectId`; a aplicação deve sempre filtrá-lo. IndexedDB não impõe relações, cascatas ou RLS.
@@ -37,6 +37,7 @@ Há também um armazenamento auxiliar em arquivos JSON, usado pela API local par
 | `reminders` | `id`; `projectId`, `alertTime`, `isRead` | Lembrete: texto, capítulo opcional, alerta, importância e leitura. |
 | `keyboardShortcuts` | `command` (chave) | Atalhos: `command`, `keyCombo`. |
 | `automationHistories` | `id`; `projectId`, `source`, `kind`, `status`, `manuscriptId`, `createdAt` | Histórico de coletas automáticas. Campos: resumo, `payload`, origem (`MANUSCRIPT_EXTRACTION`, `SEMANTIC_SCAN`, `SANDBOX_GENERATION`, `TEXT_ANALYSIS`), estado e capítulo opcional. |
+| `extractionCandidates` | `id`; `projectId`, `manuscriptId`, `fingerprint`, `status`, `createdAt` | Candidato revisável de extração: evidência serializada, confiança, versão da heurística, chave idempotente e decisão (`PENDING`, `APPROVED`, `DISCARDED`). Não é uma ficha do universo. |
 
 ### Planejamento, estrutura narrativa e métricas
 
@@ -55,7 +56,7 @@ Há também um armazenamento auxiliar em arquivos JSON, usado pela API local par
 
 | Tabela | Chave e índices | Schema lógico / finalidade |
 |---|---|---|
-| `wikiEntities` | `id`; `projectId`, `name`, `type`, `isConfidential` | Entidade do universo: personagem/local/item/organização, descrição, conteúdo e confidencialidade. |
+| `wikiEntities` | `id`; `projectId`, `name`, `type`, `isConfidential` | Entidade do universo: personagem/local/item/organização/criatura, descrição, conteúdo e confidencialidade. |
 | `characterSheets` | `id`; `projectId`, `name`, `role`, `factionId` | `CharacterSheet`: ficha, papel, nascimento/idade, facção, biografia e capítulos mencionados. |
 | `familyRelations` | `id`; `projectId`, `personId`, `relatedPersonId`, `relationType` | `FamilyRelation`: aresta da árvore genealógica (`PAI`, `MAE`, `FILHO`, `CONJUGE`, `IRMAO`). |
 | `factionSheets` | `id`; `projectId`, `name`, `leaderId` | `FactionSheet`: facção, líder, brasão e descrição. |
@@ -155,4 +156,5 @@ Localização: `apps/web/src/db/`. Cada arquivo contém uma lista JSON, exceto o
 2. `manuscripts.json` é usado pela API para reidratar e sincronizar capítulos, mas não contém todas as tabelas IndexedDB.
 3. O schema atual de `manuscripts` não possui índice Dexie em `projectId`; consultas devem filtrar a coleção lida pelo projeto ativo, salvo nova migração explícita.
 4. A tabela `automationHistories` é o histórico persistido de coletas automáticas; ela guarda fonte, estado, payload e capítulo de origem quando aplicável.
-5. Os contratos completos de cada tabela estão em `packages/domain/src/**` e os tipos locais complementares (`Reminder`, `WikiEntity`, `AutomationHistoryEntry`) estão em `apps/web/src/db/schema.ts`.
+5. `extractionCandidates` separa sugestões automáticas dos dados aprovados. O `fingerprint` impede que o mesmo conteúdo e a mesma versão de heurística sejam aplicados duas vezes.
+6. Os contratos completos de cada tabela estão em `packages/domain/src/**` e os tipos locais complementares (`Reminder`, `WikiEntity`, `AutomationHistoryEntry`, `ExtractionCandidate`) estão em `apps/web/src/db/schema.ts`.

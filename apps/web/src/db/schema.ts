@@ -16,12 +16,26 @@ export interface WikiEntity {
   id: string;
   projectId: string;
   name: string;
-  type: 'Personagem' | 'Local' | 'Item' | 'Organizacao';
+  type: 'Personagem' | 'Local' | 'Item' | 'Organizacao' | 'Criatura';
   description: string;
   content: string;
   isConfidential: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ExtractionCandidate {
+  id: string;
+  projectId: string;
+  manuscriptId?: string;
+  fingerprint: string;
+  kind: 'chapter' | 'entity' | 'event' | 'relation';
+  confidence: number;
+  heuristicVersion: string;
+  payload: string;
+  status: 'PENDING' | 'APPROVED' | 'DISCARDED';
+  createdAt: string;
+  decidedAt?: string;
 }
 
 export interface AutomationHistoryEntry {
@@ -52,6 +66,7 @@ export class EldritchDatabase extends Dexie {
   reminders!: Table<Reminder, string>;
   wikiEntities!: Table<WikiEntity, string>;
   automationHistories!: Table<AutomationHistoryEntry, string>;
+  extractionCandidates!: Table<ExtractionCandidate, string>;
   timelines!: Table<import('@eldritch/domain').Timeline, string>;
   timelineEvents!: Table<import('@eldritch/domain').TimelineEvent, string>;
   geoMaps!: Table<import('@eldritch/domain').GeoMap, string>;
@@ -1403,6 +1418,7 @@ export class EldritchDatabase extends Dexie {
     });
     this.version(39).stores({ researchProjects: 'id, projectId' });
     this.version(40).stores({ automationHistories: 'id, projectId, source, kind, status, manuscriptId, createdAt' });
+    this.version(41).stores({ extractionCandidates: 'id, projectId, manuscriptId, fingerprint, status, createdAt' });
   }
 }
 

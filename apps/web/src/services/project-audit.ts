@@ -17,7 +17,7 @@ export async function exportProjectIndexedDb(projectId: string): Promise<Project
 }
 
 const referenceChecks: Array<[string, string, string]> = [
-  ['familyRelations', 'personId', 'characterSheets'], ['familyRelations', 'relatedPersonId', 'characterSheets'], ['itemSheets', 'ownerCharacterId', 'characterSheets'], ['itemSheets', 'locationId', 'locationSheets'], ['locationSheets', 'factionId', 'factionSheets'], ['creatureSheets', 'habitatLocationId', 'locationSheets'], ['historicalEventSheets', 'locationId', 'locationSheets'], ['timelineEvents', 'timelineId', 'timelines'], ['comments', 'manuscriptId', 'manuscripts'], ['manuscriptVersions', 'manuscriptId', 'manuscripts'], ['pendingSaves', 'manuscriptId', 'manuscripts'], ['automationHistories', 'manuscriptId', 'manuscripts'],
+  ['familyRelations', 'personId', 'characterSheets'], ['familyRelations', 'relatedPersonId', 'characterSheets'], ['itemSheets', 'ownerCharacterId', 'characterSheets'], ['itemSheets', 'locationId', 'locationSheets'], ['locationSheets', 'factionId', 'factionSheets'], ['creatureSheets', 'habitatLocationId', 'locationSheets'], ['historicalEventSheets', 'locationId', 'locationSheets'], ['timelineEvents', 'timelineId', 'timelines'], ['comments', 'manuscriptId', 'manuscripts'], ['manuscriptVersions', 'manuscriptId', 'manuscripts'], ['pendingSaves', 'manuscriptId', 'manuscripts'], ['automationHistories', 'manuscriptId', 'manuscripts'], ['extractionCandidates', 'manuscriptId', 'manuscripts'],
 ];
 
 export function auditProjectDump(dump: ProjectDump): AuditFinding[] {
@@ -61,6 +61,14 @@ export function auditProjectDump(dump: ProjectDump): AuditFinding[] {
   }
   for (const history of tables.automationHistories ?? []) {
     if (!history.source || !history.status || !history.createdAt) findings.push({ area: 'Histórico de automações', severity: 'atenção', location: `automationHistories id=${history.id}`, message: 'Registro automático incompleto.', suggestion: 'Salvar fonte, estado e data em cada coleta.' });
+  }
+  const candidateFingerprints = new Set<string>();
+  for (const candidate of tables.extractionCandidates ?? []) {
+    if (!candidate.fingerprint || !candidate.payload || !candidate.heuristicVersion) findings.push({ area: 'Candidatos de extração', severity: 'erro', location: `extractionCandidates id=${candidate.id}`, message: 'Candidato sem chave idempotente, evidência ou versão da heurística.', suggestion: 'Não permitir a aplicação até completar metadados de proveniência.' });
+    if (typeof candidate.confidence !== 'number' || candidate.confidence < 0.7 || candidate.confidence > 1) findings.push({ area: 'Candidatos de extração', severity: 'atenção', location: `extractionCandidates id=${candidate.id}`, message: `Confiança inválida ou abaixo do limiar: ${candidate.confidence}.`, suggestion: 'Manter como pendente ou descartar; não promover automaticamente ao universo.' });
+    const key = String(candidate.fingerprint ?? '');
+    if (key && candidateFingerprints.has(key)) findings.push({ area: 'Candidatos de extração', severity: 'erro', location: `extractionCandidates id=${candidate.id}`, message: 'Fingerprint duplicado: a mesma extração pode ser reaplicada.', suggestion: 'Consolidar os candidatos e preservar apenas um histórico de decisão.' });
+    candidateFingerprints.add(key);
   }
   return findings;
 }

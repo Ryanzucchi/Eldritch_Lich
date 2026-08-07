@@ -6,7 +6,7 @@ import { db, WikiEntity } from '../../db/schema';
 import { useApp } from '../../context/AppContext';
 import './worldbuilding.css';
 
-const TYPES: WikiEntity['type'][] = ['Personagem', 'Local', 'Item', 'Organizacao'];
+const TYPES: WikiEntity['type'][] = ['Personagem', 'Local', 'Item', 'Organizacao', 'Criatura'];
 const KINSHIPS: FamilyKinship[] = ['PAI', 'MAE', 'FILHO', 'CONJUGE', 'IRMAO'];
 const relationLabel: Record<FamilyKinship, string> = { PAI: 'pai de', MAE: 'mãe de', FILHO: 'filho de', CONJUGE: 'cônjuge de', IRMAO: 'irmão(ã) de' };
 
