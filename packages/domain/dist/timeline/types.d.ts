@@ -4,6 +4,15 @@ export interface TimelineEvent {
     title: string;
     description?: string;
     dateStr: string;
+    chronologicalSortKey?: number;
+    datePrecision?: 'YEAR' | 'MONTH' | 'DAY' | 'ERA_YEAR' | 'UNRESOLVED';
+    temporalSource?: 'MANUAL' | 'MANUSCRIPT' | 'LOCAL_NLP';
+    calendarSystem?: 'GREGORIAN' | 'NARRATIVE' | 'UNKNOWN';
+    era?: string;
+    year?: number;
+    month?: number;
+    day?: number;
+    sourceKind?: 'NARRATIVE' | 'EDITORIAL' | 'MANUAL';
     sortOrder: number;
     characterIds?: string[];
     locationId?: string;

@@ -4,6 +4,19 @@ export interface TimelineEvent {
   title: string;
   description?: string;
   dateStr: string; // e.g. "Ano 1042", "2026-07-24"
+  /**
+   * Chave cronológica calculada somente quando a data tem evidência suficiente.
+   * Eventos sem uma data inequívoca continuam na posição editorial escolhida pelo autor.
+   */
+  chronologicalSortKey?: number;
+  datePrecision?: 'YEAR' | 'MONTH' | 'DAY' | 'ERA_YEAR' | 'UNRESOLVED';
+  temporalSource?: 'MANUAL' | 'MANUSCRIPT' | 'LOCAL_NLP';
+  calendarSystem?: 'GREGORIAN' | 'NARRATIVE' | 'UNKNOWN';
+  era?: string;
+  year?: number;
+  month?: number;
+  day?: number;
+  sourceKind?: 'NARRATIVE' | 'EDITORIAL' | 'MANUAL';
   sortOrder: number;
   characterIds?: string[];
   locationId?: string;
