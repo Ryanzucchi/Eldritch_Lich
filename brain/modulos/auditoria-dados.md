@@ -18,7 +18,7 @@ Permite inspecionar a base local real do projeto ativo, sem depender dos arquivo
 - posições cronológicas duplicadas;
 - conteúdo de manuscrito cujo HTML foi escapado durante a importação;
 - metadados mínimos dos registros coletados automaticamente.
-- candidatos de extração sem evidência, confiança válida, versão da heurística ou chave idempotente;
+- candidatos de extração sem evidência, confiança abaixo de `0,88`, versão da heurística, execução (`runId`), hash da fonte ou chave versionada;
 - fingerprints duplicados que poderiam reaplicar a mesma extração.
 
 ## Limites e revisão literária

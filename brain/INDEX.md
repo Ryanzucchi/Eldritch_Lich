@@ -13,6 +13,7 @@ Bem-vindo à base de conhecimento ativa e atualizada do projeto **Eldritch Lich*
 *   [Arquitetura da História](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/arquitetura-historia.md) - Atos e arcos conectados aos capítulos existentes.
 *   [Pesquisa e Análise](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/pesquisa-analise.md) - Notas e leitura editorial de capítulos locais.
 *   [Auditoria de Dados](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/auditoria-dados.md) - Exportação completa do IndexedDB e verificação estrutural por projeto.
+*   [Reanálise 4 — Senhor dos Anéis](file:///home/zucchi/Projetos/Eldritch_Lich/AUDITORIA_CATEGORIZACAO_SENHOR_DOS_ANEIS_REANALISE_4_2026-08-07.md) - Confronto do dump mais recente com o PDF e regras de correção.
 *   [Calendário do Projeto](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/calendario-projeto.md) - Prazos e encontros ligados aos capítulos.
 *   [Conversas do Projeto](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/conversas-projeto.md) - Canais e mensagens locais.
 *   [Atlas do Universo](file:///home/zucchi/Projetos/Eldritch_Lich/brain/modulos/atlas-universo.md) - Mapas e locais do projeto.
@@ -39,3 +40,6 @@ Bem-vindo à base de conhecimento ativa e atualizada do projeto **Eldritch Lich*
 *   [ADR-003: Banco de Dados e Segurança](file:///home/zucchi/Projetos/Eldritch_Lich/docs/adr/ADR-003-banco-de-dados-e-seguranca-postgresql-rls.md)
 *   [Extração local revisável](file:///home/zucchi/Projetos/Eldritch_Lich/brain/decisoes/2026-08-06-extracao-local-revisavel.md)
 *   [ADR: Candidatos de extração antes do cânone](file:///home/zucchi/Projetos/Eldritch_Lich/brain/decisoes/2026-08-07-candidatos-antes-do-canone.md)
+*   [ADR: Execuções versionadas da extração](file:///home/zucchi/Projetos/Eldritch_Lich/brain/decisoes/2026-08-07-execucoes-versionadas-extracao.md)
+*   [ADR: Extração por evidência](file:///home/zucchi/Projetos/Eldritch_Lich/brain/decisoes/2026-08-07-extracao-por-evidencia.md)
+*   [ADR: NER local e ordem temporal comprovada](file:///home/zucchi/Projetos/Eldritch_Lich/brain/decisoes/2026-08-07-ner-local-e-ordem-temporal.md)

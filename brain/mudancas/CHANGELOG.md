@@ -1211,3 +1211,44 @@
 * [workflows-manuscritos.md](../modulos/workflows-manuscritos.md)
 * [auditoria-dados.md](../modulos/auditoria-dados.md)
 * [2026-08-07-candidatos-antes-do-canone.md](../decisoes/2026-08-07-candidatos-antes-do-canone.md)
+## [2026-08-07] - Reexecução segura da análise de manuscritos
+
+* A análise da biblioteca agora exige escolher entre adicionar somente novidades e refazer todos os manuscritos. Cada execução possui `runId` e hash da fonte; o modo de refazer substitui apenas candidatos pendentes, preservando fatos já aplicados.
+* A revisão não seleciona candidatos automaticamente, exige confirmação antes da promoção e registra o estado `APPLIED`. A auditoria valida `runId`, hash e fingerprint versionado; a heurística foi tornada mais conservadora ao não inferir o tipo de um nome pelo objeto vizinho.
+* A lista de revisão ganhou seleção automática em lote por todos, confiança e categoria, evitando a marcação manual de centenas de candidatos.
+
+### Documentação Vinculada
+
+* [Fluxos de Trabalho e Manuscritos](../modulos/workflows-manuscritos.md)
+* [Decisão: Execuções versionadas da extração](../decisoes/2026-08-07-execucoes-versionadas-extracao.md)
+## [2026-08-07] - Extração por evidência e bloqueio de conflitos canônicos
+
+* A heurística de manuscritos foi substituída pela `evidence-gated-pt-v4`: capitalização não basta para criar entidade, e eventos agora exigem predicado narrativo, rejeitando medidas, datas editoriais e texto corrompido.
+* A análise e a promoção bloqueiam nomes cujo tipo diverge da entidade Wiki canônica; lotes de versões antigas ou com confiança inferior a 0,88 não podem ser aplicados.
+
+### Documentação Vinculada
+
+* [Fluxos de Trabalho e Manuscritos](../modulos/workflows-manuscritos.md)
+* [Decisão: Extração por evidência](../decisoes/2026-08-07-extracao-por-evidencia.md)
+
+## [2026-08-07] - Análise linguística local e cronologia verificável
+
+* Foi adicionado o acompanhante Stanza em `infralauch/linguistics`; quando configurado, ele reconhece entidades em português somente em `localhost`, substituindo candidatos heurísticos de entidade e preservando a revisão humana.
+* Eventos agora recebem uma chave cronológica apenas para datas explícitas. A timeline ordena essas datas e oferece uma migração local que mantém números ambíguos na ordem editorial.
+
+### Documentação Vinculada
+
+* [Fluxos de Trabalho e Manuscritos](../modulos/workflows-manuscritos.md)
+* [Linha do Tempo](../modulos/timeline.md)
+* [Decisão: NER local e ordem temporal comprovada](../decisoes/2026-08-07-ner-local-e-ordem-temporal.md)
+
+## [2026-08-07] - Reanálise do PDF e bloqueios v6 da categorização
+
+* A reanálise do dump `(5)` contra o PDF completo confirmou que a execução v5 ocorreu pelo fallback de regras. A v6 passa a votar por ocorrência, exige duas confirmações para nomes de um token, bloqueia fragmentos lexicais e restringe a seleção em massa a NER local/eventos/relações.
+* A cronologia ganhou componentes temporais estruturados e uma gramática isolada para anais; números avulsos continuam sem valor cronológico.
+
+### Documentação Vinculada
+
+* [Fluxos de Trabalho e Manuscritos](../modulos/workflows-manuscritos.md)
+* [Linha do Tempo](../modulos/timeline.md)
+* [Reanálise 4](../../AUDITORIA_CATEGORIZACAO_SENHOR_DOS_ANEIS_REANALISE_4_2026-08-07.md)

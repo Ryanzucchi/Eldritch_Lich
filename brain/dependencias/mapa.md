@@ -62,8 +62,10 @@ graph TD
     KanbanBoard -->|Lê/Grava Metas| DexieSchema
     ManuscriptEditor[app/editor/EditorWorkspace.tsx] -->|Edita e salva capítulos locais| DexieSchema
     ManuscriptEditor -->|Normaliza, solicita e revisa candidatos| ManuscriptExtraction[services/manuscript-extraction.ts]
-    ManuscriptExtraction -->|Produz evidência, confiança e fingerprint| ExtractionCandidates[db.extractionCandidates]
-    ManuscriptEditor -->|Promove somente candidatos aprovados| DexieSchema
+    ManuscriptExtraction -->|Quando configurado, reconhece entidades em português sem API externa| LocalLinguistics[services/local-linguistic-analysis.ts]
+    LocalLinguistics -->|POST somente em localhost| StanzaLocal[infralauch/linguistics]
+    ManuscriptExtraction -->|Produz evidência, confiança, hash da fonte e fingerprint| ExtractionCandidates[db.extractionCandidates]
+    ManuscriptEditor -->|Escolhe adicionar/refazer, versiona execução e promove somente seleção confirmada| DexieSchema
     ManuscriptEditor -->|Sincroniza cópia de trabalho| ManuscriptsAPI
     ManuscriptEditor[app/editor/page.tsx] -->|Analisa digitação| MMSService
     ManuscriptEditor -->|Atualiza status| DexieSchema
@@ -114,6 +116,7 @@ graph TD
     HealthAPI[app/api/health/route.ts] -->|Sonda disponibilidade| WebRuntime
     PluginRuntime[services/plugin-runtime.ts] -->|Executa módulos isolados| PluginTypes[domain/plugins/types.ts]
     TimelinePage[app/timeline/page.tsx] -->|Cria e organiza cronologias e eventos locais| DexieSchema
+    TimelinePage -->|Ordena somente datas normalizadas e preserva ordem editorial| ManuscriptExtraction
     TimelinePage -->|Valida ordenação causal| TimelineEngine
     ManuscriptEditor -->|Padroniza Nomes| DexieSchema
 ```
