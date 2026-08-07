@@ -13,6 +13,7 @@ As imagens estão fixadas em tags existentes (`pgvector 0.8.5/PostgreSQL 16` e M
 | PostgreSQL + pgvector | `postgresql://postgres:development_password@localhost:5432/eldritch_lich` | Banco e vetores para desenvolvimento. |
 | Redis | `redis://localhost:6379` | Pub/Sub, cache, filas e colaboração multi-processo local. |
 | MinIO (S3) | API: `http://localhost:9100`; console: `http://localhost:9101` | Substituto local para armazenamento de objetos. |
+| Linguística Stanza | `http://127.0.0.1:8008` | NER, POS, lemas e dependências em português usados na análise de manuscritos. |
 
 Comandos:
 
@@ -21,6 +22,20 @@ docker compose -f infra/docker-compose.yml up -d
 docker compose -f infra/docker-compose.yml ps
 docker compose -f infra/docker-compose.yml down
 ```
+
+Para iniciar somente o analisador linguístico:
+
+```bash
+docker compose -f infra/docker-compose.yml up -d --build linguistics
+curl http://127.0.0.1:8008/health
+```
+
+Na primeira análise, o Stanza baixa o modelo de português para o volume Docker
+`stanza_models`. Depois disso a análise ocorre inteiramente na máquina local.
+Defina `NEXT_PUBLIC_LOCAL_LINGUISTICS_URL=http://127.0.0.1:8008` em
+`apps/web/.env.local`, reinicie o Next e use **Refazer tudo** no editor. Sem o
+serviço, o editor segue com a heurística conservadora local, sem enviar texto a
+uma API.
 
 Aplicação web local: `http://127.0.0.1:3001` (a porta `3000` já está ocupada nesta máquina). Para iniciá-la manualmente:
 

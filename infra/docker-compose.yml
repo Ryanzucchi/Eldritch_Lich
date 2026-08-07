@@ -48,7 +48,17 @@ services:
       timeout: 5s
       retries: 5
 
+  linguistics:
+    build:
+      context: ../infralauch/linguistics
+    container_name: eldritch-linguistics
+    ports:
+      - "8008:8008"
+    volumes:
+      - stanza_models:/models
+
 volumes:
   postgres_data:
   redis_data:
   minio_data:
+  stanza_models:
